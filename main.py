@@ -1,28 +1,33 @@
 import pygame
-from png_to_sprite import player_sprites
-from player import Player
 
-window_width = 640
-window_height = 480
+from level import Level
+from settings import *
 
-pygame.init()
-window = pygame.display.set_mode((window_width, window_height))
-clock = pygame.time.Clock()
 
-player = Player(
-    spawn_coordinates=(320, 160),
-    sprite_dict = player_sprites,
-    direction = "down"
-)
+class Game:
+    def __init__(self):
+        """General setup"""
+        pygame.init()
+        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.level = Level()
 
-while True:
-    window.fill((255, 255, 255))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
+    def run(self) -> None:
+        """Run the game."""
+        while True:
+            self.window.fill((255, 255, 255))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
 
-    player.draw(window)
+            self.level.run()
+            
+            self.clock.tick(FPS)
+            pygame.display.update()
 
-    clock.tick(60)
-    pygame.display.update()
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()

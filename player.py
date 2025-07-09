@@ -1,30 +1,44 @@
 import pygame
 import math
+from png_to_sprite import player_sprites
 
 class Player:
-    def __init__(self, spawn_coordinates: tuple, sprite_dict: dict[str: str: list], direction: str):
+    def __init__(self, spawn_coordinates: tuple, direction: str, obstacle_sprites):
         # location related
         self.x: int = spawn_coordinates[0]
         self.y: int = spawn_coordinates[1]
 
+        self.obstacle_sprites = obstacle_sprites
+
         # image related
-        self.sprite_dict: dict[str: str: list] = sprite_dict
+        self.sprite_dict: dict[str: str: list] = player_sprites
         self.direction: str = direction
         self.action: str = "idle"
         self.frame: int = 0
 
         self.size: tuple[int, int] = pygame.Surface.get_size(pygame.transform.scale(self.sprite_dict[self.action][self.direction][math.floor(self.frame)], (96, 96)))
         self.width, self.height = self.size
+        self.image = None
 
         # movement related
         self.sprinting: bool = False
         self.direction_pause = 0
 
+    def move(self, move_vector: tuple[int, int]):
+        dx, dy = move_vector
+        speed = 2 if self.sprinting else 1
+        dx *= speed
+        dy *= speed
 
-    def move(self, move_vector: tuple[int, int]) -> None:
-        """ Move the player's position on the map."""
-        self.x += move_vector[0]
-        self.y += move_vector[1]
+        # Move on X axis
+        self.x += dx
+        if self.collision():
+            self.x -= dx
+
+        # Move on Y axis
+        self.y += dy
+        if self.collision():
+            self.y -= dy
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -47,14 +61,12 @@ class Player:
         for key, (direction, move_vector) in movement_keys.items():
             if key_pressed[key]:
                 self.direction = direction
-                speed = 2 if self.sprinting else 1
                 x, y = move_vector
 
                 self.direction_pause += 0.1
                 if self.direction_pause > 1:
                     self.action = "running"
-                    self.move((x * speed, y * speed))
-
+                    self.move((x , y))
                 break
         else:
             self.direction_pause = 0
@@ -66,14 +78,23 @@ class Player:
         self.frame += iterate_speed
         if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
 
+    def collision(self) -> bool:
+        player_rect = pygame.Rect(self.x + 48, self.y + 52, 8, 12)
+        for sprite in self.obstacle_sprites:
+            if player_rect.colliderect(sprite.rect):
+                return True
+        return False
+
+
+
     def draw(self, window) -> None:
         """Draw the player in the game window."""
         self.controls()
         self.animations()
         current_sprite = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
         rescale = pygame.transform.scale(current_sprite, (96, 96))
+        self.image = rescale
+
+        self.collision()
 
         window.blit(rescale, (self.x, self.y))
-
-
-
