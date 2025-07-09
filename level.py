@@ -1,6 +1,6 @@
 import pygame
 from player import Player
-from tile import Tile
+from tile import Tile, AnimatedTile
 from pytmx.util_pygame import load_pygame
 
 from settings import *
@@ -19,11 +19,30 @@ class Level:
         self.create_map()
 
     def create_map(self):
+
         for layer in self.tmx_data.layers:
-            if hasattr(layer, "data"):
-                for x, y, surface in layer.tiles():
-                    position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
-                    Tile(pos=position, surf=surface, group = (self.ground_sprites, self.visible_sprites), tile_type = "ground")
+            if layer.name == "Ground":
+                for x, y, gid in layer:
+
+
+                    props = self.tmx_data.get_tile_properties_by_gid(gid)
+
+                    # Check if the tile has animations.
+                    if props and props["frames"]:
+
+                        frames = props["frames"]
+
+                        frame_surfaces = [self.tmx_data.get_tile_image_by_gid(frame.gid) for frame in frames]
+
+                        position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
+
+                        AnimatedTile(pos=position, frames = frame_surfaces, group = (self.ground_sprites, self.visible_sprites), tile_type = "ground")
+
+
+                    else:
+                        surface = self.tmx_data.get_tile_image_by_gid(gid)
+                        position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
+                        Tile(pos=position, surf=surface, group = (self.ground_sprites, self.visible_sprites), tile_type = "ground")
 
         for obj in self.tmx_data.objects:
             pos = (obj.x, obj.y)
