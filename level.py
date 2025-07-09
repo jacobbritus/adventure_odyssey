@@ -9,7 +9,6 @@ class Level:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
 
-
         self.tmx_data = load_pygame("/Users/jacobbritus/Downloads/tmx/untitled.tmx")
         self.ground_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()

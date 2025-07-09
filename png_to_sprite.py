@@ -29,15 +29,15 @@ def sprite_converter(sprite_file: str, row: int, sprites_amount: int, sprite_wid
 player_sprites = {
     "running":
         {
-            "down": sprite_converter("sprites/characters/me.png", 3, 6, 48, 48, False),
-            "right": sprite_converter("sprites/characters/me.png", 4, 6, 48, 48, False),
-            "left": sprite_converter("sprites/characters/me.png", 4, 6, 48, 48, True),
-            "up": sprite_converter("sprites/characters/me.png", 5, 6, 48, 48, False)},
+            "down": sprite_converter("sprites/characters/moving.png", 3, 6, 32, 48, False),
+            "right": sprite_converter("sprites/characters/moving.png", 4, 6, 32, 48, False),
+            "left": sprite_converter("sprites/characters/moving.png", 4, 6, 32, 48, True),
+            "up": sprite_converter("sprites/characters/moving.png", 5, 6, 32, 48, False)},
     "idle":
         {
-            "down": sprite_converter("sprites/characters/me.png", 0, 6, 48, 48, False),
-            "right": sprite_converter("sprites/characters/me.png", 1, 6, 48, 48, False),
-            "left": sprite_converter("sprites/characters/me.png", 1, 6, 48, 48, True),
-            "up": sprite_converter("sprites/characters/me.png", 2, 6, 48, 48, False)}
+            "down": sprite_converter("sprites/characters/moving.png", 0, 6, 32, 48, False),
+            "right": sprite_converter("sprites/characters/moving.png", 1, 6, 32, 48, False),
+            "left": sprite_converter("sprites/characters/moving.png", 1, 6, 32, 48, True),
+            "up": sprite_converter("sprites/characters/moving.png", 2, 6, 32, 48, False)}
 
 }

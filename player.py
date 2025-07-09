@@ -79,7 +79,7 @@ class Player:
         if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
 
     def collision(self) -> bool:
-        player_rect = pygame.Rect(self.x + 48, self.y + 52, 8, 12)
+        player_rect = pygame.Rect(self.x + 12, self.y + 12, 8, 8)
         for sprite in self.obstacle_sprites:
             if player_rect.colliderect(sprite.rect):
                 return True
@@ -91,10 +91,9 @@ class Player:
         """Draw the player in the game window."""
         self.controls()
         self.animations()
-        current_sprite = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
-        rescale = pygame.transform.scale(current_sprite, (96, 96))
-        self.image = rescale
+
+        self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
 
         self.collision()
 
-        window.blit(rescale, (self.x, self.y))
+        window.blit(self.image, (self.x, self.y))
