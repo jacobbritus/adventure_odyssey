@@ -3,6 +3,8 @@ from player import Player
 from tile import Tile
 from pytmx.util_pygame import load_pygame
 
+from settings import *
+
 
 class Level:
     def __init__(self):
@@ -11,6 +13,7 @@ class Level:
         self.tmx_data = load_pygame("/Users/jacobbritus/Downloads/tmx/untitled.tmx")
         self.ground_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
+        self.visible_sprites = YSortCameraGroup()
 
         self.player = None
         self.create_map()
@@ -19,46 +22,58 @@ class Level:
         for layer in self.tmx_data.layers:
             if hasattr(layer, "data"):
                 for x, y, surface in layer.tiles():
-                    position = (int(x * 32), int(y * 32))
-                    Tile(pos=position, surf=surface, groups=self.ground_sprites)
+                    position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
+                    Tile(pos=position, surf=surface, group = (self.ground_sprites, self.visible_sprites), tile_type = "ground")
 
         for obj in self.tmx_data.objects:
             pos = (obj.x, obj.y)
             if obj.image:
-                Tile(pos=pos, surf=obj.image, groups=self.obstacle_sprites)
+                Tile(pos=pos, surf=obj.image, group = (self.obstacle_sprites, self.visible_sprites), tile_type = "tree")
             if obj.name == "Spawn":
                 self.player = Player(
+                    group = self.visible_sprites,
                     spawn_coordinates=pos,
                     direction="down",
                     obstacle_sprites=self.obstacle_sprites
                 )
 
-    def get_camera_offset(self):
-        screen_center_x = self.display_surface.get_width() // 2
-        screen_center_y = self.display_surface.get_height() // 2
-        offset_x = self.player.rect.centerx - screen_center_x
-        offset_y = self.player.rect.centery - screen_center_y
-        return offset_x, offset_y
 
     def run(self):
-        offset_x, offset_y = self.get_camera_offset()
-        screen_rect = pygame.Rect(offset_x, offset_y, self.display_surface.get_width(),
-                                  self.display_surface.get_height())
+        self.visible_sprites.custom_draw(self.player)
+        self.visible_sprites.update() # get the actual locations
 
-        # Draw visible ground tiles
-        visible_ground = [sprite for sprite in self.ground_sprites if sprite.rect.colliderect(screen_rect)]
-        for sprite in visible_ground:
-            pos = (sprite.rect.x - offset_x, sprite.rect.y - offset_y)
-            self.display_surface.blit(sprite.image, pos)
 
-        # Player is always visible, draw with offset
-        player_pos = (self.player.rect.x - offset_x, self.player.rect.y - offset_y)
-        self.display_surface.blit(self.player.image, player_pos)
+class YSortCameraGroup(pygame.sprite.Group):
+    """A custom sprite group that draws sprites with a camera offset, so the player stays centered."""
+    def __init__(self):
+        super().__init__()
+        self.display_surface = pygame.display.get_surface()
 
-        self.player.update()
+        # Calculate the center of the screen.
+        self.screen_center_x = self.display_surface.get_width() // 2
+        self.screen_center_y = self.display_surface.get_height() // 2
 
-        # Similarly for obstacles and player
-        visible_obstacles = [sprite for sprite in self.obstacle_sprites if sprite.rect.colliderect(screen_rect)]
-        for sprite in visible_obstacles:
-            pos = (sprite.rect.x - offset_x, sprite.rect.y - offset_y)
-            self.display_surface.blit(sprite.image, pos)
+        # Used to track how far the player has moved from the center.
+        self.offset = pygame.math.Vector2()
+
+    def custom_draw(self, player):
+        # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
+        # Move all sprites by the offset calculated here
+        self.offset.x = player.rect.centerx - self.screen_center_x # Move all sprite
+        self.offset.y = player.rect.centery - self.screen_center_y
+
+        # If the camera / player.x increases, all the sprite's x positions decrease
+        # If player move right all sprites move left
+
+        # Draw all the ground sprites.
+        ground_sprites = [sprite for sprite in self.sprites() if sprite.type == "ground"]
+        for sprite in ground_sprites:
+            offset_pos = sprite.rect.topleft - self.offset
+            self.display_surface.blit(sprite.image, offset_pos)
+
+        # Draw the other sprites with overlapping.
+        other_sprites = [sprite for sprite in self.sprites() if sprite.type != "ground"]
+        for sprite in sorted(other_sprites, key=lambda sprite: sprite.rect.centery + (32 if sprite.type == "tree" else 0)):
+            offset_pos = sprite.rect.topleft - self.offset # draw all the elements in a different spot
+            self.display_surface.blit(sprite.image, offset_pos)
+

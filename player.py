@@ -2,13 +2,15 @@ import pygame
 import math
 from png_to_sprite import player_sprites
 
-class Player:
-    def __init__(self, spawn_coordinates: tuple, direction: str, obstacle_sprites):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, group, spawn_coordinates: tuple, direction: str, obstacle_sprites):
+        super().__init__(group)
         # location related
         self.x: int = spawn_coordinates[0]
         self.y: int = spawn_coordinates[1]
 
         self.obstacle_sprites = obstacle_sprites
+        self.type = "player"
 
         # image related
         self.sprite_dict: dict[str: str: list] = player_sprites
@@ -82,7 +84,7 @@ class Player:
     def collision(self) -> bool:
         player_rect = pygame.Rect(self.x + 12, self.y + 12, 8, 8)
         for sprite in self.obstacle_sprites:
-            if player_rect.colliderect(sprite.rect):
+            if player_rect.colliderect(sprite.hitbox):
                 return True
         return False
 
@@ -92,8 +94,5 @@ class Player:
         """Draw the player in the game window."""
         self.controls()
         self.animations()
-
         self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
-
-        self.collision()
 
