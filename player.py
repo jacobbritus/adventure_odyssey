@@ -16,9 +16,9 @@ class Player:
         self.action: str = "idle"
         self.frame: int = 0
 
-        self.size: tuple[int, int] = pygame.Surface.get_size(pygame.transform.scale(self.sprite_dict[self.action][self.direction][math.floor(self.frame)], (96, 96)))
-        self.width, self.height = self.size
-        self.image = None
+        self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
+        self.width, self.height = pygame.Surface.get_size(self.image)
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
         # movement related
         self.sprinting: bool = False
@@ -39,6 +39,7 @@ class Player:
         self.y += dy
         if self.collision():
             self.y -= dy
+        self.rect.topleft = (self.x, self.y)
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -87,7 +88,7 @@ class Player:
 
 
 
-    def draw(self, window) -> None:
+    def update(self) -> None:
         """Draw the player in the game window."""
         self.controls()
         self.animations()
@@ -96,4 +97,3 @@ class Player:
 
         self.collision()
 
-        window.blit(self.image, (self.x, self.y))
