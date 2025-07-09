@@ -7,12 +7,12 @@ from settings import *
 
 
 class Level:
+    """A class to manage the game level."""
     def __init__(self):
-        self.display_surface = pygame.display.get_surface()
-
+        self.display_surface: pygame.Surface = pygame.display.get_surface()
         self.tmx_data = load_pygame("/Users/jacobbritus/Downloads/tmx/untitled.tmx")
-        self.ground_sprites = pygame.sprite.Group()
-        self.obstacle_sprites = pygame.sprite.Group()
+        self.ground_sprites: pygame.sprite.Group = pygame.sprite.Group()
+        self.obstacle_sprites: pygame.sprite.Group = pygame.sprite.Group()
         self.visible_sprites = YSortCameraGroup()
 
         self.player = None

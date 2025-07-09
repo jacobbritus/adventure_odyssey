@@ -3,6 +3,7 @@ import math
 from png_to_sprite import player_sprites
 
 class Player(pygame.sprite.Sprite):
+    """The player class."""
     def __init__(self, group, spawn_coordinates: tuple, direction: str, obstacle_sprites):
         super().__init__(group)
         # location related
@@ -27,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         self.direction_pause = 0
 
     def move(self, move_vector: tuple[int, int]):
+        """Move the player based on the move vector."""
         dx, dy = move_vector
         speed = 2 if self.sprinting else 1
         dx *= speed
@@ -77,12 +79,13 @@ class Player(pygame.sprite.Sprite):
 
     def animations(self) -> None:
         """Iterate over the sprite list assigned to the action > direction."""
-        iterate_speed = 0.2 if self.sprinting else 0.12
+        iterate_speed: float = 0.2 if self.sprinting else 0.12
         self.frame += iterate_speed
         if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
 
     def collision(self) -> bool:
-        player_rect = pygame.Rect(self.x + 12, self.y + 12, 8, 8)
+        """Check if the player is colliding with any other obstacle sprite."""
+        player_rect: pygame.Rect = pygame.Rect(self.x + 12, self.y + 12, 8, 8)
         for sprite in self.obstacle_sprites:
             if player_rect.colliderect(sprite.hitbox):
                 return True
@@ -94,5 +97,5 @@ class Player(pygame.sprite.Sprite):
         """Draw the player in the game window."""
         self.controls()
         self.animations()
-        self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
+        self.image: pygame.surface = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
 
