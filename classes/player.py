@@ -118,10 +118,6 @@ class Player(Entity):
         self.frame += iterate_speed
         if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
 
-    # # implement this
-    # def dust_particle(self):
-    #     DustParticle(self.player, self.groups())
-
     def update(self) -> None:
         """Draw the player in the game window."""
         self.controls()

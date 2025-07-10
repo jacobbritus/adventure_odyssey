@@ -2,7 +2,7 @@ import pytmx
 
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle
-from classes.statctile import StatcTile, AnimatedTile, ActionTile
+from classes.Tiles import StaticTile, AnimatedTile, ActionTile
 from pytmx.util_pygame import load_pygame
 
 from other.settings import *
@@ -18,9 +18,13 @@ class Level:
         self.obstacle_sprites: pygame.sprite.Group = pygame.sprite.Group()
         self.enemies: pygame.sprite.Group = pygame.sprite.Group()
         self.visible_sprites = YSortCameraGroup()
+        self.action_sprites: pygame.sprite.Group = pygame.sprite.Group()
 
         self.player = None
         self.create_map()
+
+        self.state = None
+
 
     def create_map(self):
 
@@ -45,8 +49,8 @@ class Level:
                 else:
                     surface = self.tmx_data.get_tile_image_by_gid(gid)
                     position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
-                    StatcTile(pos=position, surf=surface, group=(self.ground_sprites, self.visible_sprites),
-                              tile_type="ground")
+                    StaticTile(pos=position, surf=surface, group=(self.ground_sprites, self.visible_sprites),
+                               tile_type="ground")
 
         enemy_sprites = self.tmx_data.get_layer_by_name("Enemies")
         if isinstance(enemy_sprites, pytmx.TiledObjectGroup):
@@ -72,8 +76,8 @@ class Level:
                                      animation_speed=0.1)
                     else:
 
-                        StatcTile(pos=pos, surf=obj.image, group=(self.obstacle_sprites, self.visible_sprites),
-                                  tile_type="tree")
+                        StaticTile(pos=pos, surf=obj.image, group=(self.obstacle_sprites, self.visible_sprites),
+                                   tile_type="tree")
 
                 # separate this
                 if obj.name == "Spawn":
@@ -89,7 +93,7 @@ class Level:
                 # seperate this too
                 if obj.name == "battle_spot":
                     ActionTile(pos=pos, size=(obj.width, obj.height),
-                               group=(self.obstacle_sprites, self.visible_sprites), tile_type="battle_spot")
+                               group=(self.action_sprites, self.visible_sprites), tile_type="battle_spot")
 
     def run(self) -> None:
         if self.visible_sprites.state == "OVERWORLD":
@@ -98,6 +102,7 @@ class Level:
             self.run_battle()
 
     def run_overworld(self) -> None:
+        self.visible_sprites.update_soundtrack()
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
         self.visible_sprites.update_enemy(self.player)
@@ -105,10 +110,10 @@ class Level:
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def run_battle(self):
+        self.visible_sprites.update_soundtrack()
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
         self.visible_sprites.update_enemy(self.player)
-
         # Test Hotkey
         if self.player.run: self.visible_sprites.end_battle()
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
@@ -142,6 +147,25 @@ class YSortCameraGroup(pygame.sprite.Group):
         # Game state
         self.state = "OVERWORLD"
         self.battle_participants = None
+        self.current_music = None
+
+    def update_soundtrack(self):
+        if not hasattr(self, 'current_music'):
+            self.current_music = None
+
+        if self.state == "OVERWORLD" and self.current_music != "forest":
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load("sounds/forest_theme.mp3")
+            pygame.mixer.music.set_volume(0.2)
+            pygame.mixer.music.play(-1)
+            self.current_music = "forest"
+
+        elif self.state == "BATTLE" and self.current_music != "battle":
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load("sounds/battle_music.mp3")
+            pygame.mixer.music.set_volume(0.2)
+            pygame.mixer.music.play(-1)
+            self.current_music = "battle"
 
     def get_visible_sprites(self):
         """Get all sprites that are visible on the screen."""

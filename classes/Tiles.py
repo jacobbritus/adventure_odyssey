@@ -1,6 +1,6 @@
 import pygame
 
-class StatcTile(pygame.sprite.Sprite):
+class StaticTile(pygame.sprite.Sprite):
     """A class to initialize and manage a tile in the game."""
     def __init__(self, pos, surf: pygame.Surface, group, tile_type: str) -> None:
         super().__init__(group)
@@ -13,13 +13,15 @@ class ActionTile(pygame.sprite.Sprite):
     """A class to initialize and manage a tile with actions."""
     def __init__(self, pos, group, size, tile_type) -> None:
         super().__init__(group)
-        self.image = pygame.Surface(size)
+        self.image: pygame.Surface = pygame.Surface(size)
+        self.rect: pygame.Rect = self.image.get_rect(topleft = pos)
+        self.pos: tuple[int, int] = pos
+        self.type: str = tile_type
+        self.hitbox: pygame.Rect = self.rect
+
+        # Debugging
         self.image.fill('black')
         self.image.set_alpha(0)
-        self.rect = self.image.get_rect(topleft = pos)
-        self.pos = pos
-        self.type = tile_type
-        self.hitbox: pygame.Rect = self.rect
 
 
 

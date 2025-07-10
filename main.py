@@ -13,10 +13,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.level = Level()
 
-        # Play soundtrack.
-        pygame.mixer.music.load("sounds/forest_theme.mp3")
-        pygame.mixer.music.set_volume(0.2)
-        pygame.mixer.music.play(-1)
+
 
     def run(self) -> None:
         """Run the game."""
