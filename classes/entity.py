@@ -7,6 +7,8 @@ class Entity(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.12
         self.direction = "down"
+        self.action = "idle"
+
 
 
     def move(self, move_vector: tuple[int, int]):
@@ -33,10 +35,9 @@ class Entity(pygame.sprite.Sprite):
         for sprite in self.obstacle_sprites:
 
             if self.hitbox.colliderect(sprite.hitbox):
-                if sprite.type == "spawn":
-                    print("yes")
-                    continue
+
 
                 return True
         return False
+
 

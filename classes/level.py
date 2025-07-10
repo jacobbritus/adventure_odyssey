@@ -1,6 +1,8 @@
 import pygame
+
+from classes.enemy import Enemy
 from classes.player import Player, DustParticle
-from classes.tile import Tile, AnimatedTile, ActionTile
+from classes.tile import Tile, AnimatedTile
 from pytmx.util_pygame import load_pygame
 
 from other.settings import *
@@ -48,7 +50,7 @@ class Level:
 
         for obj in self.tmx_data.get_layer_by_name("Enemies"):
             pos = (obj.x, obj.y)
-            Tile(pos=pos, surf=obj.image, group=(self.enemies, self.visible_sprites), tile_type="enemy")
+            Enemy(surf = obj.image, pos = pos, monster_name = obj.name, group = (self.enemies, self.visible_sprites), obstacle_sprites = self.obstacle_sprites)
 
         for obj in self.tmx_data.get_layer_by_name("Obstacles"):
             pos = (obj.x, obj.y)
@@ -64,7 +66,6 @@ class Level:
 
                     Tile(pos=pos, surf=obj.image, group = (self.obstacle_sprites, self.visible_sprites), tile_type = "tree")
             if obj.name == "Spawn":
-                ActionTile(pos=pos, size = (obj.width, obj.height), group=(self.obstacle_sprites, self.visible_sprites), tile_type="spawn")
 
                 self.player = Player(
                     group = self.visible_sprites,
@@ -79,6 +80,7 @@ class Level:
     def run(self):
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update() # get the actual locations
+        self.visible_sprites.update_enemy(self.player)
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)
@@ -97,6 +99,10 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # Used to track how far the player has moved from the center.
         self.offset = pygame.math.Vector2()
+
+        self.enemy_sprites = None
+
+
 
     def get_visible_sprites(self):
         """Get all sprites that are visible on the screen."""
@@ -129,8 +135,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             offset_pos = sprite.rect.topleft - self.offset # draw all the elements in a different spot
             self.display_surface.blit(sprite.image, offset_pos)
 
-        action_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "spawn"]
-        for sprite in action_sprites:
-            offset_pos = sprite.rect.topleft - self.offset
-            sprite.pos = offset_pos
+        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
+
+    def update_enemy(self, player):
+        """Updates all of the enemy sprites based on the player's position."""
+        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
+        for sprite in self.enemy_sprites:
+            sprite.enemy_update(player)

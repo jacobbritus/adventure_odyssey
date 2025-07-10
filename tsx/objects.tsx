@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.2" name="Objects" tilewidth="96" tileheight="128" tilecount="3" columns="0">
+<tileset version="1.10" tiledversion="1.11.2" name="Objects" tilewidth="96" tileheight="128" tilecount="4" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="../sprites/objects/tree1.png" width="96" height="128"/>
@@ -16,5 +16,8 @@
  </tile>
  <tile id="2">
   <image source="../sprites/objects/tree1.3.png" width="96" height="128"/>
+ </tile>
+ <tile id="3">
+  <image source="../sprites/characters/skeleton_swordless_front.png" width="32" height="48"/>
  </tile>
 </tileset>

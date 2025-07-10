@@ -2,7 +2,7 @@ import pygame
 import math
 
 from classes.entity import Entity
-from other.png_to_sprite import player_sprites, sprite_dust
+from other.settings import *
 
 
 class Player(Entity):
@@ -115,7 +115,7 @@ class Player(Entity):
         self.enemy_collisions()
         self.controls()
         self.animations()
-        self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
+        self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 
 
 class DustParticle(pygame.sprite.Sprite):
