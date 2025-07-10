@@ -1,0 +1,69 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "/Users/jacobbritus/Downloads/adventure_odyssey/tsx/Objects.tsx": {
+            "dynamicWrapping": true
+        },
+        "/Users/jacobbritus/Downloads/adventure_odyssey/tsx/decor_32x32.tsx": {
+            "dynamicWrapping": false
+        },
+        "/Users/jacobbritus/Downloads/adventure_odyssey/tsx/plains.tsx": {
+            "dynamicWrapping": false
+        },
+        "/Users/jacobbritus/Downloads/tsx/plains.tsx": {
+            "scaleInDock": 1
+        },
+        "map2.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 0.75,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1262,
+                "y": 823.3333333333333
+            }
+        },
+        "map2.tmx#Objects": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "map2.tmx#plains": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "untitled.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1184.6666666666665,
+                "y": 1598
+            }
+        }
+    },
+    "frame.defaultDuration": 300,
+    "last.externalTilesetPath": "/Users/jacobbritus/Downloads/adventure_odyssey/tsx",
+    "last.imagePath": "/Users/jacobbritus/Downloads/adventure_odyssey/sprites/objects",
+    "map.height": 40,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 60,
+    "openFiles": [
+    ],
+    "project": "overworld.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
+}
