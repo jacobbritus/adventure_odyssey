@@ -1,6 +1,6 @@
 import pygame
 
-class Tile(pygame.sprite.Sprite):
+class StatcTile(pygame.sprite.Sprite):
     """A class to initialize and manage a tile in the game."""
     def __init__(self, pos, surf: pygame.Surface, group, tile_type: str) -> None:
         super().__init__(group)

@@ -118,18 +118,12 @@ class Player(Entity):
         self.frame += iterate_speed
         if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
 
-
-    def enemy_collisions(self):
-        self.hitbox = pygame.Rect(self.x + 12, self.y + 24, 12, 12)
-        for sprite in self.enemy_sprites:
-
-            if self.hitbox.colliderect(sprite.hitbox):
-                print("yes")
-
+    # # implement this
+    # def dust_particle(self):
+    #     DustParticle(self.player, self.groups())
 
     def update(self) -> None:
         """Draw the player in the game window."""
-        self.enemy_collisions()
         self.controls()
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
@@ -186,3 +180,5 @@ class DustParticle(pygame.sprite.Sprite):
 
         self.rect.y += -1
         self.frame_index += 0.2
+
+
