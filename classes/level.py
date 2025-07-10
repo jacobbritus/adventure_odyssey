@@ -1,6 +1,6 @@
 import pygame
-from classes.player import Player
-from classes.tile import Tile, AnimatedTile
+from classes.player import Player, DustParticle
+from classes.tile import Tile, AnimatedTile, ActionTile
 from pytmx.util_pygame import load_pygame
 
 from other.settings import *
@@ -13,6 +13,7 @@ class Level:
         self.tmx_data = load_pygame("tmx/untitled.tmx")
         self.ground_sprites: pygame.sprite.Group = pygame.sprite.Group()
         self.obstacle_sprites: pygame.sprite.Group = pygame.sprite.Group()
+        self.enemies: pygame.sprite.Group = pygame.sprite.Group()
         self.visible_sprites = YSortCameraGroup()
 
         self.player = None
@@ -44,7 +45,12 @@ class Level:
                         position = (int(x * TILE_SIZE), int(y * TILE_SIZE))
                         Tile(pos=position, surf=surface, group = (self.ground_sprites, self.visible_sprites), tile_type = "ground")
 
-        for obj in self.tmx_data.objects:
+
+        for obj in self.tmx_data.get_layer_by_name("Enemies"):
+            pos = (obj.x, obj.y)
+            Tile(pos=pos, surf=obj.image, group=(self.enemies, self.visible_sprites), tile_type="enemy")
+
+        for obj in self.tmx_data.get_layer_by_name("Obstacles"):
             pos = (obj.x, obj.y)
             props = self.tmx_data.get_tile_properties_by_gid(obj.gid)
 
@@ -58,17 +64,24 @@ class Level:
 
                     Tile(pos=pos, surf=obj.image, group = (self.obstacle_sprites, self.visible_sprites), tile_type = "tree")
             if obj.name == "Spawn":
+                ActionTile(pos=pos, size = (obj.width, obj.height), group=(self.obstacle_sprites, self.visible_sprites), tile_type="spawn")
+
                 self.player = Player(
                     group = self.visible_sprites,
                     spawn_coordinates=pos,
                     direction="down",
-                    obstacle_sprites=self.obstacle_sprites
+                    obstacle_sprites=self.obstacle_sprites,
+                    dust_particles = self.dust_particle,
+                    enemy_sprites= self.enemies
                 )
 
 
     def run(self):
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update() # get the actual locations
+
+    def dust_particle(self):
+        DustParticle(self.player, self.visible_sprites)
 
 
 class YSortCameraGroup(pygame.sprite.Group):
@@ -105,14 +118,19 @@ class YSortCameraGroup(pygame.sprite.Group):
         # If player move right all sprites move left
 
         # Draw all the ground sprites.
-        ground_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type in ["ground", "water"]]
+        ground_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type and sprite.type in ["ground", "water"]]
         for sprite in ground_sprites:
             offset_pos = sprite.rect.topleft - self.offset
             self.display_surface.blit(sprite.image, offset_pos)
 
         # Draw the other sprites with overlapping.
-        other_sprites = [sprite for sprite in self.get_visible_sprites() if not sprite.type in ["ground", "water"]]
+        other_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type in ["player", "tree", "enemy"]]
         for sprite in sorted(other_sprites, key=lambda sprite: sprite.rect.centery + (32 if sprite.type == "tree" else 0)):
             offset_pos = sprite.rect.topleft - self.offset # draw all the elements in a different spot
             self.display_surface.blit(sprite.image, offset_pos)
+
+        action_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "spawn"]
+        for sprite in action_sprites:
+            offset_pos = sprite.rect.topleft - self.offset
+            sprite.pos = offset_pos
 

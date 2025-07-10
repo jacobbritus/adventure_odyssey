@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="2498">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="2499">
  <tileset firstgid="1" source="../tsx/plains.tsx"/>
  <tileset firstgid="241" source="../tsx/Objects.tsx"/>
  <tileset firstgid="244" source="../tsx/decor_32x32.tsx"/>
+ <tileset firstgid="269" source="../tsx/Objects.tsx"/>
  <layer id="1" name="Ground" width="80" height="60">
   <data encoding="csv">
 248,247,258,253,244,251,244,248,263,253,263,253,244,253,248,248,253,248,244,253,249,248,263,245,247,263,248,255,258,248,254,247,248,253,253,253,246,258,248,248,247,258,258,263,253,263,253,253,248,263,263,244,244,246,258,253,263,248,253,248,244,263,258,253,251,253,244,248,244,263,261,248,258,258,263,250,246,260,246,253,
@@ -67,7 +68,7 @@
 253,253,248,258,263,258,248,263,248,244,253,263,253,245,262,263,248,258,248,244,263,253,245,248,244,248,248,253,263,253,261,258,14,6,9,11,4,253,253,258,263,258,263,258,248,253,258,256,263,248,258,253,248,248,244,245,253,248,253,258,258,253,248,263,263,263,253,246,263,253,253,247,248,255,248,248,258,253,258,258
 </data>
  </layer>
- <objectgroup id="2" name="Object Layer 1">
+ <objectgroup id="2" name="Obstacles">
   <object id="1" name="Spawn" x="1140.88" y="855.364" width="193.182" height="159.091"/>
   <object id="6" gid="241" x="1468.67" y="620" width="96" height="128"/>
   <object id="7" gid="241" x="1536.67" y="620" width="96" height="128"/>
@@ -1439,5 +1440,8 @@
   <object id="2494" gid="241" x="1828" y="1105.33" width="96" height="128"/>
   <object id="2496" gid="241" x="691.394" y="1236.73" width="96" height="128"/>
   <object id="2497" gid="241" x="1348.97" y="1500.36" width="96" height="128"/>
+ </objectgroup>
+ <objectgroup id="3" name="Enemies">
+  <object id="2498" name="enemy" gid="270" x="1513.33" y="946.667" width="38.6667" height="128"/>
  </objectgroup>
 </map>

@@ -47,3 +47,5 @@ player_sprites = {
             "up": sprite_converter("sprites/characters/moving.png", 2, 6, 32, 48, False)}
 
 }
+
+sprite_dust = sprite_converter("sprites/particles/dust.png", 0, 4, 24, 24, False)
