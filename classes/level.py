@@ -2,7 +2,7 @@ import pygame
 
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle
-from classes.tile import Tile, AnimatedTile
+from classes.tile import Tile, AnimatedTile, ActionTile
 from pytmx.util_pygame import load_pygame
 
 from other.settings import *
@@ -52,9 +52,14 @@ class Level:
             pos = (obj.x, obj.y)
             Enemy(surf = obj.image, pos = pos, monster_name = obj.name, group = (self.enemies, self.visible_sprites), obstacle_sprites = self.obstacle_sprites)
 
+
+
         for obj in self.tmx_data.get_layer_by_name("Obstacles"):
             pos = (obj.x, obj.y)
             props = self.tmx_data.get_tile_properties_by_gid(obj.gid)
+
+
+
 
             if obj.image:
                 if props and props["frames"]:
@@ -76,11 +81,31 @@ class Level:
                     enemy_sprites= self.enemies
                 )
 
+            if obj.name == "battle_spot":
+                ActionTile(pos=pos, size = (obj.width, obj.height), group = (self.obstacle_sprites, self.visible_sprites), tile_type = "battle_spot")
 
     def run(self):
+        if self.visible_sprites.state == "OVERWORLD":
+            self.run_overworld()
+        else:
+            self.run_battle()
+
+    def run_overworld(self):
         self.visible_sprites.custom_draw(self.player)
-        self.visible_sprites.update() # get the actual locations
+        self.visible_sprites.update()  # get the actual locations
         self.visible_sprites.update_enemy(self.player)
+        self.visible_sprites.simple_initiate_combat(self.player)
+        if self.visible_sprites.transition: self.visible_sprites.darken_screen()
+
+
+    def run_battle(self):
+        self.visible_sprites.custom_draw(self.player)
+        self.visible_sprites.update()  # get the actual locations
+        self.visible_sprites.update_enemy(self.player)
+        if self.player.run: self.visible_sprites.end_battle()
+        if self.visible_sprites.transition: self.visible_sprites.darken_screen()
+
+
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)
@@ -102,6 +127,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.enemy_sprites = None
 
+        # Screen transition into battle.
+        self.transition_time = 0
+        self.transition_speed = 0.1
+        self.transition = False
+
+        # Game state
+        self.state = "OVERWORLD"
+        self.battle_participants = None
 
 
     def get_visible_sprites(self):
@@ -120,6 +153,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset.x = player.rect.centerx - self.screen_center_x # Move all sprite
         self.offset.y = player.rect.centery - self.screen_center_y
 
+        if self.state == "BATTLE": self.offset.x += 150
+
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
 
@@ -130,16 +165,64 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.display_surface.blit(sprite.image, offset_pos)
 
         # Draw the other sprites with overlapping.
-        other_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type in ["player", "tree", "enemy"]]
+        other_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type in ["player", "tree", "enemy", "battle_spot"]]
         for sprite in sorted(other_sprites, key=lambda sprite: sprite.rect.centery + (32 if sprite.type == "tree" else 0)):
             offset_pos = sprite.rect.topleft - self.offset # draw all the elements in a different spot
-            self.display_surface.blit(sprite.image, offset_pos)
+            if hasattr(sprite, "image"): self.display_surface.blit(sprite.image, offset_pos)
 
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
-
 
     def update_enemy(self, player):
         """Updates all of the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
         for sprite in self.enemy_sprites:
             sprite.enemy_update(player)
+
+    def simple_initiate_combat(self, player):
+        if self.state == "OVERWORLD":
+
+            self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
+            battle_spots = [sprite for sprite in self.get_visible_sprites() if sprite.type == "battle_spot"]
+
+            for enemy in self.enemy_sprites:
+                if player.hitbox.colliderect(enemy.rect.inflate(32,32)):
+                    self.state = "BATTLE"
+                    self.battle_participants = [player, enemy]
+                    spots = player.find_two_closest_battle_spots(battle_spots)
+
+                    if len(spots) == 2:
+                        self.transition = True
+                        enemy.in_battle_position = True
+                        player.in_battle_position = True
+
+                        player.teleport_to_spot(spots[0])
+                        enemy.teleport_to_spot(spots[1])
+
+                        player.face_target(enemy)
+                        enemy.face_target(player)
+
+                        break
+
+
+
+
+
+    def darken_screen(self):
+        if self.transition_time <= 30:
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+            overlay.fill((0, 0, 0))
+            self.display_surface.blit(overlay, (0, 0))
+            self.transition_time += 1
+        else:
+            self.transition = False  # Transition finished
+            self.transition_time = 0
+
+    def end_battle(self):
+        self.state = "OVERWORLD"
+        player, enemy = self.battle_participants
+        player.in_battle_position = False
+        enemy.in_battle_position = False
+        self.battle_participants = None
+        player.run = False
+        self.transition = True
+

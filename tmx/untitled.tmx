@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="2500">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="2508">
  <tileset firstgid="1" source="../tsx/plains.tsx"/>
  <tileset firstgid="241" source="../tsx/Objects.tsx"/>
  <tileset firstgid="245" source="../tsx/decor_32x32.tsx"/>
@@ -68,6 +68,9 @@
 254,254,249,259,264,259,249,264,249,245,254,264,254,246,263,264,249,259,249,245,264,254,246,249,245,249,249,254,264,254,262,259,14,6,9,11,4,254,254,259,264,259,264,259,249,254,259,257,264,249,259,254,249,249,245,246,254,249,254,259,259,254,249,264,264,264,254,247,264,254,254,248,249,256,249,249,259,254,259,259
 </data>
  </layer>
+ <objectgroup id="3" name="Enemies">
+  <object id="2499" gid="244" x="1521.33" y="997.333" width="32" height="48"/>
+ </objectgroup>
  <objectgroup id="2" name="Obstacles">
   <object id="1" name="Spawn" x="1140.88" y="855.364" width="193.182" height="159.091"/>
   <object id="6" gid="241" x="1468.67" y="620" width="96" height="128"/>
@@ -1440,8 +1443,7 @@
   <object id="2494" gid="241" x="1828" y="1105.33" width="96" height="128"/>
   <object id="2496" gid="241" x="691.394" y="1236.73" width="96" height="128"/>
   <object id="2497" gid="241" x="1348.97" y="1500.36" width="96" height="128"/>
- </objectgroup>
- <objectgroup id="3" name="Enemies">
-  <object id="2499" gid="244" x="1521.33" y="997.333" width="32" height="48"/>
+  <object id="2506" name="battle_spot" x="1040" y="728" width="77.3333" height="79.3367"/>
+  <object id="2507" name="battle_spot" x="1362.67" y="731.665" width="80" height="71.3367"/>
  </objectgroup>
 </map>

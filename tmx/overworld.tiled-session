@@ -30,8 +30,8 @@
             "scale": 0.75,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 1262,
-                "y": 823.3333333333333
+                "x": 1054,
+                "y": 700
             }
         },
         "map2.tmx#Objects": {
@@ -47,10 +47,10 @@
                 2
             ],
             "scale": 0.75,
-            "selectedLayer": 0,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1184.6666666666665,
-                "y": 1598
+                "x": 1322,
+                "y": 829.3333333333333
             }
         }
     },

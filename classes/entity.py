@@ -9,14 +9,20 @@ class Entity(pygame.sprite.Sprite):
         self.direction = "down"
         self.action = "idle"
 
+        self.speed = 2
+
+        self.in_battle_position = False
+
 
 
     def move(self, move_vector: tuple[int, int]):
         """Move the player based on the move vector."""
+        if self.in_battle_position:
+            return
         dx, dy = move_vector
-        speed = 4 if self.sprinting else 2
-        dx *= speed
-        dy *= speed
+        self.speed = 4 if self.sprinting else 2
+        dx *= self.speed
+        dy *= self.speed
 
         # Move on X axis
         self.x += dx
@@ -35,9 +41,50 @@ class Entity(pygame.sprite.Sprite):
         for sprite in self.obstacle_sprites:
 
             if self.hitbox.colliderect(sprite.hitbox):
-
+                if sprite.type == "battle_spot":
+                    print("yes")
+                    continue
 
                 return True
         return False
+
+    def teleport_to_spot(self, spot):
+        self.x = spot.rect.centerx - self.rect.width // 2
+        self.y = spot.rect.centery - self.rect.height // 2
+        self.rect.topleft = (self.x, self.y)
+        self.hitbox = pygame.Rect(self.x + 12, self.y + 24, 12, 12)
+        self.action = "idle"
+
+    def face_target(self, target):
+        dx = target.rect.centerx - self.rect.centerx
+        dy = target.rect.centery - self.rect.centery
+
+        if abs(dx) > abs(dy):
+            self.direction = "right" if dx > 0 else "left"
+        else:
+            self.direction = "down" if dy > 0 else "up"
+
+    def find_two_closest_battle_spots(self, battle_spots: list[pygame.sprite.Sprite]) -> list[pygame.sprite.Sprite]:
+        """Returns the two closest battle spots sorted from left to right."""
+        # Calculate distance to all spots
+        spots_with_distance = []
+        for spot in battle_spots:
+            dx = spot.rect.centerx - self.rect.centerx
+            dy = spot.rect.centery - self.rect.centery
+            distance = (dx ** 2 + dy ** 2) ** 0.5
+            spots_with_distance.append((distance, spot))
+
+        # Sort by distance
+        spots_with_distance.sort(key=lambda x: x[0])
+
+        # Get two closest
+        two_closest = [s[1] for s in spots_with_distance[:2]]
+
+        # Sort by x (left to right)
+        two_closest.sort(key=lambda s: s.rect.centerx)
+        return two_closest
+
+
+
 
 

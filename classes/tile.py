@@ -13,8 +13,10 @@ class ActionTile(pygame.sprite.Sprite):
     """A class to initialize and manage a tile with actions."""
     def __init__(self, pos, group, size, tile_type) -> None:
         super().__init__(group)
-        self.surf = pygame.Surface(size)
-        self.rect = self.surf.get_rect(topleft = pos)
+        self.image = pygame.Surface(size)
+        self.image.fill('black')
+        self.image.set_alpha(0)
+        self.rect = self.image.get_rect(topleft = pos)
         self.pos = pos
         self.type = tile_type
         self.hitbox: pygame.Rect = self.rect

@@ -36,6 +36,7 @@ class Player(Entity):
         # movement related
         self.sprinting: bool = False
         self.direction_pause = 0
+        self.speed = 2
 
         # sound related
         self.footstep_sound = pygame.mixer.Sound("sounds/Walk/Grass/GRASS - Walk 7.wav")
@@ -45,12 +46,26 @@ class Player(Entity):
         self.footstep_delay = 50
         self.last_footstep_time = pygame.time.get_ticks()
 
+        # Battle run test.
+        self.run = False
+
 
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
+
+        if key_pressed[pygame.K_r]:
+            self.run = True
+        else:
+            self.run = False
+
+
+        if self.in_battle_position:
+            return
+
+
 
         if key_pressed[pygame.K_LSHIFT]:
             self.sprinting = True
@@ -60,6 +75,8 @@ class Player(Entity):
             self.sprinting = False
             self.footstep_delay = 400
             self.dust_cooldown = 400
+
+
 
 
         # movement keys with directions and move vectors
