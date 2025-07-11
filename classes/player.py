@@ -76,9 +76,6 @@ class Player(Entity):
             self.footstep_delay = 400
             self.dust_cooldown = 400
 
-
-
-
         # movement keys with directions and move vectors
         movement_keys = {
             pygame.K_w: ("up", (0, -1)),
@@ -123,6 +120,8 @@ class Player(Entity):
         self.controls()
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
+
+
 
 
 class DustParticle(pygame.sprite.Sprite):

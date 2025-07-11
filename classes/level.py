@@ -1,5 +1,6 @@
 import pytmx
 
+from classes.battleloop import BattleLoop
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle
 from classes.Tiles import StaticTile, AnimatedTile, ActionTile
@@ -110,10 +111,15 @@ class Level:
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def run_battle(self):
+
         self.visible_sprites.update_soundtrack()
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
         self.visible_sprites.update_enemy(self.player)
+
+        self.visible_sprites.battle_loop.update()
+
+
         # Test Hotkey
         if self.player.run: self.visible_sprites.end_battle()
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
@@ -121,9 +127,10 @@ class Level:
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)
 
-
 class YSortCameraGroup(pygame.sprite.Group):
-    """A custom sprite group that draws sprites with a camera offset, so the player stays centered."""
+    """A custom sprite group that draws sprites with a camera offset, so the player stays centered.
+       It also handles the player and enemy sprites and the game states.
+    """
 
     def __init__(self):
         super().__init__()
@@ -148,6 +155,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.state = "OVERWORLD"
         self.battle_participants = None
         self.current_music = None
+        self.player_location = None
+        self.battle_loop = None
 
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):
@@ -213,13 +222,19 @@ class YSortCameraGroup(pygame.sprite.Group):
         if self.state == "OVERWORLD":
 
             self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
-            battle_spots = [sprite for sprite in self.get_visible_sprites() if sprite.type == "battle_spot"]
+
+            # checks all battle spots instead of just the visible ones
+            battle_spots = [sprite for sprite in self.sprites() if sprite.type == "battle_spot"]
 
             for enemy in self.enemy_sprites:
-                if player.hitbox.colliderect(enemy.rect.inflate(32, 32)):
+                if player.hitbox.colliderect(enemy.hitbox):
                     self.state = "BATTLE"
                     self.battle_participants = [player, enemy]
+                    self.player_location = (player.x, player.y)
                     spots = player.find_two_closest_battle_spots(battle_spots)
+
+                    # Start battle loop.
+                    self.battle_loop = BattleLoop(player, enemy)
 
                     if len(spots) == 2:
                         self.transition = True
@@ -247,8 +262,24 @@ class YSortCameraGroup(pygame.sprite.Group):
     def end_battle(self):
         self.state = "OVERWORLD"
         player, enemy = self.battle_participants
+
+        # Put the participants out of the battle state.
         player.in_battle_position = False
         enemy.in_battle_position = False
+
+        # Stop the battle loop
+        self.battle_loop = None
+
+        # Kill whoever lost. (Removes them from all sprite groups)
+        enemy.kill()
         self.battle_participants = None
+
+        # Running from battle test.
         player.run = False
+
+        # Set player to initiate location.
+        player.rect.topleft = self.player_location
+        player.x, player.y = self.player_location
+
+        # Transition into the overworld.
         self.transition = True

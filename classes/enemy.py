@@ -18,16 +18,13 @@ class Enemy(Entity):
         self.y = pos[1]
         self.width, self.height = pygame.Surface.get_size(surf)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.hitbox = self.rect.inflate(-16, -16)
+        self.hitbox = self.rect.inflate(32, 32)
 
         self.frame = 0
         self.sprinting = False
 
         self.monster_name = monster_name
 
-
-        self.dust_spawn_time = 0
-        self.dust_cooldown = 400
 
 
     def get_status(self, player):
@@ -83,3 +80,4 @@ class Enemy(Entity):
         self.get_status(player)
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
+
