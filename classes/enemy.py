@@ -1,4 +1,3 @@
-import pygame
 from classes.entity import Entity
 from other.settings import *
 import math
@@ -25,11 +24,15 @@ class Enemy(Entity):
 
         self.monster_name = monster_name
 
+        # battle stuff
+        self.hp = 15
+        self.dmg = 3
+
 
 
     def get_status(self, player):
         # Calculate distances between enemy and player
-        if self.in_battle_position:
+        if self.in_battle:
             return
 
         x_distance = player.x - self.x  # Positive if player is to the right
@@ -77,7 +80,7 @@ class Enemy(Entity):
 
     def enemy_update(self, player) -> None:
         """Draw the player in the game window."""
-        self.get_status(player)
+        if not self.in_battle: self.get_status(player)
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 

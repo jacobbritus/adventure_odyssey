@@ -46,8 +46,10 @@ class Player(Entity):
         self.footstep_delay = 50
         self.last_footstep_time = pygame.time.get_ticks()
 
-        # Battle run test.
-        self.run = False
+        # Battle related.
+        self.hp = 20
+        self.max_hp = 20
+        self.dmg = 3
 
 
 
@@ -55,17 +57,6 @@ class Player(Entity):
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
-
-        if key_pressed[pygame.K_r]:
-            self.run = True
-        else:
-            self.run = False
-
-
-        if self.in_battle_position:
-            return
-
-
 
         if key_pressed[pygame.K_LSHIFT]:
             self.sprinting = True
@@ -117,7 +108,8 @@ class Player(Entity):
 
     def update(self) -> None:
         """Draw the player in the game window."""
-        self.controls()
+        if not self.in_battle:
+            self.controls()
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 

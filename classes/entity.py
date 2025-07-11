@@ -26,12 +26,12 @@ class Entity(pygame.sprite.Sprite):
         self.speed = 2
 
         # Other.
-        self.in_battle_position = False
+        self.in_battle = False
         self.obstacle_sprites = None
 
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
-        if self.in_battle_position:
+        if self.in_battle:
             return
         dx, dy = move_vector
         self.speed = 4 if self.sprinting else 2

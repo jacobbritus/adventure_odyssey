@@ -120,8 +120,12 @@ class Level:
         self.visible_sprites.battle_loop.update()
 
 
+        self.visible_sprites.battle_loop.ui(self.visible_sprites.display_surface)
+
+
+
         # Test Hotkey
-        if self.player.run: self.visible_sprites.end_battle()
+        if self.visible_sprites.battle_loop.finished: self.visible_sprites.end_battle()
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def dust_particle(self):
@@ -171,7 +175,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         elif self.state == "BATTLE" and self.current_music != "battle":
             pygame.mixer.music.stop()
-            pygame.mixer.music.load("sounds/battle_music.mp3")
+            # pygame.mixer.music.load("sounds/battle_music.mp3")
             pygame.mixer.music.set_volume(0.2)
             pygame.mixer.music.play(-1)
             self.current_music = "battle"
@@ -239,7 +243,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                     if len(spots) == 2:
                         self.transition = True
                         enemy.in_battle_position = True
-                        player.in_battle_position = True
+                        player.in_battle = True
 
                         player.teleport_to_spot(spots[0])
                         enemy.teleport_to_spot(spots[1])
@@ -264,8 +268,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         player, enemy = self.battle_participants
 
         # Put the participants out of the battle state.
-        player.in_battle_position = False
-        enemy.in_battle_position = False
+        player.in_battle = False
+        enemy.in_battle = False
 
         # Stop the battle loop
         self.battle_loop = None

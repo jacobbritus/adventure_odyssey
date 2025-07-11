@@ -23,6 +23,8 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
+                if self.level.visible_sprites.state == "BATTLE":
+                    self.level.visible_sprites.battle_loop.handle_input(event)
 
             self.level.run()
 
