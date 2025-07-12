@@ -32,8 +32,7 @@ class Enemy(Entity):
 
     def get_status(self, player):
         # Calculate distances between enemy and player
-        if self.in_battle:
-            return
+
 
         x_distance = player.x - self.x  # Positive if player is to the right
         y_distance = player.y - self.y  # Positive if player is below

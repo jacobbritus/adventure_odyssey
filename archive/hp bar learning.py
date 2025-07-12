@@ -1,20 +1,25 @@
 import pygame
 
-from classes.hpbar import Hpbar
+from classes.UI import Hpbar, Button
+
+
+def one():
+    print("yess")
+
+def two():
+    print("noooo")
 
 pygame.init()
 window = pygame.display.set_mode((640, 480))
 clock = pygame.time.Clock()
-box = pygame.image.load("../sprites/UI/Slider01_Box.png")
-box_position = (100, 300) # change based on the sprites position
 
+buttons_group = pygame.sprite.Group()
 
-bar = pygame.image.load("../sprites/UI/Slider01_Bar02.png")
-bar_location = box_position
+window_center_x = window.get_width() // 2
+window_center_y = window.get_height() // 2
 
-crop_width_by = 0
-
-hpbar = Hpbar((10, 10), 20)
+button1 = Button(buttons_group, (window_center_x, window_center_y), one, "Attack")
+button2 = Button(buttons_group, (100, 200), two, "Run")
 
 while True:
     window.fill((255, 255, 255))
@@ -23,32 +28,14 @@ while True:
             pygame.quit()
             exit()
 
-        # if event.type == pygame.KEYDOWN:
-        #     if event.key == pygame.K_a and not new_size >= 96:
-        #         new_size += 4
-        #     if event.key == pygame.K_d and not new_size <= 0:
-        #         new_size -= 4
-
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_a] and not crop_width_by >= 96:
-            crop_width_by += 4
-        if keys[pygame.K_d] and not crop_width_by <= 0:
-            crop_width_by -= 4
 
 
-    crop = pygame.Rect(0, 0, bar.get_size()[0] - crop_width_by, bar.get_size()[1])
-
-
-    # print(bar_rect)
-    # print(crop)
-
-    cropped_image = bar.subsurface(crop).copy()
-
-    hpbar.draw(window)
-    window.blit(box, box_position)
-
-    window.blit(cropped_image, bar_location)
+    for button in buttons_group:
+        button.draw(window)
+        button.update()
+        if button.delete:
+            for buttons in buttons_group:
+                buttons.kill()
 
 
     clock.tick(60)

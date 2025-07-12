@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from classes.Tiles import ActionTile
@@ -16,7 +18,7 @@ class Entity(pygame.sprite.Sprite):
         self.hitbox = None
 
         # Animation related.
-        self.frame_index = 0
+        self.frame = 0
         self.animation_speed = 0.12
 
         # Action related.
@@ -29,9 +31,13 @@ class Entity(pygame.sprite.Sprite):
         self.in_battle = False
         self.obstacle_sprites = None
 
+        self.close_distance = False
+        self.move_back = False
+        self.attacking = False
+
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
-        if self.in_battle:
+        if self.in_battle and not self.close_distance and not self.move_back:
             return
         dx, dy = move_vector
         self.speed = 4 if self.sprinting else 2
@@ -93,6 +99,52 @@ class Entity(pygame.sprite.Sprite):
         two_closest.sort(key=lambda s: s.rect.centerx)
         return two_closest
 
+
+    def move_to(self, target):
+        self.sprinting = True
+        dx = target.x - self.x
+        dy = target.y - self.y
+        distance = math.hypot(dx, dy)
+
+        if distance > 0:
+            self.action = "running"
+            self.direction = "right" if dx > 0 else "left"
+            self.move((dx / distance, dy / distance))
+
+            if self.hitbox.colliderect(target.rect):
+                self.frame = 0
+                self.direction = "right"
+                self.action = "punch"
+                self.attack()
+
+                self.close_distance = False
+                self.attacking = True
+
+    def attack(self):
+
+
+        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 2:
+            self.attacking = False
+            self.action = "running"
+            self.move_back = True
+
+
+    def go_back(self, origin):
+        self.sprinting = True
+
+        dx = origin[0] - self.x
+        dy = origin[1] - self.y
+        distance = math.hypot(dx, dy)
+
+        if distance > 0:
+            self.action = "running"
+            self.direction = "right" if dx > 0 else "left"
+            self.move((dx / distance, dy / distance))
+
+            if distance < 30:
+                self.direction = "left" if self.direction == "right" else "right"
+                self.action = "idle"
+                self.move_back = False
 
 
 

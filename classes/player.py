@@ -25,7 +25,6 @@ class Player(Entity):
         self.sprite_dict: dict[str: str: list] = player_sprites
         self.direction: str = direction
         self.action: str = "idle"
-        self.frame: int = 0
 
         self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
@@ -42,8 +41,7 @@ class Player(Entity):
         self.footstep_sound = pygame.mixer.Sound("sounds/Walk/Grass/GRASS - Walk 7.wav")
         self.footstep_sound.set_volume(0.2)
 
-        self.footstep_timer = 0
-        self.footstep_delay = 50
+        self.footstep_delay = 400
         self.last_footstep_time = pygame.time.get_ticks()
 
         # Battle related.
@@ -110,6 +108,8 @@ class Player(Entity):
         """Draw the player in the game window."""
         if not self.in_battle:
             self.controls()
+
+        print(self.frame)
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 
@@ -159,6 +159,7 @@ class DustParticle(pygame.sprite.Sprite):
 
     def update(self) -> None:
         """Update the position of the dust particle."""
+
 
         # Update animation
         self.image = self.images[int(self.frame_index)]

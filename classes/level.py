@@ -11,7 +11,6 @@ from other.settings import *
 
 class Level:
     """A class to manage the game level."""
-
     def __init__(self):
         self.display_surface: pygame.Surface = pygame.display.get_surface()
         self.tmx_data = load_pygame("tmx/untitled.tmx")
@@ -24,7 +23,6 @@ class Level:
         self.player = None
         self.create_map()
 
-        self.state = None
 
 
     def create_map(self):
@@ -111,6 +109,7 @@ class Level:
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def run_battle(self):
+        self.visible_sprites.battle_loop.handle_input()
 
         self.visible_sprites.update_soundtrack()
         self.visible_sprites.custom_draw(self.player)
@@ -120,12 +119,12 @@ class Level:
         self.visible_sprites.battle_loop.update()
 
 
-        self.visible_sprites.battle_loop.ui(self.visible_sprites.display_surface)
 
 
 
         # Test Hotkey
-        if self.visible_sprites.battle_loop.finished: self.visible_sprites.end_battle()
+        if self.visible_sprites.battle_loop.return_to_overworld:
+            self.visible_sprites.end_battle()
         if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def dust_particle(self):
@@ -161,6 +160,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.current_music = None
         self.player_location = None
         self.battle_loop = None
+        self.battle_location = None
 
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):
@@ -191,10 +191,16 @@ class YSortCameraGroup(pygame.sprite.Group):
     def custom_draw(self, player):
         # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
         # Move all sprites by the offset calculated here
+
         self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
         self.offset.y = player.rect.centery - self.screen_center_y
 
-        if self.state == "BATTLE": self.offset.x += 150
+        if self.state == "BATTLE":
+            self.offset.x = self.battle_location[0] - self.screen_center_x  # Move all sprite
+            self.offset.y = self.battle_location[1] - self.screen_center_y
+        else:
+            self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
+            self.offset.y = player.rect.centery - self.screen_center_y
 
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
@@ -224,7 +230,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def simple_initiate_combat(self, player):
         if self.state == "OVERWORLD":
-
             self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
             # checks all battle spots instead of just the visible ones
@@ -238,11 +243,10 @@ class YSortCameraGroup(pygame.sprite.Group):
                     spots = player.find_two_closest_battle_spots(battle_spots)
 
                     # Start battle loop.
-                    self.battle_loop = BattleLoop(player, enemy)
 
                     if len(spots) == 2:
                         self.transition = True
-                        enemy.in_battle_position = True
+                        enemy.in_battle = True
                         player.in_battle = True
 
                         player.teleport_to_spot(spots[0])
@@ -251,14 +255,20 @@ class YSortCameraGroup(pygame.sprite.Group):
                         player.face_target(enemy)
                         enemy.face_target(player)
 
+                        self.battle_location = (player.rect.centerx + 150, player.rect.centery)
+
+
+                        self.battle_loop = BattleLoop(player, enemy, self.display_surface)
+
+
                         break
 
     def darken_screen(self):
-        if self.transition_time <= 30:
+        if self.transition_time <= 5:
             overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
             overlay.fill((0, 0, 0))
             self.display_surface.blit(overlay, (0, 0))
-            self.transition_time += 1
+            self.transition_time += 0.1
         else:
             self.transition = False  # Transition finished
             self.transition_time = 0
@@ -279,7 +289,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_participants = None
 
         # Running from battle test.
-        player.run = False
+        player.player_run = False
 
         # Set player to initiate location.
         player.rect.topleft = self.player_location
