@@ -13,20 +13,9 @@ class BattleLoop:
         self.enemy = enemy
         self.window: pygame.Surface = window
 
-
-
-        battle_center = self.window.get_width() // 2
-        battle_y = self.window.get_height() // 2
-        self.battle_offset = 100  # adjust for more spacing
-
-
-
         self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
         self.enemy_position: pygame.Vector2 = pygame.Vector2(enemy.x, enemy.y)
 
-        self.turn: str = "player" # to be changed based on speed stat.
-
-        self.end_battle: bool = False
         self.return_to_overworld: bool = False
 
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp)
@@ -37,33 +26,35 @@ class BattleLoop:
         self.display_menu_options = False
 
 
-        self.state = None
+        self.state: str = "player" # to be changed based on speed stat.
+
+        self.state = "player_turn"
+
+        self.timer = 0
+        self.timer_started = False
+        self.death_delay = 2000
 
 
     def update(self):
-
         self.animation()
         self.draw_ui(self.window)
 
-        if not self.player.close_distance and not self.enemy.close_distance:
-            self.player_hp_bar.update()
-            self.enemy_hp_bar.update()
+        print(self.timer)
 
-
-
-        # Stop the rest from updating
-        if self.state == "animation" or self.end_battle:
-            return
-        if self.end_battle:
-            self.return_to_overworld = True
-
-        if self.turn == "player":
+        if self.state == "player_turn":
             self.display_menu_options = True
 
-        elif self.turn == "enemy":
+        elif self.state == "enemy_turn":
             self.display_menu_options = False
             self.enemy_turn()
 
+        elif self.state == "end_battle":
+            if not self.timer_started:
+                self.timer = pygame.time.get_ticks()
+                self.timer_started = True
+
+            if pygame.time.get_ticks() - self.timer > self.death_delay:
+                self.return_to_overworld = True
 
     def draw_ui(self, window):
         self.player_hp_bar.draw(window)
@@ -84,58 +75,69 @@ class BattleLoop:
             Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")
 
     def player_run(self):
-        self.end_battle = True
+        self.state = "end_battle"
 
     def player_attack(self):
         self.player.close_distance = True
-        self.state = "animation"
+        self.state = "player_animation"
         # attack_type = ... gets inputted in button as action
 
         self.enemy.hp -= self.player.dmg
-        if self.enemy.hp <= 0:
-            self.end_battle = True
 
         self.enemy_hp_bar.set_hp(self.enemy.hp)
 
-
-
     def animation(self):
-        if self.player.close_distance:
-            self.player.move_to(self.enemy)
-        elif self.player.attacking:
-            self.player.attack()
-        elif self.player.move_back:
-            self.player.go_back(self.player_position)
-            self.turn = "enemy"
+        if self.state == "player_animation":
+            if self.player.close_distance:
+                self.player.move_to(self.enemy)
 
-        elif self.enemy.close_distance:
-            self.enemy.move_to(self.player)
+            elif self.player.attacking:
+                self.enemy_hp_bar.update()
+                self.player.attack(self.enemy)
 
-        elif self.enemy.move_back:
-            self.enemy.go_back(self.enemy_position)
-            self.turn = "player"
+            elif self.player.move_back:
+                self.player.go_back(self.player_position)
 
-        elif self.enemy.attacking:
-            self.enemy.attack()
+            elif self.enemy.hp <= 0:
+                self.state = "end_battle"
 
-        elif self.enemy.death:
-            self.enemy.death_animation()
+            elif not self.player.attacking and not self.player.move_back:
+                # End of player's animation
+                self.state = "enemy_turn"
 
-        else:
-            self.state = "ok"
+        elif self.state == "enemy_animation":
+            if self.enemy.close_distance:
+                self.enemy.move_to(self.player)
+
+            elif self.enemy.attacking:
+                self.enemy.attack(self.player)
+                self.player_hp_bar.update()
+
+            elif self.enemy.move_back:
+                self.enemy.go_back(self.enemy_position)
+
+            elif self.player.hp <= 0 and not self.enemy.move_back:
+                self.state = "end_battle"
+
+            elif not self.enemy.attacking and not self.enemy.move_back:
+                # End of enemy's animation
+                self.state = "player_turn"
 
 
-    def enemy_turn(self):
-        self.state = "animation"
+
+    def enemy_attack(self):
         self.enemy.close_distance = True
+        self.state = "enemy_animation"
 
         self.player.hp -= self.enemy.dmg
 
-        if self.player.hp <= 0:
-            self.end_battle = True
-
         self.player_hp_bar.set_hp(self.player.hp)
-        self.delay = True
+
+    def enemy_turn(self):
+        # add random actions in the future
+        self.enemy_attack()
+
+
 
 
 # state	Meaning

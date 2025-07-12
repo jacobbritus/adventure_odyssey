@@ -50,9 +50,13 @@ player_sprites = {
 
     "sword_slash": {
         "right": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, False),
-        "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True)
+        "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True)},
 
-    }
+    "death": {
+        "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
+        "left": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, True)}
+
+
 }
 
 sprite_dust = sprite_converter("sprites/particles/dust.png", 0, 4, 24, 24, False)
@@ -76,7 +80,7 @@ skeleton_sprites = {
         "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, True)},
 
     "death": {
-            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 14, 4, 96, 80, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 14, 4, 96, 80, True)}
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, True)}
 
 }

@@ -80,25 +80,6 @@ class Entity(pygame.sprite.Sprite):
                 return True
         return False
 
-    def teleport_to_spot(self, spot) -> None:
-        self.x = spot.rect.centerx - self.rect.width // 2
-        self.y = spot.rect.centery - self.rect.height // 2
-
-
-        self.rect.topleft = (self.x, self.y)
-
-        self.action = "idle"
-
-    def teleport_to_spot2(self, spot: tuple) -> None:
-        """
-        Move the sprite so it's centered inside the battle spot.
-        """
-        # Center the sprite's rect on the spot's center
-        new_x = spot.centerx - self.rect.width // 2
-        new_y = spot.centery - self.rect.height // 2
-        self.rect.topleft = (new_x, new_y)
-
-        self.rect.topleft = spot
 
     def face_target(self, target) -> None:
         dx: int = target.rect.centerx - self.rect.centerx
@@ -147,10 +128,6 @@ class Entity(pygame.sprite.Sprite):
                         target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
 
                 self.frame = 0
-                self.action = "sword_slash"
-
-                if target.hp <= 0:
-                    target.death = True
 
                 self.close_distance = False
                 self.attacking = True
@@ -159,20 +136,39 @@ class Entity(pygame.sprite.Sprite):
 
 
 
-    def attack(self):
+    def attack(self, target):
+
+        if target.hp <= 0 and self.frame > 3:
+            target.death = True
+            target.death_animation()
+
+        self.action = "sword_slash"
+
+
         if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
             self.action = "idle"
 
+
+
         if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
+
 
             self.attacking = False
             self.action = "running"
             self.move_back = True
 
     def death_animation(self):
+        # Only reset once at the start of the death animation
+        if self.frame != 0 and self.action != "death":
+            self.frame = 0
+
         self.action = "death"
 
-        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
+        # Play the animation frame by frame
+        if self.frame < len(self.sprite_dict[self.action][self.direction]) - 1:
+            self.frame += 0.12
+        else:
+            # Keep it at the last frame
             self.frame = len(self.sprite_dict[self.action][self.direction]) - 1
 
 

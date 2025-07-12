@@ -26,7 +26,7 @@ class Enemy(Entity):
 
         # battle stuff
         self.hp = 15
-        self.dmg = 3
+        self.dmg = 20
 
 
 
@@ -76,7 +76,7 @@ class Enemy(Entity):
     def enemy_update(self, player) -> None:
         """Draw the player in the game window."""
         if not self.in_battle: self.get_status(player)
-        self.animations()
+        if not self.death: self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 
 

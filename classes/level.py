@@ -9,7 +9,6 @@ from pytmx.util_pygame import load_pygame
 
 from other.settings import *
 
-
 class Level:
     """A class to manage the game level."""
     def __init__(self):
@@ -110,6 +109,13 @@ class Level:
         self.visible_sprites.find_battle_spot(self.player.rect)
 
     def battle(self):
+        # Make camera follow the animation
+        self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
+
+        # print(self.visible_sprites.animation_camera)
+
+
+
         self.visible_sprites.update_soundtrack()
 
         self.visible_sprites.battle_loop.handle_input()
@@ -118,10 +124,6 @@ class Level:
         self.visible_sprites.update_enemy(self.player)
 
         self.visible_sprites.battle_loop.update()
-
-
-
-
 
         # Test Hotkey
         if self.visible_sprites.battle_loop.return_to_overworld:
@@ -162,6 +164,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_loop = None
         self.battle_position: pygame.math.Vector2 = pygame.math.Vector2()
 
+        self.animation_camera = None
+
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):
             self.current_music = None
@@ -192,13 +196,25 @@ class YSortCameraGroup(pygame.sprite.Group):
         # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
         # Move all sprites by the offset calculated here
 
-
-        if self.state == "BATTLE":
-            self.offset.x = self.battle_position[0] - self.screen_center_x  # Move all sprite
-            self.offset.y = self.battle_position[1] - self.screen_center_y
-        else:
+        if self.state == "OVERWORLD" or self.animation_camera == "player_animation":
             self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
             self.offset.y = player.rect.centery - self.screen_center_y
+
+        elif self.state == "BATTLE":
+            if self.animation_camera == "player_animation":
+                self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
+                self.offset.y = player.rect.centery - self.screen_center_y
+            elif self.animation_camera == "enemy_animation":
+                self.offset.x = self.battle_participants[1].rect.centerx - self.screen_center_x  # Move all sprite
+                self.offset.y = self.battle_participants[1].rect.centery - self.screen_center_y
+            else:
+                self.offset.x = self.battle_position[0] - self.screen_center_x  # Move all sprite
+                self.offset.y = self.battle_position[1] - self.screen_center_y
+
+
+
+
+
 
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
@@ -220,7 +236,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
-
     def update_enemy(self, player):
         """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
@@ -232,19 +247,12 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
             # checks all battle spots instead of just the visible ones
-
-
-            battle_spots = [sprite for sprite in self.sprites() if sprite.type == "battle_spot"]
-
             for enemy in self.enemy_sprites:
-
                 if player.rect.inflate(-player.rect.width // 2, -player.rect.height // 2).colliderect(
                         enemy.rect.inflate(-enemy.rect.width // 2, -enemy.rect.height // 2)):
                     spots2 = self.find_battle_spot(player.rect)
 
-
                     if spots2:
-
                         self.state = "BATTLE"
                         self.battle_participants = [player, enemy] # Used to update their in_battle attribute.
                         self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
@@ -254,53 +262,41 @@ class YSortCameraGroup(pygame.sprite.Group):
                             y = rect.centery
                             return [(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
-
                         positions = get_positions_in_rect(spots2, 2)
 
-                        spots = player.find_two_closest_battle_spots(battle_spots)
-
-
                         # Start battle loop.
-                        if len(spots) == 2:
-                            self.transition = True
+                        self.transition = True
 
-                            enemy.in_battle = True
-                            player.in_battle = True
+                        enemy.in_battle = True
+                        player.in_battle = True
 
-                            enemy.x, enemy.y = positions[1]
-                            enemy.rect.topleft = (int(enemy.x), int(enemy.y))
+                        enemy.x, enemy.y = positions[1]
+                        enemy.rect.topleft = (int(enemy.x), int(enemy.y))
 
+                        player.x, player.y = positions[0]
+                        player.rect.topleft = (int(player.x), int(player.y))
 
+                        player.face_target(enemy)
+                        enemy.face_target(player)
 
+                        player.action = "idle"
+                        enemy.action = "idle"
 
-                            player.x, player.y = positions[0]
-                            player.rect.topleft = (int(player.x), int(player.y))
+                        battle_center_x = (player.rect.centerx + enemy.rect.centerx) // 2
+                        battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
+                        self.battle_position.update(battle_center_x, battle_center_y)
 
+                        self.battle_loop = BattleLoop(player, enemy, self.display_surface)
 
-
-                            player.face_target(enemy)
-                            enemy.face_target(player)
-
-                            player.action = "idle"
-                            enemy.action = "idle"
-
-                            battle_center_x = (player.rect.centerx + enemy.rect.centerx) // 2
-                            battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
-                            self.battle_position.update(battle_center_x, battle_center_y)
-
-
-                            self.battle_loop = BattleLoop(player, enemy, self.display_surface)
-
-                            break
-
-
+                        break
 
     def darken_screen(self):
-        if self.transition_time <= 5:
-            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
-            overlay.fill((0, 0, 0))
+        if self.transition_time <= 255:  # max alpha value for fade
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)  # enable per-pixel alpha
+            alpha_value = int(self.transition_time)  # alpha must be int between 0-255
+            overlay.fill((0, 0, 0, alpha_value))  # fill with black + alpha
             self.display_surface.blit(overlay, (0, 0))
-            self.transition_time += 0.1
+            self.transition_time += 5  # increase alpha faster for visible fade
         else:
             self.transition = False  # Transition finished
             self.transition_time = 0
@@ -327,10 +323,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         # Transition into the overworld.
         self.transition = True
 
-    def find_battle_spot(self, player_rect, spot_size = (900, 50), search_radius = 100, step = 20):
-        "Find a nearby unobstructed rectangular area for battle."
+    def find_battle_spot(self, player_rect, search_radius = 100, step = 20):
+        """Find a nearby unobstructed rectangular area for battle."""
 
-        spot_size = (500, 10)
+        spot_size = (600, 10)
 
         obstacles = [sprite for sprite in self.sprites() if sprite.type == "tree"]
 
@@ -351,14 +347,10 @@ class YSortCameraGroup(pygame.sprite.Group):
                         break
 
                 if not collision:
-
                     pygame.draw.rect(self.display_surface, (255, 0,0), candidate)
-
-                    return                     candidate
-
+                    return candidate
 
         return None
-
 
 
 

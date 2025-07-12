@@ -27,7 +27,7 @@ class Hpbar:
 
         self.bar_cropped = self.bar.subsurface(self.crop).copy()
 
-        self.smooth_speed = 1
+        self.smooth_speed = 3
 
     def set_hp(self, new_hp: int):
         new_hp = max(0, min(new_hp, self.max_hp))

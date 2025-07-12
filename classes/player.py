@@ -46,7 +46,7 @@ class Player(Entity):
         # Battle related.
         self.hp = 20
         self.max_hp = 20
-        self.dmg = 3
+        self.dmg = 5
 
 
 
@@ -104,8 +104,7 @@ class Player(Entity):
         if not self.in_battle:
             self.controls()
 
-
-        self.animations()
+        if not self.death: self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
 
 
