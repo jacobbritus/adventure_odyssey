@@ -70,11 +70,7 @@ class Enemy(Entity):
             # Player is too far - enemy stops
             self.action = "idle"
 
-    def animations(self) -> None:
-        """Iterate over the sprite list assigned to the action > direction."""
-        iterate_speed: float = 0.2 if self.sprinting else 0.12
-        self.frame += iterate_speed
-        if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
+
 
 
     def enemy_update(self, player) -> None:
@@ -82,4 +78,7 @@ class Enemy(Entity):
         if not self.in_battle: self.get_status(player)
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
+
+
+
 

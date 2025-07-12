@@ -1,16 +1,24 @@
-import pygame
+from other.settings import *
 
 class Hpbar:
-    def __init__(self, pos: tuple[int, int], current_hp: int, max_hp: int):
+    def __init__(self, pos: tuple[int, int], pos2, current_hp: int, max_hp: int):
         self.max_hp = max_hp
         self.hp = current_hp
 
-        self.position = pos# change based on the sprites position
-        self.box = pygame.image.load("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/UI/Slider01_Box.png")
+        self.box = pygame.image.load(get_file_location("sprites/UI/Slider01_Box.png"))
 
-
-        self.bar = pygame.image.load("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/UI/Slider01_Bar02.png")
+        self.bar = pygame.image.load(get_file_location("sprites/UI/Slider01_Bar02.png"))
         self.bar_size = self.bar.get_size()
+
+        x_padding = 10
+        y_padding = pos[1] // 3
+        if pos2 == "left":
+            self.position = (0 + x_padding, pos[1] - y_padding)
+        else:
+            self.position = (pos[0] - (self.bar.get_width() + x_padding), pos[1]- y_padding)
+
+
+
 
         self.current_width = int(self.bar_size[0] * self.hp / self.max_hp)
         self.target_width = self.bar_size[0]
@@ -53,9 +61,9 @@ class Hpbar:
 class Button(pygame.sprite.Sprite):
     def __init__(self, group, pos: tuple[int, int], action, text):
         super().__init__(group)
-        self.image_normal = pygame.image.load("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/UI/Button_01A_Normal.png")
-        self.image_pressed = pygame.image.load("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/UI/Button_01A_Pressed.png")
-        self.image_selected = pygame.image.load("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/UI/Button_01A_Selected.png")
+        self.image_normal = pygame.image.load(get_file_location("sprites/UI/Button_01A_Normal.png"))
+        self.image_pressed = pygame.image.load(get_file_location("sprites/UI/Button_01A_Pressed.png"))
+        self.image_selected = pygame.image.load(get_file_location("sprites/UI/Button_01A_Selected.png"))
         self.image = self.image_normal
 
         self.pos = (pos[0] - self.image.get_size()[0] // 2, pos[1])
@@ -64,7 +72,7 @@ class Button(pygame.sprite.Sprite):
         self.action = action
 
         if text:
-            self.font = pygame.font.Font("/Users/jacobbritus/Downloads/adventure_odyssey/sprites/fonts/FantasyRPGtext.ttf", 16)
+            self.font = pygame.font.Font(get_file_location("sprites/fonts/FantasyRPGtext.ttf"), 16)
             self.text = self.font.render(text,True, (99, 61, 76)
 )
             self.size = self.text.get_size()

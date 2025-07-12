@@ -16,6 +16,8 @@ class Entity(pygame.sprite.Sprite):
         # Image related.
         self.rect = None
         self.hitbox = None
+        self.width = None
+        self.height = None
 
         # Animation related.
         self.frame = 0
@@ -34,6 +36,7 @@ class Entity(pygame.sprite.Sprite):
         self.close_distance = False
         self.move_back = False
         self.attacking = False
+        self.death = False
 
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
@@ -55,9 +58,23 @@ class Entity(pygame.sprite.Sprite):
             self.y -= dy
         self.rect.topleft = (self.x, self.y)
 
+
+    def animations(self) -> None:
+        """Iterate over the sprite list assigned to the action > direction."""
+        if self.death and self.frame >= len(self.sprite_dict[self.action][self.direction]):
+            return
+        if not self.in_battle:
+            iterate_speed: float = 0.2 if self.sprinting else 0.12
+        else:
+            iterate_speed = 0.12
+
+        self.frame += iterate_speed
+
+        if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
+
     def obstacle_collisions(self) -> bool:
         """Check if the player is colliding with any other obstacle sprite."""
-        self.hitbox = pygame.Rect(self.x + 12, self.y + 24, 12, 12)
+        self.hitbox = pygame.Rect(self.x + (self.width // 2), self.y + self.height // 2, 8, 8)
         for sprite in self.obstacle_sprites:
             if self.hitbox.colliderect(sprite.hitbox):
                 return True
@@ -66,9 +83,22 @@ class Entity(pygame.sprite.Sprite):
     def teleport_to_spot(self, spot) -> None:
         self.x = spot.rect.centerx - self.rect.width // 2
         self.y = spot.rect.centery - self.rect.height // 2
+
+
         self.rect.topleft = (self.x, self.y)
-        self.hitbox = pygame.Rect(self.x + 12, self.y + 24, 12, 12)
+
         self.action = "idle"
+
+    def teleport_to_spot2(self, spot: tuple) -> None:
+        """
+        Move the sprite so it's centered inside the battle spot.
+        """
+        # Center the sprite's rect on the spot's center
+        new_x = spot.centerx - self.rect.width // 2
+        new_y = spot.centery - self.rect.height // 2
+        self.rect.topleft = (new_x, new_y)
+
+        self.rect.topleft = spot
 
     def face_target(self, target) -> None:
         dx: int = target.rect.centerx - self.rect.centerx
@@ -111,29 +141,47 @@ class Entity(pygame.sprite.Sprite):
             self.direction = "right" if dx > 0 else "left"
             self.move((dx / distance, dy / distance))
 
-            if self.hitbox.colliderect(target.rect):
+
+
+            if self.rect.inflate(-self.rect.width + 8, -self.rect.height // 2).colliderect(
+                        target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
+
                 self.frame = 0
-                self.direction = "right"
-                self.action = "punch"
-                self.attack()
+                self.action = "sword_slash"
+
+                if target.hp <= 0:
+                    target.death = True
 
                 self.close_distance = False
                 self.attacking = True
 
+
+
+
+
     def attack(self):
+        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
+            self.action = "idle"
 
+        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
 
-        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 2:
             self.attacking = False
             self.action = "running"
             self.move_back = True
+
+    def death_animation(self):
+        self.action = "death"
+
+        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
+            self.frame = len(self.sprite_dict[self.action][self.direction]) - 1
+
 
 
     def go_back(self, origin):
         self.sprinting = True
 
-        dx = origin[0] - self.x
-        dy = origin[1] - self.y
+        dx = origin.x - self.x + self.width // 2
+        dy = origin.y - self.y
         distance = math.hypot(dx, dy)
 
         if distance > 0:

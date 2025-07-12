@@ -35,21 +35,22 @@ def sprite_converter(sprite_file: str, row: int, sprites_amount: int, sprite_wid
 player_sprites = {
     "running":
         {
-            "down": sprite_converter("sprites/characters/moving.png", 3, 6, 32, 48, False),
-            "right": sprite_converter("sprites/characters/moving.png", 4, 6, 32, 48, False),
-            "left": sprite_converter("sprites/characters/moving.png", 4, 6, 32, 48, True),
-            "up": sprite_converter("sprites/characters/moving.png", 5, 6, 32, 48, False)},
+            "down": sprite_converter("sprites/characters/me2.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/me2.png", 5, 6, 96, 80, False)},
     "idle":
         {
-            "down": sprite_converter("sprites/characters/moving.png", 0, 6, 32, 48, False),
-            "right": sprite_converter("sprites/characters/moving.png", 1, 6, 32, 48, False),
-            "left": sprite_converter("sprites/characters/moving.png", 1, 6, 32, 48, True),
-            "up": sprite_converter("sprites/characters/moving.png", 2, 6, 32, 48, False)},
-    "punch": {
-        "right": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-        "left": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-    "up": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-    "down": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
+            "down": sprite_converter("sprites/characters/me2.png", 0, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/me2.png", 2, 6, 96, 80, False)},
+    # "punch": {
+    #         "right": sprite_converter("sprites/characters/punch.png", 0, 5, 80, 80, False)},
+
+    "sword_slash": {
+        "right": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, False),
+        "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True)
 
     }
 }
@@ -59,20 +60,23 @@ sprite_dust = sprite_converter("sprites/particles/dust.png", 0, 4, 24, 24, False
 skeleton_sprites = {
     "running":
         {
-            "down": sprite_converter("sprites/characters/skeleton_swordless.png", 3, 6, 32, 48, False),
-            "right": sprite_converter("sprites/characters/skeleton_swordless.png", 4, 6, 32, 48, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless.png", 4, 6, 32, 48, True),
-            "up": sprite_converter("sprites/characters/skeleton_swordless.png", 5, 6, 32, 48, False)},
+            "down": sprite_converter("sprites/characters/skeleton_swordless2.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 5, 6, 96, 80, False)},
     "idle":
         {
-            "down": sprite_converter("sprites/characters/skeleton_swordless.png", 0, 6, 32, 48, False),
-            "right": sprite_converter("sprites/characters/skeleton_swordless.png", 1, 6, 32, 48, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless.png", 1, 6, 32, 48, True),
-            "up": sprite_converter("sprites/characters/skeleton_swordless.png", 2, 6, 32, 48, False)},
-    "punch": {
-            "right": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-            "left": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-        "up": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False),
-        "down": sprite_converter("sprites/characters/punch.png", 0, 5, 48, 48, False)},
+            "down": sprite_converter("sprites/characters/skeleton_swordless2.png", 0, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 1, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 1, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 2, 6, 96, 80, False)},
+
+    "sword_slash": {
+        "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, False),
+        "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, True)},
+
+    "death": {
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 14, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 14, 4, 96, 80, True)}
 
 }

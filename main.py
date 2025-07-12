@@ -1,8 +1,5 @@
-import pygame
-
 from classes.level import Level
 from other.settings import *
-
 
 class Game:
     def __init__(self):
@@ -13,8 +10,6 @@ class Game:
         self.clock = pygame.time.Clock()
         self.level = Level()
 
-
-
     def run(self) -> None:
         """Run the game."""
         while True:
@@ -24,13 +19,9 @@ class Game:
                     pygame.quit()
                     exit()
 
-
             self.level.run()
-
             self.clock.tick(FPS)
             pygame.display.update()
-
-
 
 if __name__ == "__main__":
     game = Game()

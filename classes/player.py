@@ -1,4 +1,3 @@
-import pygame
 import math
 
 from classes.entity import Entity
@@ -30,7 +29,7 @@ class Player(Entity):
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
-        self.hitbox = pygame.Rect(self.x + 12, self.y + 24, 12, 12)
+        self.hitbox = self.rect.inflate(-16, -16)
 
         # movement related
         self.sprinting: bool = False
@@ -98,20 +97,17 @@ class Player(Entity):
             self.direction_pause = 0
             self.action = "idle"
 
-    def animations(self) -> None:
-        """Iterate over the sprite list assigned to the action > direction."""
-        iterate_speed: float = 0.2 if self.sprinting else 0.12
-        self.frame += iterate_speed
-        if self.frame >= len(self.sprite_dict[self.action][self.direction]): self.frame = 0
+
 
     def update(self) -> None:
         """Draw the player in the game window."""
         if not self.in_battle:
             self.controls()
 
-        print(self.frame)
+
         self.animations()
         self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
+
 
 
 
@@ -165,6 +161,10 @@ class DustParticle(pygame.sprite.Sprite):
         self.image = self.images[int(self.frame_index)]
         if self.frame_index >= len(self.images) - 1:
             self.kill()
+
+
+        # Update hitbox
+
 
         self.rect.y += -1
         self.frame_index += 0.2
