@@ -6,34 +6,34 @@ class Enemy(Entity):
     def __init__(self, monster_name, surf, pos, group, obstacle_sprites):
         super().__init__(group)
 
-        # General Setup.
+        # General
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
-        self.sprite_dict = skeleton_sprites
 
-        # Graphics Setup.
-        self.image = surf
+        # Stats
+        self.monster_name = monster_name
+        self.hp = 15
+        self.dmg = 5
+
+        # Location
         self.x = pos[0]
         self.y = pos[1]
+
+        # Image
+        self.sprite_dict = self.get_sprites()
+        self.image = surf
         self.width, self.height = pygame.Surface.get_size(surf)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(32, 32)
 
-        self.frame = 0
-        self.sprinting = False
+    def get_sprites(self) -> list or None:
+        if self.monster_name == "Skeleton":
+            return skeleton_sprites
+        else:
+            return None
 
-        self.monster_name = monster_name
-
-        # battle stuff
-        self.hp = 15
-        self.dmg = 5
-
-
-
-    def get_status(self, player):
+    def get_status(self, player) -> None:
         # Calculate distances between enemy and player
-
-
         x_distance = player.x - self.x  # Positive if player is to the right
         y_distance = player.y - self.y  # Positive if player is below
         
@@ -70,10 +70,7 @@ class Enemy(Entity):
             # Player is too far - enemy stops
             self.action = "idle"
 
-
-
-
-    def enemy_update(self, player) -> None:
+    def update_enemy(self, player) -> None:
         """Draw the player in the game window."""
         if not self.in_battle: self.get_status(player)
         if not self.death: self.animations()

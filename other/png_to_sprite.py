@@ -84,3 +84,8 @@ skeleton_sprites = {
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, True)}
 
 }
+
+def get_file_location(file_location: str) -> str:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_dir, "..", file_location)

@@ -91,27 +91,6 @@ class Entity(pygame.sprite.Sprite):
         else:
             self.direction = "down" if dy > 0 else "up"
 
-    def find_two_closest_battle_spots(self, battle_spots: list[ActionTile]) -> list[pygame.sprite.Sprite]:
-        """Returns the two closest battle spots sorted from left to right."""
-        # Calculate distance to all spots
-        spots_with_distance = []
-        for spot in battle_spots:
-            dx = spot.rect.centerx - self.rect.centerx
-            dy = spot.rect.centery - self.rect.centery
-            distance = (dx ** 2 + dy ** 2) ** 0.5
-            spots_with_distance.append((distance, spot))
-
-        # Sort by distance
-        spots_with_distance.sort(key=lambda x: x[0])
-
-        # Get two closest
-        two_closest = [s[1] for s in spots_with_distance[:2]]
-
-        # Sort by x (left to right)
-        two_closest.sort(key=lambda s: s.rect.centerx)
-        return two_closest
-
-
     def approach_animation(self, target):
         self.sprinting = True
         dx = target.x - self.x
@@ -127,7 +106,6 @@ class Entity(pygame.sprite.Sprite):
 
             if self.rect.inflate(-self.rect.width + 8, -self.rect.height // 2).colliderect(
                         target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
-
                 self.frame = 0
 
                 self.approach_trigger = False

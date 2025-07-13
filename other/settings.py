@@ -11,10 +11,12 @@ player_sprites = player_sprites
 sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites
 
-def get_file_location(file_location: str) -> str:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+# maps
+FOREST_MAP = get_file_location("tmx/untitled.tmx")
 
-    return os.path.join(base_dir, "..", file_location)
+# background music and sounds
+FOREST_MUSIC = get_file_location("sounds/background/forest_theme.mp3")
+BATTLE_MUSIC_1 = get_file_location("sounds/background/12-Fight3.mp3")
 
-
+GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
 

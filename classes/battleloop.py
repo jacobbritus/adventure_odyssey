@@ -38,6 +38,7 @@ class BattleLoop:
 
 
     def update(self):
+        self.handle_input()
         self.animation()
         self.draw_ui(self.window)
 
