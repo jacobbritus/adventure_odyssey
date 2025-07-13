@@ -48,14 +48,15 @@ class Player(Entity):
         self.dust_cooldown = 400
         self.dust_particles = dust_particles
 
+        self.mask_image = pygame.mask.from_surface(self.image)
+
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
 
-
-        if key_pressed[pygame.K_b]:
+        if key_pressed[pygame.K_b] :
             self.blocking = True
         else:
             self.blocking = False
@@ -109,10 +110,15 @@ class Player(Entity):
 
     def update(self) -> None:
         """Draw the player in the game window."""
+        if self.hp <= 0:
+            self.death_animation()
+
         self.controls()
 
-        if not self.death: self.animations()
-        self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
+        if not self.death:
+            self.animations()
+            self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
+
 
 class DustParticle(pygame.sprite.Sprite):
     """A class to manage dust particles."""

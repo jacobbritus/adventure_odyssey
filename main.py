@@ -19,6 +19,9 @@ class Game:
                     pygame.quit()
                     exit()
 
+                if self.level.visible_sprites.battle_loop:
+                    self.level.visible_sprites.battle_loop.hotkeys(event)
+
             self.level.run()
             self.clock.tick(FPS)
             pygame.display.update()

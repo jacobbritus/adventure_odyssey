@@ -18,8 +18,9 @@ buttons_group = pygame.sprite.Group()
 window_center_x = window.get_width() // 2
 window_center_y = window.get_height() // 2
 
-button1 = Button(buttons_group, (window_center_x, window_center_y), one, "Attack")
-button2 = Button(buttons_group, (100, 200), two, "Run")
+player_hp_bar = Hpbar((window.get_size()), "left", 20, 20)
+enemy_hp_bar = Hpbar((window.get_size()), "right", 20, 20)
+
 
 while True:
     window.fill((255, 255, 255))
@@ -28,15 +29,8 @@ while True:
             pygame.quit()
             exit()
 
-
-
-    for button in buttons_group:
-        button.draw(window)
-        button.update()
-        if button.delete:
-            for buttons in buttons_group:
-                buttons.kill()
-
+    player_hp_bar.draw(window)
+    enemy_hp_bar.draw(window)
 
     clock.tick(60)
     pygame.display.update()

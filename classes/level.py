@@ -86,6 +86,7 @@ class Level:
 
                 # seperate this too
 
+
     def run(self) -> None:
         if self.visible_sprites.state == "OVERWORLD":
             self.visible_sprites.update_soundtrack()
@@ -95,16 +96,20 @@ class Level:
             self.battle()
 
     def overworld(self) -> None:
+        print(self.visible_sprites.battle_participants)
         if not self.visible_sprites.battle_participants:
             self.visible_sprites.enemy_collision(self.player)
         else:
-            self.visible_sprites.start_battle()
+            if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
+                self.visible_sprites.start_battle()
 
         self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
         self.visible_sprites.update_enemies(self.player)
 
-        if self.visible_sprites.transition: self.visible_sprites.darken_screen()
+        # if self.visible_sprites.transition: self.visible_sprites.darken_screen()
+
+        self.visible_sprites.transition_screen()
 
     def battle(self):
         # Make camera follow the animation
@@ -117,9 +122,17 @@ class Level:
         self.visible_sprites.battle_loop.update()
 
         # end battle
-        if self.visible_sprites.battle_loop.return_to_overworld:
+        if self.visible_sprites.battle_loop.state == "end_battle" and not self.visible_sprites.delay:
+            self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
+            self.visible_sprites.transition_timer = pygame.time.get_ticks()
+
+
+        if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
             self.visible_sprites.end_battle()
-        if self.visible_sprites.transition: self.visible_sprites.darken_screen()
+
+        self.visible_sprites.transition_screen()
+
+        # if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)

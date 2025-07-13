@@ -16,6 +16,8 @@ class BattleLoop:
         self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
         self.enemy_position: pygame.Vector2 = pygame.Vector2(enemy.x, enemy.y)
 
+
+
         self.return_to_overworld: bool = False
 
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp)
@@ -23,7 +25,10 @@ class BattleLoop:
         self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp)
 
         self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
+        self.buttons = []
         self.display_menu_options = False
+        self.number = 0
+
 
 
         self.state: str = "player" # to be changed based on speed stat.
@@ -37,13 +42,14 @@ class BattleLoop:
         self.delay = pygame.time.get_ticks() + 0
 
 
+
     def update(self):
+
         self.handle_input()
         self.animation()
         self.draw_ui(self.window)
 
         if self.delay and pygame.time.get_ticks() >= self.delay:
-
             if self.state == "player_turn":
                     self.display_menu_options = True
 
@@ -54,16 +60,18 @@ class BattleLoop:
 
             elif self.state == "end_battle":
                     self.return_to_overworld = True
-
+            elif self.state == "end_screen":
+                self.display_menu_options = True
 
     def draw_ui(self, window):
         self.player_hp_bar.draw(window)
         self.enemy_hp_bar.draw(window)
 
-        if self.buttons_group and self.display_menu_options:
-            for button in self.buttons_group:
-                button.draw(window)
+        if self.buttons and self.display_menu_options:
+            for button in self.buttons:
                 button.update()
+                button.draw(window)
+
                 if button.delete:
                     for buttons in self.buttons_group:
                         self.display_menu_options = False
@@ -71,8 +79,44 @@ class BattleLoop:
 
     def handle_input(self):
         if not self.buttons_group:
-            Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_attack, "Attack")
-            Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")
+            if self.state == "player_turn":
+                self.buttons = [Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_attack, "Attack"),
+                    Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")]
+
+
+                Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_attack, "Attack")
+                Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")
+
+            if self.state == "end_screen":
+                self.buttons = [Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_run, "Done")]
+
+
+    def hotkeys(self, event):
+            if event.type == pygame.KEYDOWN:
+
+                # Navigate up
+                if event.key == pygame.K_UP and self.number == 0:
+                    self.buttons[self.number].hovering = True
+
+
+                elif event.key == pygame.K_DOWN and self.number == len(self.buttons) - 1:
+                    self.buttons[self.number].hovering = True
+
+
+                elif event.key == pygame.K_UP and self.number > 0:
+                    self.buttons[self.number].hovering = False
+                    self.number -= 1
+                    self.buttons[self.number].hovering = True
+
+                # Navigate down
+                elif event.key == pygame.K_DOWN and self.number < len(self.buttons) - 1:
+                    self.buttons[self.number].hovering = False
+                    self.number += 1
+                    self.buttons[self.number].hovering = True
+
+                # Confirm selection
+                elif event.key == pygame.K_RETURN:
+                    self.buttons[self.number].clicked = True  # <-- Call your button action here
 
     def player_run(self):
         self.state = "end_battle"
@@ -88,6 +132,14 @@ class BattleLoop:
         if self.state == "player_animation":
             if self.player.approach_trigger:
                 self.player.approach_animation(self.enemy)
+                self.delay = pygame.time.get_ticks() + 1000
+
+
+            elif self.player.wait_trigger:
+                self.player.wait()
+                if self.delay and pygame.time.get_ticks() >= self.delay:
+                    self.player.attack_trigger = True
+                    self.player.wait_trigger = False
 
             elif self.player.attack_trigger:
                 self.enemy_hp_bar.update()
@@ -99,8 +151,7 @@ class BattleLoop:
                 self.player.return_animation(self.player_position)
 
             elif self.enemy.hp <= 0:
-                self.delay = pygame.time.get_ticks() + 5000
-                self.state = "end_battle"
+                self.state = "end_screen"
 
             elif not self.player.attack_trigger and not self.player.return_trigger:
                 # End of player's animation
@@ -110,6 +161,15 @@ class BattleLoop:
         elif self.state == "enemy_animation":
             if self.enemy.approach_trigger:
                 self.enemy.approach_animation(self.player)
+                self.delay = pygame.time.get_ticks() + 1000 # random number for timed blocks
+
+
+            elif self.enemy.wait_trigger:
+                self.enemy.wait()
+                if self.delay and pygame.time.get_ticks() >= self.delay:
+                    self.enemy.attack_trigger = True
+                    self.enemy.wait_trigger = False
+
 
             elif self.enemy.attack_trigger:
                 self.player_hp_bar.update()
@@ -120,8 +180,7 @@ class BattleLoop:
                 self.enemy.return_animation(self.enemy_position)
 
             elif self.player.hp <= 0 and not self.enemy.return_trigger:
-                self.delay = pygame.time.get_ticks() + 5000
-                self.state = "end_battle"
+                self.state = "end_screen"
 
             elif not self.enemy.attack_trigger and not self.enemy.return_trigger:
                 # End of enemy's animation

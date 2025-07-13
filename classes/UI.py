@@ -5,17 +5,23 @@ class Hpbar:
         self.max_hp = max_hp
         self.hp = current_hp
 
-        self.box = pygame.image.load(get_file_location("sprites/UI/Slider01_Box.png"))
-
-        self.bar = pygame.image.load(get_file_location("sprites/UI/Slider01_Bar02.png"))
-        self.bar_size = self.bar.get_size()
+        self.background_box = pygame.image.load(BACKGROUND_BOX)
+        self.hp_box = pygame.image.load(get_file_location("sprites/UI/Slider01_Box.png"))
+        self.hp_bar = pygame.image.load(get_file_location("sprites/UI/Slider01_Bar02.png"))
+        self.bar_size = self.hp_bar.get_size()
 
         x_padding = 10
         y_padding = pos[1] // 3
         if pos2 == "left":
-            self.position = (0 + x_padding, pos[1] - y_padding)
+            x_padding = 16
+
+            self.position = (0 + x_padding, pos[1] - y_padding + 40)
+            self.hp_bar_position = (0 + 64, pos[1] - (y_padding - 64))
         else:
-            self.position = (pos[0] - (self.bar.get_width() + x_padding), pos[1]- y_padding)
+            x_padding = 80
+            self.position = (pos[0] - (self.hp_bar.get_width() + x_padding), pos[1] - y_padding  + 40)
+            self.hp_bar_position = (pos[0] - (self.hp_bar.get_width() + x_padding - 16), pos[1] - y_padding + 64)
+
 
 
 
@@ -25,7 +31,7 @@ class Hpbar:
 
         self.crop = pygame.Rect(0, 0, self.bar_size[0] - self.current_width, self.bar_size[1])
 
-        self.bar_cropped = self.bar.subsurface(self.crop).copy()
+        self.bar_cropped = self.hp_bar.subsurface(self.crop).copy()
 
         self.smooth_speed = 3
 
@@ -52,9 +58,10 @@ class Hpbar:
 
     def draw(self, window):
         self.crop = pygame.Rect(0, 0, self.current_width, self.bar_size[1])
-        self.bar_cropped = self.bar.subsurface(self.crop).copy()
-        window.blit(self.box, self.position)
-        window.blit(self.bar_cropped, self.position)
+        self.bar_cropped = self.hp_bar.subsurface(self.crop).copy()
+        window.blit(self.background_box, self.position)
+        window.blit(self.hp_box, self.hp_bar_position)
+        window.blit(self.bar_cropped, self.hp_bar_position)
 
 
 
@@ -84,8 +91,8 @@ class Button(pygame.sprite.Sprite):
         # Sounds
         self.hover_sound = pygame.mixer.Sound("/Users/jacobbritus/Downloads/adventure_odyssey/sounds/hover.wav")
         self.click_sound = pygame.mixer.Sound("/Users/jacobbritus/Downloads/adventure_odyssey/sounds/click.wav")
-        self.hover_sound.set_volume(0.3)
-        self.click_sound.set_volume(0.3)
+        # self.hover_sound.set_volume(0.3)
+        # self.click_sound.set_volume(0.3)
 
         # Status
         self.clicked = False
@@ -93,28 +100,30 @@ class Button(pygame.sprite.Sprite):
         self.delete_delay = 0
         self.delete = False
 
+        self.sound_played = False
+        self.click_sound_played = False
+
 
     def update(self):
         self.kill_delay()
-
-        if self.clicked:
-            return
 
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
 
         if self.rect.collidepoint(mouse_pos) and press or self.clicked:
             self.image = self.image_pressed
-            self.click_sound.play()
+            if not self.click_sound_played: self.click_sound.play()
+            self.click_sound_played = True
             self.clicked = True
 
-        elif self.rect.collidepoint(mouse_pos):
+        elif self.rect.collidepoint(mouse_pos) or self.hovering:
             self.image = self.image_selected
-            if not self.hovering: self.hover_sound.play()
-            self.hovering = True
+            if not self.sound_played: self.hover_sound.play()
+            self.sound_played = True
         else:
             self.image = self.image_normal
             self.hovering = False
+            self.sound_played = False
 
 
     def kill_delay(self):

@@ -15,6 +15,7 @@ class Entity(pygame.sprite.Sprite):
         self.hitbox = None
         self.width = None
         self.height = None
+        self.image = None
 
         # Animation related.
         self.frame = 0
@@ -36,6 +37,7 @@ class Entity(pygame.sprite.Sprite):
         self.death = False
         self.hit_landed = False
         self.blocking = False
+        self.wait_trigger = False
 
         # Sound
         self.sound_played = False
@@ -66,12 +68,10 @@ class Entity(pygame.sprite.Sprite):
 
     def animations(self) -> None:
         """Iterate over the sprite list assigned to the action > direction."""
-        if self.death and self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]):
-            return
         iterate_speed: float = 0.2 if self.sprinting else 0.12
 
         if self.attack_trigger or self.death:
-            iterate_speed = 0.1
+            iterate_speed = 0.12
 
         self.frame += iterate_speed
 
@@ -97,7 +97,6 @@ class Entity(pygame.sprite.Sprite):
 
     def approach_animation(self, target) -> None:
         """Run towards the target."""
-
         self.sprinting = True
         dx = target.x - self.x
         dy = target.y - self.y
@@ -106,20 +105,23 @@ class Entity(pygame.sprite.Sprite):
         if distance > 0:
             self.action = "running"
             self.direction = "right" if dx > 0 else "left"
-            self.move((dx * 2 / distance, dy * 2 / distance))
+            self.move((dx / distance, dy / distance))
 
             if self.rect.inflate(-self.rect.width + 8, -self.rect.height // 2).colliderect(
                         target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
                 self.frame = 0
 
                 self.approach_trigger = False
-                self.attack_trigger = True
+
                 self.sprinting = False
+
+                self.wait_trigger = True
+
+    def wait(self):
+        self.action = "idle"
 
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
-
-        # Play the action sound
         self.action = action
 
         if self.frame != 0 and self.action != action:
@@ -131,8 +133,13 @@ class Entity(pygame.sprite.Sprite):
             self.hit_landed = True
             self.handle_attack_impact(target)
 
+            # Mask when hit
+            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+
+
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
             self.action = "idle"
+
 
             if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
                 self.attack_trigger = False
@@ -141,29 +148,30 @@ class Entity(pygame.sprite.Sprite):
                 self.sound_played = False
                 self.hit_landed = False
 
+
     def handle_attack_impact(self, target):
         if not self.sound_played:
             pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
             self.sound_played = True
 
-        if not target.blocking:  # can expand with dodge, critical hit,
             target.hp -= self.dmg
 
-            if target.hp <= 0:
-                target.death = True
+            if target.hp <= 0 and not target.death:
                 target.death_animation()
+                target.frame = 0
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
-        self.action = "death"
 
         if self.frame != 0 and self.action != "death":
             self.frame = 0
-
+            self.action = "death"
 
         # Play the animation frame by frame
-        if self.frame < len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
+        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
             self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
+            self.death = True
+
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""
@@ -176,7 +184,7 @@ class Entity(pygame.sprite.Sprite):
         if distance > 0:
             self.action = "running"
             self.direction = "right" if dx > 0 else "left"
-            self.move((dx * 2 / distance, dy * 2 / distance))
+            self.move((dx / distance, dy / distance))
 
             if distance < 30:
                 self.direction = "left" if self.direction == "right" else "right"

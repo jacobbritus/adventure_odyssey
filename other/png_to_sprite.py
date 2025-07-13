@@ -96,8 +96,8 @@ skeleton_sprites = {
     },
     "sword_slash": {
         "sprites": {
-            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, True),
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 6, 96, 80, True),
         },
         "sound": get_file_location("sounds/sword_slash.wav"),
         "impact_frame": 3
