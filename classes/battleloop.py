@@ -32,29 +32,28 @@ class BattleLoop:
 
         self.timer = 0
         self.timer_started = False
-        self.death_delay = 2000
+        self.death_delay = 1000
+
+        self.delay = pygame.time.get_ticks() + 0
 
 
     def update(self):
         self.animation()
         self.draw_ui(self.window)
 
-        print(self.timer)
+        if self.delay and pygame.time.get_ticks() >= self.delay:
 
-        if self.state == "player_turn":
-            self.display_menu_options = True
+            if self.state == "player_turn":
+                    self.display_menu_options = True
 
-        elif self.state == "enemy_turn":
-            self.display_menu_options = False
-            self.enemy_turn()
+            elif self.state == "enemy_turn":
+                    self.display_menu_options = False
+                    self.enemy_turn()
+                    self.delay = None
 
-        elif self.state == "end_battle":
-            if not self.timer_started:
-                self.timer = pygame.time.get_ticks()
-                self.timer_started = True
+            elif self.state == "end_battle":
+                    self.return_to_overworld = True
 
-            if pygame.time.get_ticks() - self.timer > self.death_delay:
-                self.return_to_overworld = True
 
     def draw_ui(self, window):
         self.player_hp_bar.draw(window)
@@ -78,7 +77,7 @@ class BattleLoop:
         self.state = "end_battle"
 
     def player_attack(self):
-        self.player.close_distance = True
+        self.player.approach_trigger = True
         self.state = "player_animation"
         # attack_type = ... gets inputted in button as action
 
@@ -88,45 +87,50 @@ class BattleLoop:
 
     def animation(self):
         if self.state == "player_animation":
-            if self.player.close_distance:
-                self.player.move_to(self.enemy)
+            if self.player.approach_trigger:
+                self.player.approach_animation(self.enemy)
 
-            elif self.player.attacking:
+            elif self.player.attack_trigger:
                 self.enemy_hp_bar.update()
-                self.player.attack(self.enemy)
+                self.player.attack_animation(self.enemy)
 
-            elif self.player.move_back:
-                self.player.go_back(self.player_position)
+            elif self.player.return_trigger:
+                self.player.return_animation(self.player_position)
 
             elif self.enemy.hp <= 0:
+                self.delay = pygame.time.get_ticks() + 5000
                 self.state = "end_battle"
 
-            elif not self.player.attacking and not self.player.move_back:
+            elif not self.player.attack_trigger and not self.player.return_trigger:
                 # End of player's animation
+                self.delay = pygame.time.get_ticks() + 500
                 self.state = "enemy_turn"
 
         elif self.state == "enemy_animation":
-            if self.enemy.close_distance:
-                self.enemy.move_to(self.player)
+            if self.enemy.approach_trigger:
+                self.enemy.approach_animation(self.player)
 
-            elif self.enemy.attacking:
-                self.enemy.attack(self.player)
+            elif self.enemy.attack_trigger:
+                self.enemy.attack_animation(self.player)
                 self.player_hp_bar.update()
 
-            elif self.enemy.move_back:
-                self.enemy.go_back(self.enemy_position)
+            elif self.enemy.return_trigger:
+                self.enemy.return_animation(self.enemy_position)
 
-            elif self.player.hp <= 0 and not self.enemy.move_back:
+            elif self.player.hp <= 0 and not self.enemy.return_trigger:
+                self.delay = pygame.time.get_ticks() + 5000
                 self.state = "end_battle"
 
-            elif not self.enemy.attacking and not self.enemy.move_back:
+            elif not self.enemy.attack_trigger and not self.enemy.return_trigger:
                 # End of enemy's animation
+                self.delay = pygame.time.get_ticks() + 500
                 self.state = "player_turn"
 
 
 
+
     def enemy_attack(self):
-        self.enemy.close_distance = True
+        self.enemy.approach_trigger = True
         self.state = "enemy_animation"
 
         self.player.hp -= self.enemy.dmg

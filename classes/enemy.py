@@ -26,7 +26,7 @@ class Enemy(Entity):
 
         # battle stuff
         self.hp = 15
-        self.dmg = 20
+        self.dmg = 5
 
 
 

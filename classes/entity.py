@@ -14,6 +14,7 @@ class Entity(pygame.sprite.Sprite):
         self.y: int = 0
 
         # Image related.
+        self.sprite_dict = None
         self.rect = None
         self.hitbox = None
         self.width = None
@@ -33,14 +34,14 @@ class Entity(pygame.sprite.Sprite):
         self.in_battle = False
         self.obstacle_sprites = None
 
-        self.close_distance = False
-        self.move_back = False
-        self.attacking = False
+        self.approach_trigger = False
+        self.return_trigger = False
+        self.attack_trigger = False
         self.death = False
 
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
-        if self.in_battle and not self.close_distance and not self.move_back:
+        if self.in_battle and not self.approach_trigger and not self.return_trigger:
             return
         dx, dy = move_vector
         self.speed = 4 if self.sprinting else 2
@@ -63,10 +64,10 @@ class Entity(pygame.sprite.Sprite):
         """Iterate over the sprite list assigned to the action > direction."""
         if self.death and self.frame >= len(self.sprite_dict[self.action][self.direction]):
             return
-        if not self.in_battle:
-            iterate_speed: float = 0.2 if self.sprinting else 0.12
-        else:
-            iterate_speed = 0.12
+        iterate_speed: float = 0.2 if self.sprinting else 0.12
+
+        if self.attack_trigger or self.death:
+            iterate_speed = 0.1
 
         self.frame += iterate_speed
 
@@ -111,7 +112,7 @@ class Entity(pygame.sprite.Sprite):
         return two_closest
 
 
-    def move_to(self, target):
+    def approach_animation(self, target):
         self.sprinting = True
         dx = target.x - self.x
         dy = target.y - self.y
@@ -120,7 +121,7 @@ class Entity(pygame.sprite.Sprite):
         if distance > 0:
             self.action = "running"
             self.direction = "right" if dx > 0 else "left"
-            self.move((dx / distance, dy / distance))
+            self.move((dx * 2 / distance, dy * 2 / distance))
 
 
 
@@ -129,51 +130,42 @@ class Entity(pygame.sprite.Sprite):
 
                 self.frame = 0
 
-                self.close_distance = False
-                self.attacking = True
+                self.approach_trigger = False
+                self.attack_trigger = True
+                self.sprinting = False
 
+    def attack_animation(self, target):
+        self.action = "sword_slash"
 
-
-
-
-    def attack(self, target):
+        if self.frame != 0 and self.action != "sword_slash":
+            self.frame = 0
 
         if target.hp <= 0 and self.frame > 3:
             target.death = True
             target.death_animation()
 
-        self.action = "sword_slash"
-
-
         if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
             self.action = "idle"
 
-
-
-        if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
-
-
-            self.attacking = False
-            self.action = "running"
-            self.move_back = True
+            if self.frame >= len(self.sprite_dict[self.action][self.direction]) - 1:
+                self.attack_trigger = False
+                self.action = "running"
+                self.return_trigger = True
 
     def death_animation(self):
         # Only reset once at the start of the death animation
         if self.frame != 0 and self.action != "death":
             self.frame = 0
 
-        self.action = "death"
+            self.action = "death"
 
         # Play the animation frame by frame
         if self.frame < len(self.sprite_dict[self.action][self.direction]) - 1:
-            self.frame += 0.12
-        else:
-            # Keep it at the last frame
             self.frame = len(self.sprite_dict[self.action][self.direction]) - 1
 
 
 
-    def go_back(self, origin):
+    def return_animation(self, origin):
         self.sprinting = True
 
         dx = origin.x - self.x + self.width // 2
@@ -183,12 +175,18 @@ class Entity(pygame.sprite.Sprite):
         if distance > 0:
             self.action = "running"
             self.direction = "right" if dx > 0 else "left"
-            self.move((dx / distance, dy / distance))
+            self.move((dx * 2 / distance, dy * 2 / distance))
 
             if distance < 30:
                 self.direction = "left" if self.direction == "right" else "right"
                 self.action = "idle"
-                self.move_back = False
+
+                if self.frame != 0 and self.action != "sword_slash":
+                    self.frame = 0
+                if self.frame < len(self.sprite_dict[self.action][self.direction]) - 1:
+                    self.return_trigger = False
+                    self.sprinting = False
+
 
 
 
