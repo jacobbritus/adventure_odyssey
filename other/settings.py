@@ -18,5 +18,6 @@ FOREST_MAP = get_file_location("tmx/untitled.tmx")
 FOREST_MUSIC = get_file_location("sounds/background/forest_theme.mp3")
 BATTLE_MUSIC_1 = get_file_location("sounds/background/12-Fight3.mp3")
 
+
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
 

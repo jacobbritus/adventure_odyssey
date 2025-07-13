@@ -20,10 +20,11 @@ class Player(Entity):
         self.direction_pause = 0
         self.direction: str = direction
         self.action: str = "idle"
+        self.blocking = False
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites
-        self.image = self.sprite_dict[self.action][self.direction][math.floor(self.frame)]
+        self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(-16, -16)
@@ -52,6 +53,17 @@ class Player(Entity):
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
+
+
+        if key_pressed[pygame.K_b]:
+            self.blocking = True
+        else:
+            self.blocking = False
+
+        if self.in_battle:
+            return
+
+        # Overworld controls
 
         if key_pressed[pygame.K_LSHIFT]:
             self.sprinting = True
@@ -97,15 +109,10 @@ class Player(Entity):
 
     def update(self) -> None:
         """Draw the player in the game window."""
-        if not self.in_battle:
-            self.controls()
+        self.controls()
 
         if not self.death: self.animations()
-        self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
-
-
-
-
+        self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
 
 class DustParticle(pygame.sprite.Sprite):
     """A class to manage dust particles."""

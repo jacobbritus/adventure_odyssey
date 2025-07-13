@@ -74,7 +74,7 @@ class Enemy(Entity):
         """Draw the player in the game window."""
         if not self.in_battle: self.get_status(player)
         if not self.death: self.animations()
-        self.image = self.sprite_dict[self.action][self.direction][int(self.frame)]
+        self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
 
 
 

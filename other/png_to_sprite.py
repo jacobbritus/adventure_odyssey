@@ -1,8 +1,10 @@
-import pygame
 import os
+import pygame
 
-pygame.init()
+def get_file_location(file_location: str) -> str:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
+    return os.path.join(base_dir, "..", file_location)
 
 def sprite_converter(sprite_file: str, row: int, sprites_amount: int, sprite_width: int, sprite_height: int,
                      flip: bool) -> list:
@@ -33,59 +35,81 @@ def sprite_converter(sprite_file: str, row: int, sprites_amount: int, sprite_wid
 
 
 player_sprites = {
-    "running":
-        {
-            "down": sprite_converter("sprites/characters/me2.png", 3, 6, 96, 80, False),
-            "right": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/me2.png", 5, 6, 96, 80, False)},
-    "idle":
-        {
+    "idle": {
+        "sprites": {
             "down": sprite_converter("sprites/characters/me2.png", 0, 6, 96, 80, False),
             "right": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, False),
             "left": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/me2.png", 2, 6, 96, 80, False)},
-    # "punch": {
-    #         "right": sprite_converter("sprites/characters/punch.png", 0, 5, 80, 80, False)},
-
+            "up": sprite_converter("sprites/characters/me2.png", 2, 6, 96, 80, False),
+        },
+        "sound": get_file_location("sounds/sword_slash")
+    },
+    "running": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/me2.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/me2.png", 5, 6, 96, 80, False),
+        },
+        "sound": "sounds/footsteps.wav"
+    },
     "sword_slash": {
-        "right": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, False),
-        "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True)},
+        "sprites": {
+            "right": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True),
+        },
+        "sound": get_file_location("sounds/sword_slash.wav"),
+        "impact_frame": 1
 
+
+    },
     "death": {
-        "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
-        "left": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, True)}
-
-
+        "sprites": {
+            "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, True),
+        },
+        "sound": "sounds/death.wav"
+    }
 }
+
 
 sprite_dust = sprite_converter("sprites/particles/dust.png", 0, 4, 24, 24, False)
 
 skeleton_sprites = {
-    "running":
-        {
-            "down": sprite_converter("sprites/characters/skeleton_swordless2.png", 3, 6, 96, 80, False),
-            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 5, 6, 96, 80, False)},
-    "idle":
-        {
+    "idle": {
+        "sprites": {
             "down": sprite_converter("sprites/characters/skeleton_swordless2.png", 0, 6, 96, 80, False),
             "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 1, 6, 96, 80, False),
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 1, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 2, 6, 96, 80, False)},
-
+            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 2, 6, 96, 80, False),
+        },
+        "sound": None
+    },
+    "running": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/skeleton_swordless2.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 5, 6, 96, 80, False),
+        },
+        "sound": "sounds/skeleton_run.wav"
+    },
     "sword_slash": {
-        "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, False),
-        "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, True)},
-
+        "sprites": {
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 4, 96, 80, True),
+        },
+        "sound": get_file_location("sounds/sword_slash.wav"),
+        "impact_frame": 3
+    },
     "death": {
+        "sprites": {
             "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, False),
-            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, True)}
-
+            "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, True),
+        },
+        "sound": "sounds/skeleton_death.wav"
+    }
 }
 
-def get_file_location(file_location: str) -> str:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    return os.path.join(base_dir, "..", file_location)
+

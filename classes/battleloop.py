@@ -82,9 +82,7 @@ class BattleLoop:
         self.state = "player_animation"
         # attack_type = ... gets inputted in button as action
 
-        self.enemy.hp -= self.player.dmg
 
-        self.enemy_hp_bar.set_hp(self.enemy.hp)
 
     def animation(self):
         if self.state == "player_animation":
@@ -93,7 +91,9 @@ class BattleLoop:
 
             elif self.player.attack_trigger:
                 self.enemy_hp_bar.update()
-                self.player.attack_animation(self.enemy)
+                self.player.attack_animation(self.enemy, "sword_slash")
+                self.enemy_hp_bar.set_hp(self.enemy.hp)
+
 
             elif self.player.return_trigger:
                 self.player.return_animation(self.player_position)
@@ -112,8 +112,9 @@ class BattleLoop:
                 self.enemy.approach_animation(self.player)
 
             elif self.enemy.attack_trigger:
-                self.enemy.attack_animation(self.player)
                 self.player_hp_bar.update()
+                self.enemy.attack_animation(self.player, "sword_slash")
+                self.player_hp_bar.set_hp(self.player.hp)
 
             elif self.enemy.return_trigger:
                 self.enemy.return_animation(self.enemy_position)
@@ -134,9 +135,7 @@ class BattleLoop:
         self.enemy.approach_trigger = True
         self.state = "enemy_animation"
 
-        self.player.hp -= self.enemy.dmg
 
-        self.player_hp_bar.set_hp(self.player.hp)
 
     def enemy_turn(self):
         # add random actions in the future
