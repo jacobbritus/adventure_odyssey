@@ -1,5 +1,7 @@
 import math
 
+import pygame
+
 from classes.entity import Entity
 from other.settings import *
 
@@ -14,6 +16,7 @@ class Player(Entity):
         # Location
         self.x: int = spawn_coordinates[0]
         self.y: int = spawn_coordinates[1]
+        self.screen_position = pygame.math.Vector2
 
         # Movement
         self.sprinting: bool = False
@@ -48,7 +51,9 @@ class Player(Entity):
         self.dust_cooldown = 400
         self.dust_particles = dust_particles
 
-        self.mask_image = pygame.mask.from_surface(self.image)
+        self.mask_image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+
+
 
 
     def controls(self) -> None:
@@ -56,10 +61,7 @@ class Player(Entity):
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
 
-        if key_pressed[pygame.K_b] :
-            self.blocking = True
-        else:
-            self.blocking = False
+
 
         if self.in_battle:
             return
@@ -108,16 +110,23 @@ class Player(Entity):
             self.direction_pause = 0
             self.action = "idle"
 
-    def update(self) -> None:
+    def update_player(self, offset, window) -> None:
         """Draw the player in the game window."""
-        if self.hp <= 0:
-            self.death_animation()
+        # print(offset)
+        if not self.in_battle:
+            self.screen_position = pygame.math.Vector2(WINDOW_WIDTH // 2 - self.width // 2, WINDOW_HEIGHT // 2 - self.height // 2)
+        else:
+            self.screen_position = pygame.math.Vector2(self.x - offset.x,
+                                                       self.y - offset.y)
+
+        if self.blocking:
+            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            window.blit(mask, self.screen_position)
 
         self.controls()
 
-        if not self.death:
-            self.animations()
-            self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
+        self.update_animations()
+
 
 
 class DustParticle(pygame.sprite.Sprite):

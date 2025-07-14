@@ -2,7 +2,7 @@ from other.settings import *
 
 class Damage:
     def __init__(self, pos, damage):
-        self.font = pygame.font.Font(RPG_TEXT, 16)
+        self.font = pygame.font.Font(TEXT_ONE, 16)
         self.damage = self.font.render(damage , True, (99, 61, 76))
         self.pos = pos
 
@@ -22,10 +22,13 @@ class Hpbar:
         self.hp_bar = pygame.image.load(HP_BAR)
         self.hp_icon = pygame.image.load(HP_ICON)
 
-        self.font = pygame.font.Font(RPG_TEXT, 16)
-        self.hp_status = self.font.render(f"{current_hp}/{max_hp}",True, (99, 61, 76))
+        self.font = pygame.font.Font(TEXT_ONE, 8 * SCALE)
 
         self.title_box = pygame.image.load(TITLE_BOX)
+        self.name = self.font.render(name, True, (255, 194, 161))
+
+
+        self.hp_status = self.font.render(f"{current_hp}/{max_hp}",True, (99, 61, 76))
         self.name = self.font.render(name,True, (255, 194, 161)
 )
         name_width = self.name.get_width()
@@ -33,36 +36,37 @@ class Hpbar:
 
         self.bar_size = self.hp_bar.get_size()
 
-        y_padding = pos[1] // 3
+        y_padding = pos[1] // 1.2 + self.background_box.get_width() // 2
         if pos2 == "left":
-            x_padding = 16
+            x_padding = 8 * SCALE
 
-            self.box_position = (0 + x_padding, pos[1] - y_padding + 40)
-            self.title_box_position = (self.box_position[0] + 32, self.box_position[1] - 8)
+            self.box_position = (0 + x_padding, pos[1] - y_padding + 20 * SCALE)
+            self.title_box_position = (self.box_position[0] + SCALE - 2, self.box_position[1] - 4 * SCALE)
             self.name_position = (
-                self.title_box_position[0] + (98 - name_width) // 2,
-                self.title_box_position[1] + 6
+                self.title_box_position[0] + (49 * SCALE - name_width) // 2,
+                self.title_box_position[1] + 3 * SCALE
             )
 
-            self.hp_bar_position = (self.box_position[0] + 48, self.box_position[1] + 24)
-
-            self.hp_icon_position = (self.hp_bar_position[0] - 36, self.hp_bar_position[1] - 4)
-            self.hp_status_position = (self.hp_icon_position[0] + 90, self.hp_icon_position[1] + 26)
+            self.hp_bar_position = (self.box_position[0] + 17 * SCALE, self.box_position[1] + 9 * SCALE)
+            self.hp_icon_position = (self.hp_bar_position[0] - 13 * SCALE, self.hp_bar_position[1] - 2 * SCALE)
+            self.hp_status_position = (self.hp_icon_position[0] + 16 * SCALE, self.hp_icon_position[1] + 12 * SCALE)
 
         else:
-            x_padding = 80
-            self.box_position = (pos[0] - (self.hp_bar.get_width() + x_padding), pos[1] - y_padding + 40)
-            self.title_box_position = (self.box_position[0] + 32, self.box_position[1] - 8)
-            self.name_position = (
-                self.title_box_position[0] + (98 - name_width) // 2,
-                self.title_box_position[1] + 6)
-
-            self.hp_bar_position = (self.box_position[0] + 16, self.box_position[1] + 24)
+            x_padding = 32 * SCALE
 
             self.hp_icon = pygame.transform.flip(self.hp_icon, True, False)
-            self.hp_icon_position = (self.hp_bar_position[0] + 100, self.hp_bar_position[1] - 4)
+            self.title_box = pygame.transform.flip(self.title_box, True, False)
 
-            self.hp_status_position = (self.hp_icon_position[0] - 96, self.hp_icon_position[1] + 26)
+            self.box_position = (pos[0] - (self.hp_bar.get_width() + x_padding), pos[1] - y_padding + 20 * SCALE)
+            self.title_box_position = (self.box_position[0] + 24 * SCALE, self.box_position[1] - 4 * SCALE)
+            self.name_position = (
+                self.title_box_position[0] + (49 * SCALE - name_width) // 2,
+                self.title_box_position[1] + 3 * SCALE
+            )
+
+            self.hp_bar_position = (self.box_position[0] + 6 * SCALE, self.box_position[1] + 9 * SCALE)
+            self.hp_icon_position = (self.hp_bar_position[0] + 46 * SCALE, self.hp_bar_position[1] - 2 * SCALE)
+            self.hp_status_position = (self.hp_icon_position[0] - 24 * SCALE, self.hp_icon_position[1] + 12 * SCALE)
 
 
         self.current_width = int(self.bar_size[0] * self.hp / self.max_hp)
@@ -113,20 +117,28 @@ class Hpbar:
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, group, pos: tuple[int, int], action, text):
+    def __init__(self, group, action, text, number):
         super().__init__(group)
-        self.image_normal = pygame.image.load(BUTTON_NORMAL)
-        self.image_pressed = pygame.image.load(BUTTON_PRESSED)
-        self.image_selected = pygame.image.load(BUTTON_SELECTED)
+        self.image_normal = pygame.image.load(BUTTON_TWO_NORMAL)
+        self.image_pressed = pygame.image.load(BUTTON_TWO_PRESSED)
+        self.image_selected = pygame.image.load(BUTTON_TWO_SELECTED)
         self.image = self.image_normal
 
-        self.pos = (pos[0] - self.image.get_size()[0] // 2, pos[1])
+        if number == "one":
+            self.pos = ((WINDOW_WIDTH // 2) - self.image.get_width() , WINDOW_HEIGHT // 1.25)
+        elif number == "two":
+            self.pos = ((WINDOW_WIDTH // 2) + self.image.get_width() // 6 , WINDOW_HEIGHT // 1.25)
+
+        elif number == "middle":
+            self.pos = ((WINDOW_WIDTH // 2) - self.image.get_width() // 2 , WINDOW_HEIGHT // 1.25)
+
+
         self.rect = self.image.get_rect(topleft = self.pos)
 
         self.action = action
 
         if text:
-            self.font = pygame.font.Font(RPG_TEXT, 16)
+            self.font = pygame.font.Font(TEXT_ONE, 16)
             self.text = self.font.render(text,True, (99, 61, 76)
 )
             self.size = self.text.get_size()

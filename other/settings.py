@@ -1,9 +1,15 @@
+from token import EXCLAMATION
+
 from other.png_to_sprite import *
 import os
 
 
-WINDOW_WIDTH = 1080
-WINDOW_HEIGHT = 720
+SCALE = 2
+
+
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 360
+
 FPS = 60
 TILE_SIZE = 32
 
@@ -25,17 +31,24 @@ PRESS_SOUND = get_file_location("sounds/click.wav")
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
 
 # UI
-BACKGROUND_BOX = get_file_location("sprites/UI/background_box.png")
-TITLE_BOX = get_file_location("sprites/UI/title_box.png")
-
-HP_BOX = get_file_location("sprites/UI/Slider01_Box.png")
-HP_BAR = get_file_location("sprites/UI/Slider01_Bar02.png")
-HP_ICON = get_file_location("sprites/UI/heart_icon.png")
+BACKGROUND_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/background_box.png")
+TITLE_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/title_box.png")
+HP_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/hp_box.png")
+HP_BAR = get_file_location(f"sprites/UI/{str(SCALE)}x/hp_bar.png")
 
 
-BUTTON_NORMAL = get_file_location("sprites/UI/Button_01A_Normal.png")
-BUTTON_SELECTED = get_file_location("sprites/UI/Button_01A_Selected.png")
-BUTTON_PRESSED = get_file_location("sprites/UI/Button_01A_Pressed.png")
+HP_ICON = get_file_location(f"sprites/UI/{str(SCALE)}x/heart_icon.png")
+EXCLAMATION_MARK = get_file_location(f"sprites/UI/{str(SCALE)}x/exclamation_mark.png")
 
-RPG_TEXT = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
+
+BUTTON_NORMAL = get_file_location(f"sprites/UI/{str(SCALE)}x/button_one_normal.png")
+BUTTON_SELECTED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_one_selected.png")
+BUTTON_PRESSED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_one_pressed.png")
+
+BUTTON_TWO_NORMAL = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_normal.png")
+BUTTON_TWO_SELECTED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_selected.png")
+BUTTON_TWO_PRESSED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_pressed.png")
+
+TEXT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
+TEXT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")
 

@@ -9,6 +9,7 @@ class Enemy(Entity):
         # General
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
+        self.detected_player = True
 
         # Stats
         self.monster_name = monster_name
@@ -25,6 +26,8 @@ class Enemy(Entity):
         self.width, self.height = pygame.Surface.get_size(surf)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(32, 32)
+        self.exclamation_mark = pygame.image.load(EXCLAMATION_MARK)
+
 
     def get_sprites(self) -> list or None:
         if self.monster_name == "Skeleton":
@@ -46,6 +49,8 @@ class Enemy(Entity):
         if distance <= detection_radius:
             # Enemy sees player - start chasing
             self.action = "running"
+            self.detected_player = True
+
         
             # Determine primary direction based on largest distance
             if abs(x_distance) > abs(y_distance):
@@ -69,16 +74,20 @@ class Enemy(Entity):
         else:
             # Player is too far - enemy stops
             self.action = "idle"
+            self.detected_player = False
 
-    def update_enemy(self, player) -> None:
-        if self.hp <= 0:
-            self.death_animation()
+
+    def update_enemy(self, player, window, offset) -> None:
+        # window.blit(player.image, (self.rect.x - offset.x, self.rect.y - offset.y)) future use
+
+        if self.detected_player and not self.in_battle:
+            window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + self.width // 2, self.rect.y - offset.y - 8))
 
         """Draw the player in the game window."""
         if not self.in_battle: self.get_status(player)
-        if not self.death:
-            self.animations()
-            self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
+
+        self.update_animations()
+
 
 
 

@@ -38,6 +38,8 @@ class Entity(pygame.sprite.Sprite):
         self.hit_landed = False
         self.blocking = False
         self.wait_trigger = False
+        self.death_trigger = False
+
 
         # Sound
         self.sound_played = False
@@ -76,6 +78,8 @@ class Entity(pygame.sprite.Sprite):
         self.frame += iterate_speed
 
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]): self.frame = 0
+
+        self.image = self.sprite_dict[self.action]["sprites"][self.direction][int(self.frame)]
 
     def obstacle_collisions(self) -> bool:
         """Check if the player is colliding with any other obstacle sprite."""
@@ -129,12 +133,16 @@ class Entity(pygame.sprite.Sprite):
 
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
 
-        if impact_frame is not None and self.frame > impact_frame and not self.hit_landed:
+        if impact_frame is not None and self.frame > impact_frame and not self.hit_landed and not target.death:
+
             self.hit_landed = True
             self.handle_attack_impact(target)
 
             # Mask when hit
             target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+
+            # Hit animation
+
 
 
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
@@ -147,6 +155,7 @@ class Entity(pygame.sprite.Sprite):
                 self.return_trigger = True
                 self.sound_played = False
                 self.hit_landed = False
+                target.action = "idle"
 
 
     def handle_attack_impact(self, target):
@@ -154,23 +163,33 @@ class Entity(pygame.sprite.Sprite):
             pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
             self.sound_played = True
 
-            target.hp -= self.dmg
+            if target.blocking:
+                target.hp -= self.dmg // 2
+            else:
+                target.hp -= self.dmg
+
+
 
             if target.hp <= 0 and not target.death:
-                target.death_animation()
+                pass
+            else:
                 target.frame = 0
+                target.action = "death"
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
 
-        if self.frame != 0 and self.action != "death":
+        if self.action != "death":
             self.frame = 0
             self.action = "death"
 
         # Play the animation frame by frame
-        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
-            self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
+        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2:
             self.death = True
+
+
+
+
 
 
     def return_animation(self, origin) -> None:
@@ -195,3 +214,16 @@ class Entity(pygame.sprite.Sprite):
                 if self.frame < len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
                     self.return_trigger = False
                     self.sprinting = False
+
+
+    def update_animations(self) -> None:
+        if self.death:
+            self.action = "death"
+            death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
+            self.image = self.sprite_dict[self.action]["sprites"][self.direction][death_frame]
+        else:
+            if self.hp <= 0:
+                self.death_animation()
+
+            self.animations()
+

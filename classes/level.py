@@ -1,4 +1,6 @@
 import pytmx
+
+from classes.UI import Hpbar
 from classes.camera import YSortCameraGroup
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle
@@ -19,6 +21,7 @@ class Level:
         self.action_sprites: pygame.sprite.Group = pygame.sprite.Group()
 
         self.player = None
+        self.player_hp_bar = None
         self.create_map()
 
     def create_map(self):
@@ -84,6 +87,8 @@ class Level:
                         dust_particles=self.dust_particle,
                     )
 
+                # enemy.name in the future
+
                 # seperate this too
 
 
@@ -95,19 +100,31 @@ class Level:
             self.visible_sprites.update_soundtrack()
             self.battle()
 
-    def overworld(self) -> None:
+    def battle_transition(self):
         if not self.visible_sprites.battle_participants:
             self.visible_sprites.enemy_collision(self.player)
         else:
             if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
                 self.visible_sprites.start_battle()
 
-        self.visible_sprites.custom_draw(self.player)
+    def overworld_transition(self):
+        if self.visible_sprites.battle_loop.state == "end_battle" and not self.visible_sprites.delay:
+            self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
+            self.visible_sprites.transition_timer = pygame.time.get_ticks()
+
+        if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
+            self.visible_sprites.end_battle()
+
+
+    def overworld(self) -> None:
+
+        self.battle_transition()
+
         self.visible_sprites.update()
+        self.visible_sprites.draw_sprites()
+        self.visible_sprites.update_camera(self.player)
+
         self.visible_sprites.update_enemies(self.player)
-
-        # if self.visible_sprites.transition: self.visible_sprites.darken_screen()
-
         self.visible_sprites.transition_screen()
 
     def battle(self):
@@ -115,24 +132,20 @@ class Level:
         self.visible_sprites.battle_loop.offset = self.visible_sprites.offset
         self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
 
-        self.visible_sprites.custom_draw(self.player)
+        # self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
+        self.visible_sprites.draw_sprites()
+        self.visible_sprites.update_camera(self.player)
+
+
         self.visible_sprites.update_enemies(self.player)
 
         self.visible_sprites.battle_loop.update()
 
         # end battle
-        if self.visible_sprites.battle_loop.state == "end_battle" and not self.visible_sprites.delay:
-            self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
-            self.visible_sprites.transition_timer = pygame.time.get_ticks()
-
-
-        if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
-            self.visible_sprites.end_battle()
-
+        self.overworld_transition()
         self.visible_sprites.transition_screen()
 
-        # if self.visible_sprites.transition: self.visible_sprites.darken_screen()
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)

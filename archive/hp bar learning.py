@@ -1,6 +1,7 @@
 import pygame
 
 from classes.UI import Hpbar, Button
+from other.settings import *
 
 
 def one():
@@ -10,16 +11,16 @@ def two():
     print("noooo")
 
 pygame.init()
-window = pygame.display.set_mode((640, 480))
+window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = pygame.time.Clock()
 
 buttons_group = pygame.sprite.Group()
 
-window_center_x = window.get_width() // 2
-window_center_y = window.get_height() // 2
-
 player_hp_bar = Hpbar((window.get_size()), "left", 20, 20, "JACOB")
 enemy_hp_bar = Hpbar((window.get_size()), "right", 20, 20, "SKELETON")
+
+button = Button(buttons_group, one, "ATTACK", "one")
+button_two = Button(buttons_group, one, "RUN", "two")
 
 
 while True:
@@ -31,6 +32,10 @@ while True:
 
     player_hp_bar.draw(window)
     enemy_hp_bar.draw(window)
+    button.draw(window)
+    button.update()
+    button_two.draw(window)
+    button_two.update()
 
     clock.tick(60)
     pygame.display.update()

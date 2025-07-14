@@ -1,4 +1,6 @@
 import random
+
+from classes.UI import Hpbar
 from other.settings import *
 from classes.battleloop import BattleLoop
 
@@ -11,12 +13,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.display_surface = pygame.display.get_surface()
         self.display_rect = self.display_surface.get_rect()
 
+
         # Calculate the center of the screen.
         self.screen_center_x = self.display_surface.get_width() // 2
         self.screen_center_y = self.display_surface.get_height() // 2
 
         # Used to track how far the player has moved from the center.
         self.offset = pygame.math.Vector2()
+        self.offset_float = pygame.math.Vector2()
 
         self.enemy_sprites: list = []
         self.obstacles: []
@@ -66,11 +70,13 @@ class YSortCameraGroup(pygame.sprite.Group):
             if inflated_display_rect.collidepoint(offset_pos):
                 yield sprite
 
-    def custom_draw(self, player):
-        # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
-        # Move all sprites by the offset calculated here
+
+    def update_camera(self, player):
+        player.update_player(self.offset, self.display_surface)
+
 
         if self.state == "OVERWORLD":
+
             self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
             self.offset.y = player.rect.centery - self.screen_center_y
 
@@ -81,7 +87,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.shake_duration = 1
                 self.shake_intensity = 2
 
-
             if self.animation_camera == "player_animation":
                 target_x = player.rect.centerx - self.screen_center_x
                 target_y = player.rect.centery - self.screen_center_y
@@ -91,12 +96,17 @@ class YSortCameraGroup(pygame.sprite.Group):
                 target_y = self.battle_participants[1].rect.centery - self.screen_center_y
 
             else:
-                target_x = int(self.battle_position[0] - self.screen_center_x)
-                target_y = int(self.battle_position[1] - self.screen_center_y)
+                target_x = self.battle_position[0] - self.screen_center_x
+                target_y = self.battle_position[1] - self.screen_center_y
 
             # Smoothly move offset toward the target
-            self.offset.x += int((target_x - self.offset.x) * camera_speed)
-            self.offset.y += int((target_y - self.offset.y) * camera_speed)
+            # Keep float offset for calculations
+            self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
+            self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
+
+            # Round offset before drawing
+            self.offset.x = round(self.offset_float.x)
+            self.offset.y = round(self.offset_float.y)
 
             if self.shake_duration > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
@@ -107,6 +117,10 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.shake_duration = 0
                 self.shake_intensity = 0
 
+
+    def draw_sprites(self):
+        # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
+        # Move all sprites by the offset calculated here
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
 
@@ -148,51 +162,49 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.offset += self.shake_offset
 
+
+
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
         for sprite in self.enemy_sprites:
-            sprite.update_enemy(player)
+            sprite.update_enemy(player, self.display_surface, self.offset)
 
     def start_battle(self):
-        if self.state == "OVERWORLD":
-            player, enemy = self.battle_participants
+        player, enemy = self.battle_participants
 
-            spots2 = self.find_battle_spot(player.rect)
+        spots2 = self.find_battle_spot(player.rect)
+        print("tried")
 
-            if spots2:
-                self.state = "BATTLE"
-                self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
+        if spots2:
+            print("success")
+            self.state = "BATTLE"
+            self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
 
-                def get_positions_in_rect(rect, n):
-                    spacing = 200
-                    y = rect.centery
-                    return [(rect.left + spacing * i, y) for i in range(1, n + 1)]
+            def get_positions_in_rect(rect, n):
+                spacing = 250
+                y = rect.centery
+                return [(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
-                positions = get_positions_in_rect(spots2, 2)
+            positions = get_positions_in_rect(spots2, 2)
 
-                enemy.in_battle = True
-                player.in_battle = True
+            enemy.x, enemy.y = positions[1]
+            enemy.rect.topleft = (int(enemy.x), int(enemy.y))
 
-                enemy.x, enemy.y = positions[1]
-                enemy.rect.topleft = (int(enemy.x), int(enemy.y))
+            player.x, player.y = positions[0]
+            player.rect.topleft = (int(player.x), int(player.y))
 
-                player.x, player.y = positions[0]
-                player.rect.topleft = (int(player.x), int(player.y))
+            player.face_target(enemy)
+            enemy.face_target(player)
 
-                player.face_target(enemy)
-                enemy.face_target(player)
+            battle_center_x = (player.rect.centerx + enemy.rect.centerx) // 2
+            battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
+            self.battle_position.update(battle_center_x, battle_center_y)
 
-                player.action = "idle"
-                enemy.action = "idle"
+            self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
+        else:
+            print("failed")
 
-                battle_center_x = (player.rect.centerx + enemy.rect.centerx) // 2
-                battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
-                self.battle_position.update(battle_center_x, battle_center_y)
-
-                self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
-            else:
-                print("L")
 
 
     def enemy_collision(self, player):
@@ -200,20 +212,24 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
-            if player.rect.inflate(-player.rect.width // 2, -player.rect.height // 2).colliderect(
-                    enemy.rect.inflate(-enemy.rect.width // 2, -enemy.rect.height // 2)):
+            if player.rect.inflate(-player.rect.width // 3, -player.rect.height // 3).colliderect(
+                    enemy.rect.inflate(-enemy.rect.width // 3, -enemy.rect.height // 3)):
                 self.battle_participants = [player, enemy]
                 self.transition_timer = pygame.time.get_ticks()
                 self.delay = pygame.time.get_ticks() + self.delay_time
-                break
+                for participant in self.battle_participants:
+                    participant.in_battle = True
+                    participant.action = "idle"
 
+
+                break
 
 
     def transition_screen(self):
         if self.transition_timer:
             now = pygame.time.get_ticks()
             time_elapsed = now - self.transition_timer
-            alpha = int((time_elapsed / self.delay_time) * 755)
+            alpha = int((time_elapsed / self.delay_time) * 1000)
             overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)  # enable per-pixel alpha
 
             if alpha < 255:
@@ -224,8 +240,9 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.display_surface.blit(overlay, (0, 0))
 
             if now > self.delay:
-                self.transition_timer = None
                 self.delay = None
+
+                self.transition_timer = None
 
 
 
@@ -251,7 +268,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
 
-    def find_battle_spot(self, player_rect, search_radius = 400, step = 20):
+    def find_battle_spot(self, player_rect, search_radius = 300, step = 20):
         """Find a nearby unobstructed rectangular area for battle."""
 
         spot_size = (300, 48)
@@ -278,4 +295,5 @@ class YSortCameraGroup(pygame.sprite.Group):
                     # pygame.draw.rect(self.display_surface, (255, 0,0), candidate)
                     return candidate
 
+        print("no")
         return None

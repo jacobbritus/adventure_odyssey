@@ -1,6 +1,6 @@
 import pygame
 from classes.UI import Hpbar, Button
-from other.settings import RPG_TEXT
+from other.settings import *
 
 
 # Add options like Defend, Use Item, etc.
@@ -48,9 +48,18 @@ class BattleLoop:
 
         self.delay = pygame.time.get_ticks() + 0
 
+        # Hotkey stuff
+        self.block_duration = 250 # blocking last time
+        self.block_cooldown_end = 0 # when blocking ends
+        self.block = False # whether blocking is True
+        self.block_delay = 2000
+
 
 
     def update(self):
+        if self.block and pygame.time.get_ticks() >= self.block_cooldown_end:
+            self.block = False
+            self.player.blocking = False
 
         self.handle_input()
         self.animation()
@@ -70,30 +79,49 @@ class BattleLoop:
             elif self.state == "end_screen":
                 self.display_menu_options = True
 
-    def draw_ui(self, window):
-        self.player_hp_bar.draw(window)
-        self.enemy_hp_bar.draw(window)
-        font = pygame.font.Font(RPG_TEXT, 32)
+    def action_lock(self) -> bool:
+        return (
+                self.player.approach_trigger or
+                self.enemy.approach_trigger or
+                self.player.wait_trigger or
+                self.enemy.wait_trigger or
+                self.player.attack_trigger or
+                self.enemy.attack_trigger
+        )
 
+    def display_dmg(self):
+        font = pygame.font.Font(TEXT_TWO, 22)
 
         if self.player.hit_landed:
+
             damage_text = font.render(str(self.player.dmg), True, (255, 255, 255))
 
             self.window.blit(damage_text, self.enemy_damage_position)
-            self.enemy_damage_position.y -= 0.5
+            self.enemy_damage_position.y -= 1
 
 
         elif self.enemy.hit_landed:
-            damage_text = font.render(str(self.enemy.dmg), True, (255, 255, 255))
-            self.window.blit(damage_text, self.player_damage_position)
-            self.player_damage_position.y -= 0.5
+            dmg = self.enemy.dmg
+            if self.player.blocking:
+                dmg = dmg // 2
 
+            damage_text = font.render(str(dmg), True, (255, 255, 255))
+            self.window.blit(damage_text, self.player_damage_position)
+            self.player_damage_position.y -= 1
 
         else:
-            self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x + 32,
+            self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x - 16,
                                                         self.enemy.y - self.offset.y - 16)
-            self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 32,
-                                                        self.player.y - self.offset.y - 16)
+            self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 64,
+                                                         self.player.y - self.offset.y - 16)
+
+    def draw_ui(self, window):
+        if not self.action_lock() or self.player.hit_landed or self.enemy.hit_landed:
+            self.player_hp_bar.draw(window)
+            self.enemy_hp_bar.draw(window)
+            self.display_dmg()
+
+
 
         if self.buttons and self.display_menu_options:
             for button in self.buttons:
@@ -108,18 +136,19 @@ class BattleLoop:
     def handle_input(self):
         if not self.buttons_group:
             if self.state == "player_turn":
-                self.buttons = [Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_attack, "Attack"),
-                    Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")]
+                self.buttons = [Button(self.buttons_group,  self.player_attack, "Attack", "one"),
+                    Button(self.buttons_group, self.player_run, "Run", "two")]
 
 
-                Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_attack, "Attack")
-                Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5) + 32), self.player_run, "Run")
+
 
             if self.state == "end_screen":
-                self.buttons = [Button(self.buttons_group, (self.window.get_width() // 2, int(self.window.get_height() // 1.5)), self.player_run, "Done")]
+                self.buttons = [Button(self.buttons_group, self.player_run, "Done", "middle")]
 
 
     def hotkeys(self, event):
+            current_time = pygame.time.get_ticks()
+
             if event.type == pygame.KEYDOWN:
 
                 # Navigate up
@@ -144,7 +173,15 @@ class BattleLoop:
 
                 # Confirm selection
                 elif event.key == pygame.K_RETURN:
-                    self.buttons[self.number].clicked = True  # <-- Call your button action here
+                    self.buttons[self.number].clicked = True
+
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+                    if not self.block and current_time >= self.block_cooldown_end + self.block_delay:
+                        self.block = True
+                        self.player.blocking = True
+                        self.block_cooldown_end = current_time + self.block_duration  # Next time we can block again
+
+            print(self.player.blocking)
 
     def player_run(self):
         self.state = "end_battle"
@@ -176,6 +213,9 @@ class BattleLoop:
 
             elif self.player.return_trigger:
                 self.player.return_animation(self.player_position)
+                self.enemy_hp_bar.update()
+
+
 
             elif self.enemy.hp <= 0:
                 self.state = "end_screen"
@@ -206,6 +246,9 @@ class BattleLoop:
 
             elif self.enemy.return_trigger:
                 self.enemy.return_animation(self.enemy_position)
+                self.player_hp_bar.update()
+
+
 
             elif self.player.hp <= 0 and not self.enemy.return_trigger:
                 self.state = "end_screen"
