@@ -1,5 +1,6 @@
 import pygame
 from classes.UI import Hpbar, Button
+from other.settings import RPG_TEXT
 
 
 # Add options like Defend, Use Item, etc.
@@ -8,7 +9,7 @@ from classes.UI import Hpbar, Button
 # Let the player choose a target if multiple enemies exist.
 
 class BattleLoop:
-    def __init__(self, player, enemy, window: pygame.Surface):
+    def __init__(self, player, enemy, window: pygame.Surface, offset):
         self.player = player
         self.enemy = enemy
         self.window: pygame.Surface = window
@@ -16,18 +17,24 @@ class BattleLoop:
         self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
         self.enemy_position: pygame.Vector2 = pygame.Vector2(enemy.x, enemy.y)
 
+        self.offset = offset
 
 
         self.return_to_overworld: bool = False
 
-        self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp)
+        self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
-        self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp)
+        self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, "SKELETON") #enemy.name in the future
 
         self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
         self.buttons = []
         self.display_menu_options = False
         self.number = 0
+
+        self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x + 32, self.enemy.y - self.offset.y - 16)
+        self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 32,
+                                                     self.player.y - self.offset.y - 16)
+
 
 
 
@@ -66,6 +73,27 @@ class BattleLoop:
     def draw_ui(self, window):
         self.player_hp_bar.draw(window)
         self.enemy_hp_bar.draw(window)
+        font = pygame.font.Font(RPG_TEXT, 32)
+
+
+        if self.player.hit_landed:
+            damage_text = font.render(str(self.player.dmg), True, (255, 255, 255))
+
+            self.window.blit(damage_text, self.enemy_damage_position)
+            self.enemy_damage_position.y -= 0.5
+
+
+        elif self.enemy.hit_landed:
+            damage_text = font.render(str(self.enemy.dmg), True, (255, 255, 255))
+            self.window.blit(damage_text, self.player_damage_position)
+            self.player_damage_position.y -= 0.5
+
+
+        else:
+            self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x + 32,
+                                                        self.enemy.y - self.offset.y - 16)
+            self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 32,
+                                                        self.player.y - self.offset.y - 16)
 
         if self.buttons and self.display_menu_options:
             for button in self.buttons:
@@ -146,7 +174,6 @@ class BattleLoop:
                 self.player.attack_animation(self.enemy, "sword_slash")
                 self.enemy_hp_bar.set_hp(self.enemy.hp)
 
-
             elif self.player.return_trigger:
                 self.player.return_animation(self.player_position)
 
@@ -174,6 +201,7 @@ class BattleLoop:
             elif self.enemy.attack_trigger:
                 self.player_hp_bar.update()
                 self.enemy.attack_animation(self.player, "sword_slash")
+
                 self.player_hp_bar.set_hp(self.player.hp)
 
             elif self.enemy.return_trigger:

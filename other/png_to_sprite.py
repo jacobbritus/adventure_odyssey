@@ -59,7 +59,7 @@ player_sprites = {
             "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True),
         },
         "sound": get_file_location("sounds/sword_slash.wav"),
-        "impact_frame": 1
+        "impact_frame": 2
 
 
     },

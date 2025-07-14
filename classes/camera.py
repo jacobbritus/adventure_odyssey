@@ -1,3 +1,4 @@
+import random
 from other.settings import *
 from classes.battleloop import BattleLoop
 
@@ -33,6 +34,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.delay = pygame.time.get_ticks() + 0
         self.transition_timer = 0
         self.delay_time = 3000
+
+        self.shake_duration = 0
+        self.shake_intensity = 5
+        self.shake_offset = pygame.Vector2(0, 0)
 
 
     def update_soundtrack(self):
@@ -72,6 +77,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         elif self.state == "BATTLE":
             camera_speed = 0.2
 
+            if not self.shake_duration and player.hit_landed or self.battle_participants[1].hit_landed:
+                self.shake_duration = 1
+                self.shake_intensity = 2
+
+
             if self.animation_camera == "player_animation":
                 target_x = player.rect.centerx - self.screen_center_x
                 target_y = player.rect.centery - self.screen_center_y
@@ -87,6 +97,15 @@ class YSortCameraGroup(pygame.sprite.Group):
             # Smoothly move offset toward the target
             self.offset.x += int((target_x - self.offset.x) * camera_speed)
             self.offset.y += int((target_y - self.offset.y) * camera_speed)
+
+            if self.shake_duration > 0:
+                self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
+                self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
+                self.shake_duration -= 1
+            else:
+                self.shake_offset = pygame.Vector2(0, 0)
+                self.shake_duration = 0
+                self.shake_intensity = 0
 
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
@@ -126,6 +145,8 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.display_surface.blit(enemy_sprite.image, offset_pos)
 
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
+
+        self.offset += self.shake_offset
 
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
@@ -169,9 +190,9 @@ class YSortCameraGroup(pygame.sprite.Group):
                 battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
                 self.battle_position.update(battle_center_x, battle_center_y)
 
-                self.battle_loop = BattleLoop(player, enemy, self.display_surface)
+                self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
             else:
-                self.battle_participants = None
+                print("L")
 
 
     def enemy_collision(self, player):

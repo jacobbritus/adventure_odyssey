@@ -96,7 +96,6 @@ class Level:
             self.battle()
 
     def overworld(self) -> None:
-        print(self.visible_sprites.battle_participants)
         if not self.visible_sprites.battle_participants:
             self.visible_sprites.enemy_collision(self.player)
         else:
@@ -113,6 +112,7 @@ class Level:
 
     def battle(self):
         # Make camera follow the animation
+        self.visible_sprites.battle_loop.offset = self.visible_sprites.offset
         self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
 
         self.visible_sprites.custom_draw(self.player)
