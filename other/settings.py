@@ -1,4 +1,3 @@
-from token import EXCLAMATION
 
 from other.png_to_sprite import *
 import os
@@ -7,8 +6,8 @@ import os
 SCALE = 2
 
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 360
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 FPS = 60
 TILE_SIZE = 32
@@ -26,6 +25,7 @@ BATTLE_MUSIC_1 = get_file_location("sounds/background/12-Fight3.mp3")
 
 HOVER_SOUND = get_file_location("sounds/hover.wav")
 PRESS_SOUND = get_file_location("sounds/click.wav")
+ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
 
 
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
@@ -35,6 +35,9 @@ BACKGROUND_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/background_box.png
 TITLE_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/title_box.png")
 HP_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/hp_box.png")
 HP_BAR = get_file_location(f"sprites/UI/{str(SCALE)}x/hp_bar.png")
+
+TIME_BACKGROUND = get_file_location(f"sprites/UI/{str(SCALE)}x/time_background.png")
+
 
 
 HP_ICON = get_file_location(f"sprites/UI/{str(SCALE)}x/heart_icon.png")

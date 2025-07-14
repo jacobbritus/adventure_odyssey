@@ -104,8 +104,10 @@ class Level:
         if not self.visible_sprites.battle_participants:
             self.visible_sprites.enemy_collision(self.player)
         else:
-            if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
+            if not self.visible_sprites.delay or pygame.time.get_ticks() >= self.visible_sprites.delay:
                 self.visible_sprites.start_battle()
+
+
 
     def overworld_transition(self):
         if self.visible_sprites.battle_loop.state == "end_battle" and not self.visible_sprites.delay:
@@ -117,7 +119,6 @@ class Level:
 
 
     def overworld(self) -> None:
-
         self.battle_transition()
 
         self.visible_sprites.update()
@@ -145,7 +146,6 @@ class Level:
         # end battle
         self.overworld_transition()
         self.visible_sprites.transition_screen()
-
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)

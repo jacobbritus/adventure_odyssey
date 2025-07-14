@@ -1,3 +1,5 @@
+import pygame.mixer
+
 from classes.entity import Entity
 from other.settings import *
 import math
@@ -49,6 +51,12 @@ class Enemy(Entity):
         if distance <= detection_radius:
             # Enemy sees player - start chasing
             self.action = "running"
+
+            if not self.detected_player:
+                sound = pygame.mixer.Sound(ENEMY_ALERT)
+                pygame.mixer.Sound.set_volume(sound, 0.1)
+                pygame.mixer.Sound(sound).play()
+
             self.detected_player = True
 
         

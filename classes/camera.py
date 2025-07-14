@@ -84,8 +84,8 @@ class YSortCameraGroup(pygame.sprite.Group):
             camera_speed = 0.2
 
             if not self.shake_duration and player.hit_landed or self.battle_participants[1].hit_landed:
-                self.shake_duration = 1
-                self.shake_intensity = 2
+                self.shake_duration = 5
+                self.shake_intensity = 3
 
             if self.animation_camera == "player_animation":
                 target_x = player.rect.centerx - self.screen_center_x
@@ -99,14 +99,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 target_x = self.battle_position[0] - self.screen_center_x
                 target_y = self.battle_position[1] - self.screen_center_y
 
-            # Smoothly move offset toward the target
-            # Keep float offset for calculations
-            self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
-            self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
 
-            # Round offset before drawing
-            self.offset.x = round(self.offset_float.x)
-            self.offset.y = round(self.offset_float.y)
 
             if self.shake_duration > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
@@ -117,13 +110,21 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.shake_duration = 0
                 self.shake_intensity = 0
 
+                # Smoothly move offset toward the target
+                # Keep float offset for calculations
+                self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
+                self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
+
+                # Round offset before drawing
+                self.offset.x = round(self.offset_float.x)
+                self.offset.y = round(self.offset_float.y)
+
 
     def draw_sprites(self):
         # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
         # Move all sprites by the offset calculated here
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
-
         # Draw all the ground sprites.
         ground_sprites = [sprite for sprite in self.get_visible_sprites() if
                           sprite.type and sprite.type in ["ground", "water"]]
@@ -162,8 +163,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.offset += self.shake_offset
 
-
-
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
@@ -182,7 +181,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
 
             def get_positions_in_rect(rect, n):
-                spacing = 250
+                spacing = 320
                 y = rect.centery
                 return [(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
@@ -212,8 +211,8 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
-            if player.rect.inflate(-player.rect.width // 3, -player.rect.height // 3).colliderect(
-                    enemy.rect.inflate(-enemy.rect.width // 3, -enemy.rect.height // 3)):
+            if player.rect.inflate(-player.rect.width // 4, -player.rect.height // 4).colliderect(
+                    enemy.rect.inflate(-enemy.rect.width // 4, -enemy.rect.height // 4)):
                 self.battle_participants = [player, enemy]
                 self.transition_timer = pygame.time.get_ticks()
                 self.delay = pygame.time.get_ticks() + self.delay_time
@@ -268,10 +267,10 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
 
-    def find_battle_spot(self, player_rect, search_radius = 300, step = 20):
+    def find_battle_spot(self, player_rect, search_radius = 640, step = 32):
         """Find a nearby unobstructed rectangular area for battle."""
 
-        spot_size = (300, 48)
+        spot_size = (640, 64)
 
         obstacles = [sprite for sprite in self.sprites() if sprite.type == "tree"]
 

@@ -39,6 +39,7 @@ class Entity(pygame.sprite.Sprite):
         self.blocking = False
         self.wait_trigger = False
         self.death_trigger = False
+        self.current_action = None
 
 
         # Sound
@@ -113,9 +114,9 @@ class Entity(pygame.sprite.Sprite):
 
             if self.rect.inflate(-self.rect.width + 8, -self.rect.height // 2).colliderect(
                         target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
-                self.frame = 0
 
                 self.approach_trigger = False
+                self.frame = 0
 
                 self.sprinting = False
 
@@ -126,10 +127,15 @@ class Entity(pygame.sprite.Sprite):
 
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
-        self.action = action
 
-        if self.frame != 0 and self.action != action:
+        self.current_action = action
+
+
+        if self.frame != 0 and not self.action == self.current_action:
             self.frame = 0
+            self.action = self.current_action
+
+
 
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
 
@@ -143,20 +149,17 @@ class Entity(pygame.sprite.Sprite):
 
             # Hit animation
 
+            print("test1")
+
 
 
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
+            self.attack_trigger = False
+            self.return_trigger = True
+            self.sound_played = False
+            self.hit_landed = False
+            target.action = "idle"
             self.action = "idle"
-
-
-            if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
-                self.attack_trigger = False
-                self.action = "running"
-                self.return_trigger = True
-                self.sound_played = False
-                self.hit_landed = False
-                target.action = "idle"
-
 
     def handle_attack_impact(self, target):
         if not self.sound_played:
@@ -167,8 +170,6 @@ class Entity(pygame.sprite.Sprite):
                 target.hp -= self.dmg // 2
             else:
                 target.hp -= self.dmg
-
-
 
             if target.hp <= 0 and not target.death:
                 pass
