@@ -2,6 +2,7 @@ import random
 
 import pygame
 from classes.UI import Hpbar, Button
+from classes.floatingdamage import FloatingDamage
 from other.settings import *
 
 
@@ -50,13 +51,16 @@ class BattleLoop:
         self.death_delay = 1000
         self.clock_time = pygame.time.get_ticks() + 10000
 
-
+        self.damage_group = pygame.sprite.Group()
+        self.damage_counter = 0
 
         # Hotkey stuff
         self.block_duration = 250 # blocking last time
         self.block_cooldown_end = 0 # when blocking ends
         self.block = False # whether blocking is True
         self.block_delay = 2000
+
+
 
     def timer_(self):
         if self.state == "player_turn" and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
@@ -114,25 +118,27 @@ class BattleLoop:
         )
 
     def display_dmg(self):
-        font = pygame.font.Font(TEXT_TWO, 22)
+        player_dmg_position = pygame.Vector2(self.player.screen_position.x + 32, self.player.screen_position.y)
+        enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + 32, self.enemy.screen_position.y)
 
-        if self.player.hit_landed or self.player.return_trigger and not self.enemy.death:
-            print(self.enemy.dmg_taken)
+        if self.state == "player_animation":
+            self.damage_group.update(enemy_dmg_position)
+        elif self.state == "enemy_animation":
+            self.damage_group.update(player_dmg_position)
 
-            for index, dmg in enumerate(self.enemy.dmg_taken[:]):
-                self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x - 16 + 64,
-                                                        self.enemy.y - self.offset.y - 16)
+        self.damage_group.draw(self.window)
 
-                self.enemy_damage_position = (self.enemy_damage_position[0] + index * 32, self.enemy_damage_position[1])
-                self.window.blit(font.render(str(dmg), True, (255, 255, 255)), self.enemy_damage_position)
+        if self.player.hit_landed and not self.enemy.death:
+            for index, dmg in enumerate(self.enemy.dmg_taken):
+                self.damage_group.add(FloatingDamage(dmg, enemy_dmg_position, self.damage_counter))
+                self.damage_counter += 1
+            self.enemy.dmg_taken.clear()
 
-
-        elif self.enemy.hit_landed or self.enemy.return_trigger and not self.player.death:
-            self.player_damage_position = self.player.screen_position
-
+        elif self.enemy.hit_landed and not self.player.death:
             for index, dmg in enumerate(self.player.dmg_taken):
-                self.player_damage_position = (self.player_damage_position[0] - index * 32, self.player_damage_position[1])
-                self.window.blit(font.render(str(dmg), True, (255, 255, 255)), self.player_damage_position)
+                self.damage_group.add(FloatingDamage(dmg, player_dmg_position, self.damage_counter))
+                self.damage_counter += 1
+            self.player.dmg_taken.clear()
 
 
 
@@ -216,6 +222,7 @@ class BattleLoop:
 
     def player_attack(self):
         self.enemy.dmg_taken = []
+        self.damage_counter = 0
 
         self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
         self.state = "player_animation"
@@ -288,6 +295,7 @@ class BattleLoop:
 
     def enemy_attack(self):
         self.player.dmg_taken = []
+        self.damage_counter = 0
         self.enemy.approach_trigger = True
         self.state = "enemy_animation"
 

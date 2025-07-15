@@ -30,6 +30,8 @@ class Enemy(Entity):
         self.hitbox = self.rect.inflate(32, 32)
         self.exclamation_mark = pygame.image.load(EXCLAMATION_MARK)
 
+        self.screen_position = None
+
 
     def get_sprites(self) -> list or None:
         if self.monster_name == "Skeleton":
@@ -85,7 +87,9 @@ class Enemy(Entity):
 
 
     def update_enemy(self, player, window, offset) -> None:
-        # window.blit(player.image, (self.rect.x - offset.x, self.rect.y - offset.y)) future use
+        self.screen_position = pygame.math.Vector2(self.x - offset.x,
+                                                   self.y - offset.y)
+
         if self.detected_player and not self.in_battle:
             window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + self.width // 2, self.rect.y - offset.y - 8))
 

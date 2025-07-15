@@ -30,7 +30,7 @@ class Entity(pygame.sprite.Sprite):
         self.sprinting = None
         self.speed = 2
 
-        # Other.
+        # Battle related.
         self.in_battle = False
         self.obstacle_sprites = None
 
@@ -141,8 +141,6 @@ class Entity(pygame.sprite.Sprite):
             self.frame = 0
             self.action = self.current_action
 
-
-
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
 
         if impact_frame is not None and self.frame > impact_frame and not self.hit_landed and not target.death:
@@ -162,6 +160,7 @@ class Entity(pygame.sprite.Sprite):
             self.action = "idle"
 
             if self.critical_hit and not self.critical_hit_is_done:
+                self.action = "idle"
                 self.attack_trigger = True
                 self.critical_hit = False
                 self.critical_hit_is_done = True
@@ -193,8 +192,10 @@ class Entity(pygame.sprite.Sprite):
             target.dmg_taken.append(base_dmg)
 
 
+
+
             if target.hp <= 0 and not target.death:
-                pass
+                target.death_animation()
 
             else:
                 target.frame = 0
