@@ -48,7 +48,7 @@ class BattleLoop:
         self.timer = 0
         self.timer_started = False
         self.death_delay = 1000
-        self.time = pygame.time.get_ticks() + 10000
+        self.clock_time = pygame.time.get_ticks() + 10000
 
 
 
@@ -59,9 +59,9 @@ class BattleLoop:
         self.block_delay = 2000
 
     def timer_(self):
-        if self.state == "player_turn" and self.time and not pygame.time.get_ticks() >= self.time:
+        if self.state == "player_turn" and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
 
-            current_time = ((self.time - pygame.time.get_ticks()) // 1000)
+            current_time = ((self.clock_time - pygame.time.get_ticks()) // 1000)
 
 
 
@@ -86,10 +86,10 @@ class BattleLoop:
         if not self.delay or pygame.time.get_ticks() >= self.delay:
             if self.state == "player_turn":
                     self.display_menu_options = True
-                    if self.time and pygame.time.get_ticks() >= self.time:
+                    if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
                         self.state = "enemy_turn"
 
-                        self.time = pygame.time.get_ticks() + 20000
+                        self.clock_time = pygame.time.get_ticks() + 20000
 
 
             elif self.state == "enemy_turn":
@@ -99,6 +99,8 @@ class BattleLoop:
 
             elif self.state == "end_battle":
                     self.return_to_overworld = True
+                    self.untoggle()
+
             elif self.state == "end_screen":
                 self.display_menu_options = True
 
@@ -107,40 +109,35 @@ class BattleLoop:
                 self.player.approach_trigger or
                 self.enemy.approach_trigger or
                 self.player.wait_trigger or
-                self.enemy.wait_trigger or
-                self.player.attack_trigger or
-                self.enemy.attack_trigger
+                self.enemy.wait_trigger
+
         )
 
     def display_dmg(self):
         font = pygame.font.Font(TEXT_TWO, 22)
 
-        if self.player.hit_landed:
+        if self.player.hit_landed or self.player.return_trigger and not self.enemy.death:
+            print(self.enemy.dmg_taken)
 
-            damage_text = font.render(str(self.player.dmg), True, (255, 255, 255))
-
-            self.window.blit(damage_text, self.enemy_damage_position)
-            self.enemy_damage_position.y -= 1
-
-
-        elif self.enemy.hit_landed:
-            dmg = self.enemy.dmg
-            if self.player.blocking:
-                dmg = dmg // 2
-
-            damage_text = font.render(str(dmg), True, (255, 255, 255))
-            self.window.blit(damage_text, self.player_damage_position)
-            self.player_damage_position.y -= 1
-
-        else:
-            self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x - 16,
+            for index, dmg in enumerate(self.enemy.dmg_taken[:]):
+                self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x - 16 + 64,
                                                         self.enemy.y - self.offset.y - 16)
-            self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 64,
-                                                         self.player.y - self.offset.y - 16)
+
+                self.enemy_damage_position = (self.enemy_damage_position[0] + index * 32, self.enemy_damage_position[1])
+                self.window.blit(font.render(str(dmg), True, (255, 255, 255)), self.enemy_damage_position)
+
+
+        elif self.enemy.hit_landed or self.enemy.return_trigger and not self.player.death:
+            self.player_damage_position = self.player.screen_position
+
+            for index, dmg in enumerate(self.player.dmg_taken):
+                self.player_damage_position = (self.player_damage_position[0] - index * 32, self.player_damage_position[1])
+                self.window.blit(font.render(str(dmg), True, (255, 255, 255)), self.player_damage_position)
+
+
+
 
     def draw_ui(self, window):
-
-
         if self.player.hit_landed or self.enemy.hit_landed or self.player.return_trigger or self.enemy.return_trigger:
             self.enemy_hp_bar.update()
             self.player_hp_bar.update()
@@ -180,7 +177,6 @@ class BattleLoop:
             if self.state == "end_screen":
                 self.buttons = [Button(self.buttons_group, self.player_run, "Done", "middle")]
 
-
     def hotkeys(self, event):
             current_time = pygame.time.get_ticks()
 
@@ -189,7 +185,6 @@ class BattleLoop:
                 # Navigate up
                 if event.key == pygame.K_UP and self.number == 0:
                     self.buttons[self.number].hovering = True
-
 
                 elif event.key == pygame.K_DOWN and self.number == len(self.buttons) - 1:
                     self.buttons[self.number].hovering = True
@@ -216,28 +211,23 @@ class BattleLoop:
                         self.player.blocking = True
                         self.block_cooldown_end = current_time + self.block_duration  # Next time we can block again
 
-
     def player_run(self):
         self.state = "end_battle"
 
     def player_attack(self):
-        self.player.approach_trigger = True
+        self.enemy.dmg_taken = []
+
+        self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
         self.state = "player_animation"
-        # attack_type = ... gets inputted in button as action
-
-
 
     def animation(self):
         if self.state == "player_animation":
             if self.player.approach_trigger:
                 self.player.approach_animation(self.enemy)
-                self.delay = pygame.time.get_ticks() + 1000  # or whatever delay you prefer
-
+                self.delay = pygame.time.get_ticks() + 1000 # wait time before attacking
 
             elif self.player.wait_trigger:
                 self.player.wait()
-                if self.delay is None:
-                    self.delay = pygame.time.get_ticks() + 1000  # or whatever delay you prefer
                 if pygame.time.get_ticks() >= self.delay:
                     self.player.attack_trigger = True
                     self.player.wait_trigger = False
@@ -245,12 +235,12 @@ class BattleLoop:
 
             elif self.player.attack_trigger:
                 self.player.attack_animation(self.enemy, "sword_slash")
+                self.delay = pygame.time.get_ticks() + 500  # delay before returning
 
-                self.delay = pygame.time.get_ticks() + 1000  # or whatever delay you prefer
-
-
-            elif self.player.return_trigger and pygame.time.get_ticks() >= self.delay:
-                self.player.return_animation(self.player_position)
+            elif self.player.return_trigger:
+                self.enemy.action = "idle"
+                if pygame.time.get_ticks() >= self.delay:
+                    self.player.return_animation(self.player_position)
 
             elif self.enemy.hp <= 0:
                 self.state = "end_screen"
@@ -263,50 +253,57 @@ class BattleLoop:
         elif self.state == "enemy_animation":
             if self.enemy.approach_trigger:
                 self.enemy.approach_animation(self.player)
-
+                self.delay = pygame.time.get_ticks() + random.randint(500, 3000) # random wait time before attacking
 
             elif self.enemy.wait_trigger:
                 self.enemy.wait()
-                if self.delay is None:
-                    self.delay = pygame.time.get_ticks() + random.randint(500, 2000)
-
                 if pygame.time.get_ticks() >= self.delay:
                     self.enemy.wait_trigger = False
                     self.enemy.attack_trigger = True
                     self.delay = None  # Reset! = True
 
-
             elif self.enemy.attack_trigger:
                 self.player_hp_bar.update()
                 self.enemy.attack_animation(self.player, "sword_slash")
 
-                self.delay = pygame.time.get_ticks() + 1000  # or whatever delay you prefer
+                self.delay = pygame.time.get_ticks() + 500  # delay before returning
 
 
-            elif self.enemy.return_trigger and pygame.time.get_ticks() >= self.delay:
-                self.enemy.return_animation(self.enemy_position)
-                self.player_hp_bar.update()
-                self.time = pygame.time.get_ticks() + 20000
-
-
-
+            elif self.enemy.return_trigger:
+                self.player.action = "idle"
+                if pygame.time.get_ticks() >= self.delay:
+                    self.enemy.return_animation(self.enemy_position)
+                    self.clock_time = pygame.time.get_ticks() + 20000
 
             elif self.player.hp <= 0:
                 self.state = "end_screen"
 
             elif not self.enemy.attack_trigger and not self.enemy.return_trigger :
                 # End of enemy's animation
-                self.delay = pygame.time.get_ticks() + 500
+                self.delay = pygame.time.get_ticks() + 500 # delay before player turn
                 self.state = "player_turn"
 
 
 
 
     def enemy_attack(self):
+        self.player.dmg_taken = []
         self.enemy.approach_trigger = True
         self.state = "enemy_animation"
 
-
+    def untoggle(self):
+        for participant in [self.player, self.enemy]:
+            participant.approach_trigger = False
+            participant.return_trigger = False
+            participant.attack_trigger = False
+            if not participant.hp <= 0: participant.death = False
+            participant.hit_landed = False
+            participant.blocking = False
+            participant.wait_trigger = False
+            participant.death_trigger = False
+            participant.current_action = None
+            participant.critical_hit = False
+            participant.critical_hit_is_done = False
 
     def enemy_turn(self):
         # add random actions in the future

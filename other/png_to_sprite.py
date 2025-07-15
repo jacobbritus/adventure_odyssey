@@ -63,6 +63,14 @@ player_sprites = {
 
 
     },
+
+    "punch": {
+            "sprites": {
+                "right": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, False),
+                "left": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, True),
+            },
+            "sound": get_file_location("sounds/sword_slash.wav"),
+            "impact_frame": 3},
     "death": {
         "sprites": {
             "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
@@ -83,7 +91,8 @@ skeleton_sprites = {
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 1, 6, 96, 80, True),
             "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 2, 6, 96, 80, False),
         },
-        "sound": None
+        "sound": None,
+        "impact_frame": None
     },
     "running": {
         "sprites": {
@@ -92,8 +101,9 @@ skeleton_sprites = {
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 4, 6, 96, 80, True),
             "up": sprite_converter("sprites/characters/skeleton_swordless2.png", 5, 6, 96, 80, False),
         },
-        "sound": "sounds/skeleton_run.wav"
-    },
+        "sound": "sounds/skeleton_run.wav",
+                 "impact_frame": None
+},
     "sword_slash": {
         "sprites": {
             "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 6, 96, 80, False),
@@ -107,7 +117,9 @@ skeleton_sprites = {
             "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, False),
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 12, 4, 96, 80, True),
         },
-        "sound": "sounds/skeleton_death.wav"
+        "sound": "sounds/skeleton_death.wav",
+        "impact_frame": None
+
     }
 }
 

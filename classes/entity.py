@@ -1,6 +1,9 @@
 import math
 import pygame
 
+from other.settings import *
+
+
 class Entity(pygame.sprite.Sprite):
     def __init__(self, group):
         super().__init__(group)
@@ -40,7 +43,10 @@ class Entity(pygame.sprite.Sprite):
         self.wait_trigger = False
         self.death_trigger = False
         self.current_action = None
+        self.critical_hit = False
+        self.critical_hit_is_done = False
 
+        self.dmg_taken = []
 
         # Sound
         self.sound_played = False
@@ -112,8 +118,8 @@ class Entity(pygame.sprite.Sprite):
             self.direction = "right" if dx > 0 else "left"
             self.move((dx / distance, dy / distance))
 
-            if self.rect.inflate(-self.rect.width + 8, -self.rect.height // 2).colliderect(
-                        target.rect.inflate(-target.rect.width // 2, -target.rect.height // 2)):
+            if self.rect.inflate(-self.rect.width + 1, -self.rect.height // 2).colliderect(
+                        target.rect.inflate(-target.rect.width // 1 + 8, -target.rect.height // 2)):
 
                 self.approach_trigger = False
                 self.frame = 0
@@ -140,6 +146,8 @@ class Entity(pygame.sprite.Sprite):
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
 
         if impact_frame is not None and self.frame > impact_frame and not self.hit_landed and not target.death:
+            if self.blocking and not self.critical_hit_is_done:
+                self.critical_hit = True
 
             self.hit_landed = True
             self.handle_attack_impact(target)
@@ -147,32 +155,47 @@ class Entity(pygame.sprite.Sprite):
             # Mask when hit
             target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
 
-            # Hit animation
-
-            print("test1")
-
-
 
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
-            self.attack_trigger = False
-            self.return_trigger = True
             self.sound_played = False
             self.hit_landed = False
-            target.action = "idle"
             self.action = "idle"
+
+            if self.critical_hit and not self.critical_hit_is_done:
+                self.attack_trigger = True
+                self.critical_hit = False
+                self.critical_hit_is_done = True
+
+            else:
+                self.attack_trigger = False
+                self.return_trigger = True
+                self.critical_hit_is_done = False
+
 
     def handle_attack_impact(self, target):
         if not self.sound_played:
-            pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
+            pygame.mixer.Channel(0).play(pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]))
+
             self.sound_played = True
 
+            base_dmg = self.dmg
+
             if target.blocking:
-                target.hp -= self.dmg // 2
-            else:
-                target.hp -= self.dmg
+                base_dmg //= 2
+
+                pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
+
+                target.action = "idle"
+
+
+            target.hp -= base_dmg
+
+            target.dmg_taken.append(base_dmg)
+
 
             if target.hp <= 0 and not target.death:
                 pass
+
             else:
                 target.frame = 0
                 target.action = "death"
@@ -195,6 +218,7 @@ class Entity(pygame.sprite.Sprite):
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""
+
         self.sprinting = True
 
         dx = origin.x - self.x + self.width // 2

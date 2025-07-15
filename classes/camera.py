@@ -293,6 +293,4 @@ class YSortCameraGroup(pygame.sprite.Group):
                 if not collision:
                     # pygame.draw.rect(self.display_surface, (255, 0,0), candidate)
                     return candidate
-
-        print("no")
         return None

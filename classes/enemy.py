@@ -59,7 +59,6 @@ class Enemy(Entity):
 
             self.detected_player = True
 
-        
             # Determine primary direction based on largest distance
             if abs(x_distance) > abs(y_distance):
                 # Horizontal distance is larger
@@ -87,11 +86,9 @@ class Enemy(Entity):
 
     def update_enemy(self, player, window, offset) -> None:
         # window.blit(player.image, (self.rect.x - offset.x, self.rect.y - offset.y)) future use
-
         if self.detected_player and not self.in_battle:
             window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + self.width // 2, self.rect.y - offset.y - 8))
 
-        """Draw the player in the game window."""
         if not self.in_battle: self.get_status(player)
 
         self.update_animations()
