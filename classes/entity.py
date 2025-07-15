@@ -7,6 +7,8 @@ from other.settings import *
 class Entity(pygame.sprite.Sprite):
     def __init__(self, group):
         super().__init__(group)
+        # General
+        self.type = None
 
         # Position related.
         self.x: int = 0
@@ -43,8 +45,12 @@ class Entity(pygame.sprite.Sprite):
         self.wait_trigger = False
         self.death_trigger = False
         self.current_action = None
+
+        self.perfect_block = False
+        self.perfect_block_messages = []
         self.critical_hit = False
         self.critical_hit_is_done = False
+        self.critical_hit_messages = []
 
         self.dmg_taken = []
 
@@ -144,14 +150,13 @@ class Entity(pygame.sprite.Sprite):
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
 
         if impact_frame is not None and self.frame > impact_frame and not self.hit_landed and not target.death:
-            if self.blocking and not self.critical_hit_is_done:
-                self.critical_hit = True
+
 
             self.hit_landed = True
             self.handle_attack_impact(target)
 
             # Mask when hit
-            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
 
 
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
@@ -159,19 +164,39 @@ class Entity(pygame.sprite.Sprite):
             self.hit_landed = False
             self.action = "idle"
 
+
             if self.critical_hit and not self.critical_hit_is_done:
-                self.action = "idle"
+                self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.attack_trigger = True
                 self.critical_hit = False
                 self.critical_hit_is_done = True
+                target.perfect_block = False
+
 
             else:
                 self.attack_trigger = False
                 self.return_trigger = True
                 self.critical_hit_is_done = False
+                self.critical_hit = False
+                target.perfect_block = False
+
 
 
     def handle_attack_impact(self, target):
+        if self.type == "enemy":
+            self.critical_hit = True
+
+        if self.blocking and not self.critical_hit_is_done:
+            pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+            self.critical_hit = True
+            self.critical_hit_messages.append("")
+
+        if target.blocking:
+            target.perfect_block = True
+            target.perfect_block_messages.append("")
+
+        print(self.critical_hit_messages)
+
         if not self.sound_played:
             pygame.mixer.Channel(0).play(pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]))
 
@@ -181,7 +206,6 @@ class Entity(pygame.sprite.Sprite):
 
             if target.blocking:
                 base_dmg //= 2
-
                 pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
 
                 target.action = "idle"
@@ -190,8 +214,6 @@ class Entity(pygame.sprite.Sprite):
             target.hp -= base_dmg
 
             target.dmg_taken.append(base_dmg)
-
-
 
 
             if target.hp <= 0 and not target.death:
@@ -211,11 +233,6 @@ class Entity(pygame.sprite.Sprite):
         # Play the animation frame by frame
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2:
             self.death = True
-
-
-
-
-
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""

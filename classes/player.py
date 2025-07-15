@@ -119,9 +119,9 @@ class Player(Entity):
             self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                        self.y - offset.y)
 
-        if self.blocking:
-            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            window.blit(mask, self.screen_position)
+        # if self.blocking:
+        #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+        #     window.blit(mask, self.screen_position)
 
         self.controls()
 

@@ -7,6 +7,8 @@ import math
 class Enemy(Entity):
     def __init__(self, monster_name, surf, pos, group, obstacle_sprites):
         super().__init__(group)
+        self.monster_name = monster_name
+
 
         # General
         self.type = "enemy"
@@ -14,7 +16,6 @@ class Enemy(Entity):
         self.detected_player = True
 
         # Stats
-        self.monster_name = monster_name
         self.hp = 15
         self.dmg = 5
 
@@ -36,6 +37,8 @@ class Enemy(Entity):
     def get_sprites(self) -> list or None:
         if self.monster_name == "Skeleton":
             return skeleton_sprites
+        elif self.monster_name == "Slime":
+            return slime_sprites
         else:
             return None
 

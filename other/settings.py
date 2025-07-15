@@ -27,6 +27,7 @@ HOVER_SOUND = get_file_location("sounds/hover.wav")
 PRESS_SOUND = get_file_location("sounds/click.wav")
 ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
 PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block.wav")
+CRITICAL_HIT = get_file_location("sounds/effects/critical_hit.mp3")
 
 
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")

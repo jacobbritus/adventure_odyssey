@@ -53,12 +53,15 @@ class BattleLoop:
 
         self.damage_group = pygame.sprite.Group()
         self.damage_counter = 0
+        self.critical_floated = False
+        self.perfect_block_floated = False
+        self.perfect_block_counter = 0
 
         # Hotkey stuff
         self.block_duration = 250 # blocking last time
         self.block_cooldown_end = 0 # when blocking ends
         self.block = False # whether blocking is True
-        self.block_delay = 2000
+        self.block_delay = 250
 
 
 
@@ -118,8 +121,10 @@ class BattleLoop:
         )
 
     def display_dmg(self):
-        player_dmg_position = pygame.Vector2(self.player.screen_position.x + 32, self.player.screen_position.y)
-        enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + 32, self.enemy.screen_position.y)
+        offset = 32
+        player_dmg_position = pygame.Vector2(self.player.screen_position.x + offset, self.player.screen_position.y)
+        enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + offset, self.enemy.screen_position.y)
+
 
         if self.state == "player_animation":
             self.damage_group.update(enemy_dmg_position)
@@ -130,15 +135,33 @@ class BattleLoop:
 
         if self.player.hit_landed and not self.enemy.death:
             for index, dmg in enumerate(self.enemy.dmg_taken):
-                self.damage_group.add(FloatingDamage(dmg, enemy_dmg_position, self.damage_counter))
+                FloatingDamage(self.damage_group, dmg, enemy_dmg_position, self.damage_counter)
                 self.damage_counter += 1
             self.enemy.dmg_taken.clear()
 
         elif self.enemy.hit_landed and not self.player.death:
             for index, dmg in enumerate(self.player.dmg_taken):
-                self.damage_group.add(FloatingDamage(dmg, player_dmg_position, self.damage_counter))
+                FloatingDamage(self.damage_group, dmg, enemy_dmg_position, self.damage_counter)
                 self.damage_counter += 1
             self.player.dmg_taken.clear()
+
+
+        if self.player.critical_hit and self.player.critical_hit_messages:
+            FloatingDamage(self.damage_group, "CRITICAL HIT", player_dmg_position, 1)
+            self.player.critical_hit_messages.clear()
+
+        if self.enemy.critical_hit and self.enemy.critical_hit_messages:
+            FloatingDamage(self.damage_group, "CRITICAL HIT", player_dmg_position, -3)
+            self.enemy.critical_hit_messages.clear()
+
+        # if self.player.perfect_block and not self.perfect_block_floated:
+        #     FloatingDamage(self.damage_group, "PERFECT BLOCK", player_dmg_position, 1)
+        #     self.perfect_block_floated = True
+
+        if self.player.perfect_block and self.player.perfect_block_messages:
+            FloatingDamage(self.damage_group, "PERFECT BLOCK", player_dmg_position, -4)
+            self.player.perfect_block_messages.clear()
+
 
 
 
@@ -221,7 +244,7 @@ class BattleLoop:
         self.state = "end_battle"
 
     def player_attack(self):
-        self.enemy.dmg_taken = []
+        self.perfect_block_counter = 0
         self.damage_counter = 0
 
         self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
@@ -241,11 +264,14 @@ class BattleLoop:
                     self.delay = None
 
             elif self.player.attack_trigger:
-                self.player.attack_animation(self.enemy, "sword_slash")
+                self.player.attack_animation(self.enemy, "punch")
                 self.delay = pygame.time.get_ticks() + 500  # delay before returning
 
             elif self.player.return_trigger:
                 self.enemy.action = "idle"
+                if self.enemy.hp <= 0:
+                    self.enemy.death_animation()
+
                 if pygame.time.get_ticks() >= self.delay:
                     self.player.return_animation(self.player_position)
 
@@ -256,6 +282,8 @@ class BattleLoop:
                 # End of player's animation
                 self.delay = pygame.time.get_ticks() + 500
                 self.state = "enemy_turn"
+                self.critical_floated = False
+
 
         elif self.state == "enemy_animation":
             if self.enemy.approach_trigger:
@@ -278,6 +306,9 @@ class BattleLoop:
 
             elif self.enemy.return_trigger:
                 self.player.action = "idle"
+                if self.player.hp <= 0:
+                    self.state = "end_screen"
+
                 if pygame.time.get_ticks() >= self.delay:
                     self.enemy.return_animation(self.enemy_position)
                     self.clock_time = pygame.time.get_ticks() + 20000
@@ -289,13 +320,13 @@ class BattleLoop:
                 # End of enemy's animation
                 self.delay = pygame.time.get_ticks() + 500 # delay before player turn
                 self.state = "player_turn"
-
+                self.critical_floated = False
 
 
 
     def enemy_attack(self):
-        self.player.dmg_taken = []
         self.damage_counter = 0
+        self.perfect_block_counter = 0
         self.enemy.approach_trigger = True
         self.state = "enemy_animation"
 

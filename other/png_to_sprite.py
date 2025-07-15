@@ -66,11 +66,11 @@ player_sprites = {
 
     "punch": {
             "sprites": {
-                "right": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, False),
-                "left": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, True),
+                "right": sprite_converter("sprites/characters/me2.png", 11, 4, 96, 80, False),
+                "left": sprite_converter("sprites/characters/me2.png", 11, 4, 96, 80, True),
             },
             "sound": get_file_location("sounds/sword_slash.wav"),
-            "impact_frame": 3},
+            "impact_frame": 2},
     "death": {
         "sprites": {
             "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
@@ -124,4 +124,23 @@ skeleton_sprites = {
 }
 
 
-
+slime_sprites = {
+    "idle": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/slime.png", 0, 4, 64, 64, False),
+            "right": sprite_converter("sprites/characters/slime.png", 1, 4, 64, 64, False),
+            "left": sprite_converter("sprites/characters/slime.png", 1, 4, 64, 64, True),
+            "up": sprite_converter("sprites/characters/slime.png", 2, 4, 64, 64, False),
+        },
+        "sound": None,
+        "impact_frame": None
+    },
+    "running": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/slime.png", 3, 6, 64, 64, False),
+            "right": sprite_converter("sprites/characters/slime.png", 4, 6, 64, 64, False),
+            "left": sprite_converter("sprites/characters/slime.png", 4, 6, 64, 64, True),
+            "up": sprite_converter("sprites/characters/slime.png", 5, 6, 64, 64, False),
+        },
+        "sound": "sounds/skeleton_run.wav",
+                 "impact_frame": None}}
