@@ -29,15 +29,24 @@ def attack(name):
 
 attacks = ["SWORD SLASH", "BALLS", "FORTNITE"]
 
-combat_menu = CombatMenu(attacks, attack)
+combat_menu = CombatMenu(attacks, [attack, two, one])
 
-
+combat_menu.state = "main_menu"
 while True:
     window.fill((255, 255, 255))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_b:
+                combat_menu.state = "end_screen"
+                combat_menu.buttons_group = pygame.sprite.Group()
+
+            if event.key == pygame.K_r:
+                combat_menu.state = "main_menu"
+
 
     # player_hp_bar.draw(window)
     # enemy_hp_bar.draw(window)

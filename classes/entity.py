@@ -183,8 +183,9 @@ class Entity(pygame.sprite.Sprite):
 
 
     def handle_attack_impact(self, target):
-        if self.type == "enemy":
+        if self.type == "enemy" and not self.critical_hit_is_done:
             self.critical_hit = True
+            self.critical_hit_messages.append("")
 
         if self.blocking and not self.critical_hit_is_done:
             pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))

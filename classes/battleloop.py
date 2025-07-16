@@ -25,7 +25,8 @@ class BattleLoop:
 
         self.return_to_overworld: bool = False
 
-        self.combat_menu = CombatMenu(self.player.attacks, self.player_attack)
+        self.combat_menu = CombatMenu(self.player.attacks, [self.player_attack, self.player_run, self.player_run])
+        self.combat_menu.state = "main_menu"
 
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
@@ -93,18 +94,11 @@ class BattleLoop:
 
         if not self.delay or pygame.time.get_ticks() >= self.delay:
             if self.state == "player_turn":
-                    self.combat_menu.option_selected = False
-                    if not self.combat_menu.buttons_group: self.combat_menu.main_menu()
-                    self.combat_menu.draw(self.window)
-                    self.display_menu_options = True
-                    if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
-                        self.state = "enemy_turn"
-
-                        self.clock_time = pygame.time.get_ticks() + 20000
-
+                if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
+                    self.state = "enemy_turn"
+                    self.clock_time = pygame.time.get_ticks() + 20000
 
             elif self.state == "enemy_turn":
-                    self.display_menu_options = False
                     self.enemy_turn()
                     self.delay = None
 
@@ -113,7 +107,9 @@ class BattleLoop:
                     self.untoggle()
 
             elif self.state == "end_screen":
-                self.display_menu_options = True
+                self.combat_menu.state = "end_screen"
+                self.combat_menu.draw(self.window)
+
 
     def action_lock(self) -> bool:
         return (
@@ -124,11 +120,10 @@ class BattleLoop:
 
         )
 
-    def display_dmg(self):
+    def screen_messages(self):
         offset = 32
         player_dmg_position = pygame.Vector2(self.player.screen_position.x + offset, self.player.screen_position.y)
         enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + offset, self.enemy.screen_position.y)
-
 
         if self.state == "player_animation":
             self.damage_group.update(enemy_dmg_position)
@@ -149,28 +144,23 @@ class BattleLoop:
                 self.damage_counter += 1
             self.player.dmg_taken.clear()
 
-
         if self.player.critical_hit and self.player.critical_hit_messages:
             FloatingDamage(self.damage_group, "CRITICAL HIT", player_dmg_position, 1)
             self.player.critical_hit_messages.clear()
 
         if self.enemy.critical_hit and self.enemy.critical_hit_messages:
+            print("check")
             FloatingDamage(self.damage_group, "CRITICAL HIT", player_dmg_position, -3)
             self.enemy.critical_hit_messages.clear()
-
-        # if self.player.perfect_block and not self.perfect_block_floated:
-        #     FloatingDamage(self.damage_group, "PERFECT BLOCK", player_dmg_position, 1)
-        #     self.perfect_block_floated = True
 
         if self.player.perfect_block and self.player.perfect_block_messages:
             FloatingDamage(self.damage_group, "PERFECT BLOCK", player_dmg_position, -4)
             self.player.perfect_block_messages.clear()
 
-
-
-
-
     def draw_ui(self, window):
+        if self.state == "player_turn" or self.state == "end_screen":
+            self.combat_menu.draw(self.window)
+
         if self.player.hit_landed or self.enemy.hit_landed or self.player.return_trigger or self.enemy.return_trigger:
             self.enemy_hp_bar.update()
             self.player_hp_bar.update()
@@ -179,37 +169,13 @@ class BattleLoop:
         if not self.action_lock() or self.player.hit_landed or self.enemy.hit_landed:
             self.player_hp_bar.draw(window)
             self.enemy_hp_bar.draw(window)
-            self.display_dmg()
+            self.screen_messages()
 
-
-
-        if self.buttons and self.display_menu_options:
-            for button in self.buttons:
-                button.update()
-                button.draw(window)
-
-                if button.delete:
-                    for buttons in self.buttons_group:
-                        self.display_menu_options = False
-                        buttons.kill()
 
     def handle_input(self):
         if self.block and pygame.time.get_ticks() >= self.block_cooldown_end:
             self.block = False
             self.player.blocking = False
-
-
-
-        # if not self.buttons_group:
-        #     if self.state == "player_turn":
-        #         self.buttons = [Button(self.buttons_group, "no parameter", self.player_attack, "Attack", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25)),
-        #             Button(self.buttons_group,"no parameter", self.player_run, "Run", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 6 , WINDOW_HEIGHT // 1.25))]
-        #
-        #
-        #
-        if not self.buttons_group:
-            if self.state == "end_screen":
-                self.buttons = [Button(self.buttons_group, "no parameter", self.player_run, "DONE", "medium", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))]
 
     def hotkeys(self, event):
             current_time = pygame.time.get_ticks()
@@ -327,10 +293,11 @@ class BattleLoop:
             elif not self.enemy.attack_trigger and not self.enemy.return_trigger :
                 # End of enemy's animation
                 self.delay = pygame.time.get_ticks() + 500 # delay before player turn
+                self.combat_menu.state = "main_menu"
+                self.combat_menu.buttons_group = pygame.sprite.Group()
                 self.state = "player_turn"
+
                 self.critical_floated = False
-
-
 
     def enemy_attack(self):
         self.damage_counter = 0

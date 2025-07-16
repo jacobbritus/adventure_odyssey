@@ -214,91 +214,93 @@ class Button(pygame.sprite.Sprite):
 
 
 class CombatMenu:
-    def __init__(self, attacks, attack):
+    def __init__(self, attacks: list[str], functions):
 
-        self.buttons_group = pygame.sprite.Group()
-        self.buttons = []
-        self.skill_buttons = []
-        self.attacks = attacks
-        self.attack_function = attack
+        self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
+        self.attacks: list[str] = attacks
+        self.functions = functions
 
         # skills background
-        self.background_image = pygame.image.load(LARGE_BACKGROUND_BOX)
-        self.background_image_position = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
+        self.background_image: pygame.Surface = pygame.image.load(LARGE_BACKGROUND_BOX)
+        self.background_image_position: pygame.Vector2 = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
                                                         WINDOW_HEIGHT // 2 - self.background_image.get_height() // 2)
 
-        self.skills_title_image = pygame.image.load(SKILLS_TITLE)
+        self.skills_title_image: pygame.Surface = pygame.image.load(SKILLS_TITLE)
         size = self.skills_title_image.get_size()
-        self.skills_title_position = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
+        self.skills_title_position: pygame.Vector2 = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
 
-         # main menu buttons
-
-        button = Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
-                        ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width(), WINDOW_HEIGHT // 1.25))
-        button_two = Button(self.buttons_group, "no parameter", None, "RUN", "medium",
-                            ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5,
-                             WINDOW_HEIGHT // 1.25))
+        self.state: str = ""
 
 
-        self.buttons.append(button)
-        self.buttons.append(button_two)
-        self.show_main_menu = True
-        self.show_skills_menu = False
+    def draw(self, window) -> None:
+        self.update()
 
-        self.option_selected = False
+        if self.state == "main_menu":
+            self.main_menu()
 
+        elif self.state == "skills":
+            window.blit(self.background_image, self.background_image_position)
+            window.blit(self.skills_title_image, self.skills_title_position)
 
-    def draw(self, window):
+        elif self.state == "end_screen":
+            self.end_screen()
 
-        if not self.option_selected:
-            if self.show_skills_menu:
-                window.blit(self.background_image, self.background_image_position)
-                window.blit(self.skills_title_image, self.skills_title_position)
-
-
-            for button in self.buttons_group:
-                button.draw(window)
-                button.update()
-
-            for button in self.skill_buttons:
-
-                if button.delete and self.show_skills_menu:
-                    self.skill_buttons = self.buttons = []
-                    self.option_selected = True
-                    for buttons in self.buttons_group:
-                        buttons.kill()
+        for button in self.buttons_group:
+            button.draw(window)
+            button.update()
 
 
-    def main_menu(self):
-        self.skill_buttons = []
-        self.buttons_group = pygame.sprite.Group()
-        self.show_main_menu = True
+    def update(self) -> None:
+        for button in self.buttons_group:
+            if button.delete and button.action_text == "BACK":
+                self.state = "main_menu"
+                self.buttons_group = pygame.sprite.Group()
 
-        self.show_skills_menu = False
-        button = Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
-                        ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width(), WINDOW_HEIGHT // 1.25))
-        button_two = Button(self.buttons_group, "no parameter", None, "RUN", "medium",
-                            ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5,
-                             WINDOW_HEIGHT // 1.25))
+            elif button.delete and button.action_text == "END":
+                self.state = "done"
+                for buttons in self.buttons_group:
+                    buttons.kill()
 
-        self.buttons.append(button)
-        self.buttons.append(button_two)
+            elif button.delete and not button.text == "BACK":
+                self.state = "done"  # reset to main when calling again
+                for buttons in self.buttons_group:
+                    buttons.kill()
 
-    def show_skills(self,):
-        self.buttons_group = pygame.sprite.Group()
-        self.show_main_menu = False
-        self.show_skills_menu = True
 
-        if len(self.skill_buttons) != len(self.attacks):
-            for index, attack_name in enumerate(self.attacks):
-                size = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
-                y_offset = 48
-                pos = (self.background_image_position.x + size[0] // 8, self.background_image_position.y + y_offset + size[1] * index)
-                name = attack_name.replace("_", " ")
-                self.skill_buttons.append(Button(self.buttons_group, "parameter",  self.attack_function, name.upper(), "large", pos))
 
-            size = pygame.image.load(BUTTON_NORMAL).get_size()
-            pos = (self.background_image_position.x + size[0] // 3, self.background_image_position.y + 188)
-            self.buttons.append(Button(self.buttons_group, "no parameter",  self.main_menu, "Back", "small", pos))
+    def main_menu(self) -> None:
+        if not self.buttons_group:
+            width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
+            Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
+                            ((WINDOW_WIDTH // 2) - width, WINDOW_HEIGHT // 1.25))
+            Button(self.buttons_group, "no parameter", self.functions[1], "RUN", "medium",
+                   ((WINDOW_WIDTH // 2) + width // 5,
+                                 WINDOW_HEIGHT // 1.25))
+
+    def end_screen(self):
+
+        if not self.buttons_group:
+            width = pygame.image.load(BUTTON_NORMAL).get_size()
+            pos = (self.background_image_position.x + width[0] // 3, self.background_image_position.y + 188)
+            Button(self.buttons_group, "no parameter", self.functions[2], "END", "small", pos)
+
+
+    def show_skills(self) -> None:
+            self.buttons_group = pygame.sprite.Group()
+            self.state = "skills"
+
+            # Skill buttons
+            if not self.buttons_group:
+                for index, attack_name in enumerate(self.attacks):
+                    width = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
+                    y_offset = 48
+                    pos = (self.background_image_position.x + width[0] // 8, self.background_image_position.y + y_offset + width[1] * index)
+                    name = attack_name.replace("_", " ")
+                    Button(self.buttons_group, "parameter", self.functions[0], name.upper(), "large", pos)
+
+                # Back button
+                width = pygame.image.load(BUTTON_NORMAL).get_size()
+                pos = (self.background_image_position.x + width[0] // 3, self.background_image_position.y + 188)
+                Button(self.buttons_group, "no parameter",  self.main_menu, "BACK", "small", pos)
 
 

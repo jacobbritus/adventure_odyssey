@@ -42,7 +42,8 @@ class Player(Entity):
         # Stats
         self.hp: int = 20
         self.max_hp: int = 20
-        self.dmg: int = 5
+        self.dmg: int = 10
+        
         self.speed: int = 2 # dont forget to implement this in entity class move()
 
         # Other
