@@ -1,7 +1,7 @@
 import random
 
 import pygame
-from classes.UI import Hpbar, Button
+from classes.UI import Hpbar, Button, CombatMenu
 from classes.floatingdamage import FloatingDamage
 from other.settings import *
 
@@ -25,6 +25,8 @@ class BattleLoop:
 
         self.return_to_overworld: bool = False
 
+        self.combat_menu = CombatMenu(self.player.attacks, self.player_attack)
+
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
         self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, "SKELETON") #enemy.name in the future
@@ -38,8 +40,7 @@ class BattleLoop:
         self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 32,
                                                      self.player.y - self.offset.y - 16)
 
-
-
+        self.player_attack = None
 
 
         self.state = "player_turn" # to be changed based on speed stat.
@@ -72,13 +73,13 @@ class BattleLoop:
 
 
 
-            font = pygame.font.Font(TEXT_TWO, 44)
+            font = pygame.font.Font(TEXT_TWO, 33)
             time_text = font.render(str(current_time), True, (255, 255, 255))
             time_size = time_text.get_width()
             box = pygame.image.load(TIME_BACKGROUND)
             box_size = box.get_width()
 
-            self.window.blit(box, (WINDOW_WIDTH // 2 - box_size // 2, self.player_hp_bar.box_position[1] ))
+            # self.window.blit(box, (WINDOW_WIDTH // 2 - box_size // 2, self.player_hp_bar.box_position[1] ))
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_position[1] - 2))
 
     def update(self):
@@ -92,6 +93,9 @@ class BattleLoop:
 
         if not self.delay or pygame.time.get_ticks() >= self.delay:
             if self.state == "player_turn":
+                    self.combat_menu.option_selected = False
+                    if not self.combat_menu.buttons_group: self.combat_menu.main_menu()
+                    self.combat_menu.draw(self.window)
                     self.display_menu_options = True
                     if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
                         self.state = "enemy_turn"
@@ -195,16 +199,17 @@ class BattleLoop:
             self.player.blocking = False
 
 
+
+        # if not self.buttons_group:
+        #     if self.state == "player_turn":
+        #         self.buttons = [Button(self.buttons_group, "no parameter", self.player_attack, "Attack", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25)),
+        #             Button(self.buttons_group,"no parameter", self.player_run, "Run", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 6 , WINDOW_HEIGHT // 1.25))]
+        #
+        #
+        #
         if not self.buttons_group:
-            if self.state == "player_turn":
-                self.buttons = [Button(self.buttons_group,  self.player_attack, "Attack", "one"),
-                    Button(self.buttons_group, self.player_run, "Run", "two")]
-
-
-
-
             if self.state == "end_screen":
-                self.buttons = [Button(self.buttons_group, self.player_run, "Done", "middle")]
+                self.buttons = [Button(self.buttons_group, "no parameter", self.player_run, "DONE", "medium", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))]
 
     def hotkeys(self, event):
             current_time = pygame.time.get_ticks()
@@ -243,7 +248,10 @@ class BattleLoop:
     def player_run(self):
         self.state = "end_battle"
 
-    def player_attack(self):
+    def player_attack(self, attack):
+        attack_ = attack.replace(" ", "_")
+
+        self.player_attack = attack_.lower()
         self.perfect_block_counter = 0
         self.damage_counter = 0
 
@@ -264,7 +272,7 @@ class BattleLoop:
                     self.delay = None
 
             elif self.player.attack_trigger:
-                self.player.attack_animation(self.enemy, "punch")
+                self.player.attack_animation(self.enemy, self.player_attack)
                 self.delay = pygame.time.get_ticks() + 500  # delay before returning
 
             elif self.player.return_trigger:

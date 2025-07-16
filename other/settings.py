@@ -40,6 +40,10 @@ HP_BAR = get_file_location(f"sprites/UI/{str(SCALE)}x/hp_bar.png")
 
 TIME_BACKGROUND = get_file_location(f"sprites/UI/{str(SCALE)}x/time_background.png")
 
+LARGE_BACKGROUND_BOX = get_file_location(f"sprites/UI/{str(SCALE)}x/large_background_box.png")
+SKILLS_TITLE = get_file_location(f"sprites/UI/{str(SCALE)}x/skills_title.png")
+
+
 
 
 HP_ICON = get_file_location(f"sprites/UI/{str(SCALE)}x/heart_icon.png")
@@ -53,6 +57,11 @@ BUTTON_PRESSED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_one_pressed
 BUTTON_TWO_NORMAL = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_normal.png")
 BUTTON_TWO_SELECTED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_selected.png")
 BUTTON_TWO_PRESSED = get_file_location(f"sprites/UI/{str(SCALE)}x/button_two_pressed.png")
+
+
+LARGE_BUTTON_NORMAL = get_file_location(f"sprites/UI/{str(SCALE)}x/large_button_normal.png")
+LARGE_BUTTON_SELECTED = get_file_location(f"sprites/UI/{str(SCALE)}x/large_button_selected.png")
+LARGE_BUTTON_PRESSED = get_file_location(f"sprites/UI/{str(SCALE)}x/large_button_pressed.png")
 
 TEXT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
 TEXT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")

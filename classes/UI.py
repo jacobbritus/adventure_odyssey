@@ -1,3 +1,5 @@
+import pygame
+
 from other.settings import *
 
 class Damage:
@@ -117,25 +119,20 @@ class Hpbar:
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, group, action, text, number):
+    def __init__(self, group, action_type, action, text, size, pos):
         super().__init__(group)
-        self.image_normal = pygame.image.load(BUTTON_TWO_NORMAL)
-        self.image_pressed = pygame.image.load(BUTTON_TWO_PRESSED)
-        self.image_selected = pygame.image.load(BUTTON_TWO_SELECTED)
+        self.size = size
+        self.image_normal, self.image_pressed, self.image_selected = self.get_images()
         self.image = self.image_normal
 
-        if number == "one":
-            self.pos = ((WINDOW_WIDTH // 2) - self.image.get_width() , WINDOW_HEIGHT // 1.25)
-        elif number == "two":
-            self.pos = ((WINDOW_WIDTH // 2) + self.image.get_width() // 6 , WINDOW_HEIGHT // 1.25)
+        self.action_text = text
 
-        elif number == "middle":
-            self.pos = ((WINDOW_WIDTH // 2) - self.image.get_width() // 2 , WINDOW_HEIGHT // 1.25)
-
+        self.pos = pos
 
         self.rect = self.image.get_rect(topleft = self.pos)
 
         self.action = action
+        self.action_type = action_type
 
         if text:
             self.font = pygame.font.Font(TEXT_ONE, 16)
@@ -143,6 +140,7 @@ class Button(pygame.sprite.Sprite):
 )
             self.size = self.text.get_size()
             self.text_position = (self.rect.centerx - self.size[0] // 2, self.rect.centery - self.size[1] // 2)
+
         else:
             self.text = None
 
@@ -161,6 +159,17 @@ class Button(pygame.sprite.Sprite):
 
         self.sound_played = False
         self.click_sound_played = False
+
+
+    def get_images(self):
+        if self.size == "small":
+            return pygame.image.load(BUTTON_NORMAL), pygame.image.load(BUTTON_PRESSED), pygame.image.load(BUTTON_SELECTED)
+
+        elif self.size == "medium":
+            return pygame.image.load(BUTTON_TWO_NORMAL), pygame.image.load(BUTTON_TWO_PRESSED), pygame.image.load(BUTTON_TWO_SELECTED)
+        elif self.size == "large":
+            return pygame.image.load(LARGE_BUTTON_NORMAL), pygame.image.load(LARGE_BUTTON_PRESSED), pygame.image.load(LARGE_BUTTON_SELECTED)
+        return None
 
 
     def update(self):
@@ -189,16 +198,107 @@ class Button(pygame.sprite.Sprite):
         if self.clicked:
             self.delete_delay += 0.1
 
-            # if self.delay > 2:
-            #     self.image = self.image_normal
 
             if self.delete_delay >= 2:
                 self.delete = True
 
-                self.action()
+                if self.action_type == "parameter":
+                    self.action(self.action_text)
+                else:
+                    self.action()
+        return None
 
     def draw(self, window):
         window.blit(self.image, self.pos)
         if self.text: window.blit(self.text, self.text_position)
+
+
+class CombatMenu:
+    def __init__(self, attacks, attack):
+
+        self.buttons_group = pygame.sprite.Group()
+        self.buttons = []
+        self.skill_buttons = []
+        self.attacks = attacks
+        self.attack_function = attack
+
+        # skills background
+        self.background_image = pygame.image.load(LARGE_BACKGROUND_BOX)
+        self.background_image_position = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
+                                                        WINDOW_HEIGHT // 2 - self.background_image.get_height() // 2)
+
+        self.skills_title_image = pygame.image.load(SKILLS_TITLE)
+        size = self.skills_title_image.get_size()
+        self.skills_title_position = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
+
+         # main menu buttons
+
+        button = Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
+                        ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width(), WINDOW_HEIGHT // 1.25))
+        button_two = Button(self.buttons_group, "no parameter", None, "RUN", "medium",
+                            ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5,
+                             WINDOW_HEIGHT // 1.25))
+
+
+        self.buttons.append(button)
+        self.buttons.append(button_two)
+        self.show_main_menu = True
+        self.show_skills_menu = False
+
+        self.option_selected = False
+
+
+    def draw(self, window):
+
+        if not self.option_selected:
+            if self.show_skills_menu:
+                window.blit(self.background_image, self.background_image_position)
+                window.blit(self.skills_title_image, self.skills_title_position)
+
+
+            for button in self.buttons_group:
+                button.draw(window)
+                button.update()
+
+            for button in self.skill_buttons:
+
+                if button.delete and self.show_skills_menu:
+                    self.skill_buttons = self.buttons = []
+                    self.option_selected = True
+                    for buttons in self.buttons_group:
+                        buttons.kill()
+
+
+    def main_menu(self):
+        self.skill_buttons = []
+        self.buttons_group = pygame.sprite.Group()
+        self.show_main_menu = True
+
+        self.show_skills_menu = False
+        button = Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
+                        ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width(), WINDOW_HEIGHT // 1.25))
+        button_two = Button(self.buttons_group, "no parameter", None, "RUN", "medium",
+                            ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5,
+                             WINDOW_HEIGHT // 1.25))
+
+        self.buttons.append(button)
+        self.buttons.append(button_two)
+
+    def show_skills(self,):
+        self.buttons_group = pygame.sprite.Group()
+        self.show_main_menu = False
+        self.show_skills_menu = True
+
+        if len(self.skill_buttons) != len(self.attacks):
+            for index, attack_name in enumerate(self.attacks):
+                size = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
+                y_offset = 48
+                pos = (self.background_image_position.x + size[0] // 8, self.background_image_position.y + y_offset + size[1] * index)
+                name = attack_name.replace("_", " ")
+                self.skill_buttons.append(Button(self.buttons_group, "parameter",  self.attack_function, name.upper(), "large", pos))
+
+            size = pygame.image.load(BUTTON_NORMAL).get_size()
+            pos = (self.background_image_position.x + size[0] // 3, self.background_image_position.y + 188)
+            self.buttons.append(Button(self.buttons_group, "no parameter",  self.main_menu, "Back", "small", pos))
 
 

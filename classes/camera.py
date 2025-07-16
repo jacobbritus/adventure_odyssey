@@ -176,10 +176,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         player, enemy = self.battle_participants
 
         spots2 = self.find_battle_spot(player.rect)
-        print("tried")
 
         if spots2:
-            print("success")
             self.state = "BATTLE"
             self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
 
@@ -204,8 +202,6 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.battle_position.update(battle_center_x, battle_center_y)
 
             self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
-        else:
-            print("failed")
 
 
 

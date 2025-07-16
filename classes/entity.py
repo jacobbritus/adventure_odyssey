@@ -195,7 +195,6 @@ class Entity(pygame.sprite.Sprite):
             target.perfect_block = True
             target.perfect_block_messages.append("")
 
-        print(self.critical_hit_messages)
 
         if not self.sound_played:
             pygame.mixer.Channel(0).play(pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]))
