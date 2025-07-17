@@ -143,6 +143,10 @@ class BattleLoop:
             FloatingDamage(self.screen_messages_group, "PERFECT BLOCK", player_dmg_position, -4)
             self.player.perfect_block_messages.clear()
 
+        if self.enemy.perfect_block and self.enemy.perfect_block_messages:
+            FloatingDamage(self.screen_messages_group, "PERFECT BLOCK", enemy_dmg_position, -4)
+            self.enemy.perfect_block_messages.clear()
+
     def draw_ui(self, window):
         self.timer_()
 

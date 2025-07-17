@@ -37,10 +37,11 @@ class Entity(pygame.sprite.Sprite):
         self.speed = 2
 
         # Battle related.
-        self.hp = None
         self.in_battle = False
         self.obstacle_sprites = None
         self.critical_hit_chance = None
+        self.blocking_chance = None
+        self.current_attack = None
 
         self.death = False
         self.hit_landed = False
@@ -52,19 +53,18 @@ class Entity(pygame.sprite.Sprite):
         self.critical_hit = False
         self.critical_hit_is_done = False
         self.critical_hit_messages = []
+        self.dmg_taken = []
 
         # projectiles
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
         self.casted_spell = False
 
-
-        self.dmg_taken = []
-
         # Sound
         self.sound_played = False
 
         # Stats
+        self.hp = None
         self.dmg = None
 
         # Animation states
@@ -208,6 +208,7 @@ class Entity(pygame.sprite.Sprite):
         """Perform the action argument."""
         if action in ["fire_ball", "combustion"]:
             if not self.casted_spell:
+                self.current_attack = action
                 self.frame = 0
                 self.action = "cast"
                 self.casted_spell = True
@@ -260,22 +261,44 @@ class Entity(pygame.sprite.Sprite):
                 target.perfect_block = False
 
     def handle_attack_impact(self, target):
-        if self.type == "enemy" and not self.critical_hit_is_done:
-            bools = [True, False]
-            weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
-            self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
-            if self.critical_hit:
-                self.critical_hit_messages.append("")
-                pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+        base_dmg = self.dmg
 
         if self.blocking and not self.critical_hit_is_done:
-            pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
-            self.critical_hit = True
-            self.critical_hit_messages.append("")
+            if self.blocking and not self.critical_hit_is_done:
+                pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+                self.critical_hit = True
+                self.critical_hit_messages.append("")
+
+                # for projectile based / non repeating attacks:
+                if self.current_action in ["fire_ball", "combustion"]:
+                    base_dmg *= 2
+
+
+            if self.type == "enemy":
+                bools = [True, False]
+                weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
+                self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
+                if self.critical_hit:
+                    self.critical_hit_messages.append("")
+                    pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+
+        if self.type == "player":
+            bools = [True, False]
+            weights = [target.blocking_chance, 1 - target.blocking_chance]
+            target.blocking = random.choices(bools, k=1, weights=weights)[0]
+            target.perfect_block_messages.append("")
 
         if target.blocking:
             target.perfect_block = True
             target.perfect_block_messages.append("")
+
+
+
+            base_dmg //= 2
+            pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
+
+
+
 
         if not self.sound_played and not self.current_action in ["fire_ball", "combustion"]:
             pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
@@ -283,14 +306,6 @@ class Entity(pygame.sprite.Sprite):
         else:
             pygame.mixer.Sound(fireball_sprites["sound"][1]).play()
             self.sound_played = False
-
-        base_dmg = self.dmg
-
-        if target.blocking:
-            base_dmg //= 2
-            pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
-
-            target.action = "idle"
 
 
         target.hp -= base_dmg

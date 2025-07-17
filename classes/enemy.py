@@ -14,7 +14,7 @@ class Enemy(Entity):
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
         self.detected_player = True
-        self.sprite_dict, self.moves, self.critical_hit_chance = self.initialize_enemy()
+        self.sprite_dict, self.moves, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
 
 
         # Battle related
@@ -40,9 +40,9 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash"], 0.25
+            return skeleton_sprites, ["sword_slash"], 0.25, 0.75
         elif self.monster_name == "Slime":
-            return slime_sprites, ["stomp"], 0.25
+            return slime_sprites, ["stomp"], 0.25, 0.75
         else:
             return None
 
