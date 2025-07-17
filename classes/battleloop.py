@@ -2,11 +2,9 @@ import random
 
 import pygame
 from classes.UI import Hpbar, Button, CombatMenu
-from classes.states import AnimationState
+from classes.states import AnimationState, BattleState
 from classes.floatingdamage import FloatingDamage
-from classes.projectile import Projectile
 from other.settings import *
-
 
 # Add options like Defend, Use Item, etc.
 # Add animations or sounds during attacks.
@@ -14,39 +12,33 @@ from other.settings import *
 # Let the player choose a target if multiple enemies exist.
 
 class BattleLoop:
-    def __init__(self, player, enemy, window: pygame.Surface, offset):
+    def __init__(self, player, enemy, window: pygame.Surface):
+        # __general___
         self.player = player
         self.enemy = enemy
         self.window: pygame.Surface = window
 
+        # ___idle positions___
         self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
         self.enemy_position: pygame.Vector2 = pygame.Vector2(enemy.x, enemy.y)
 
-        self.offset = offset
-
-
+        # ___end battle toggle___
         self.return_to_overworld: bool = False
 
+        # ___UI setup___
         self.combat_menu = CombatMenu(self.player.attacks, [self.player_attack, self.player_run, self.player_run])
         self.combat_menu.state = "main_menu"
-
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
         self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, "SKELETON") #enemy.name in the future
 
-        self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
-        self.buttons = []
-        self.display_menu_options = False
-        self.number = 0
+        # ___used as an argument to perform the chosen attack option___
+        self.player_attack_option = None
 
-        self.enemy_damage_position = pygame.Vector2(self.enemy.x - self.offset.x + 32, self.enemy.y - self.offset.y - 16)
-        self.player_damage_position = pygame.Vector2(self.player.x - self.offset.x + 32,
-                                                     self.player.y - self.offset.y - 16)
-
-        self.player_attack = None
+        # ___states___ (to change based on speed stat)
+        self.state = BattleState.PLAYER_TURN
 
 
-        self.state = "player_turn" # to be changed based on speed stat.
         self.delay = pygame.time.get_ticks() + 0 # set if enemy starts first
 
         self.timer = 0
@@ -67,7 +59,7 @@ class BattleLoop:
         self.block_delay = 250
 
     def timer_(self):
-        if self.state == "player_turn" and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
+        if self.state == BattleState.PLAYER_TURN and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
 
             current_time = ((self.clock_time - pygame.time.get_ticks()) // 1000)
 
@@ -93,20 +85,20 @@ class BattleLoop:
         self.draw_ui(self.window)
 
         if not self.delay or pygame.time.get_ticks() >= self.delay:
-            if self.state == "player_turn":
+            if self.state == BattleState.PLAYER_TURN:
                 if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
-                    self.state = "enemy_turn"
+                    self.state = BattleState.ENEMY_TURN
                     self.clock_time = pygame.time.get_ticks() + 20000
 
-            elif self.state == "enemy_turn":
+            elif self.state == BattleState.ENEMY_TURN:
                     self.enemy_turn()
                     self.delay = None
 
-            elif self.state == "end_battle":
+            elif self.state == BattleState.END_BATTLE:
                     self.return_to_overworld = True
                     self.untoggle()
 
-            elif self.state == "end_screen":
+            elif self.state == self.state.END_SCREEN:
                 self.combat_menu.state = "end_screen"
                 self.combat_menu.draw(self.window)
 
@@ -124,9 +116,9 @@ class BattleLoop:
         player_dmg_position = pygame.Vector2(self.player.screen_position.x + offset, self.player.screen_position.y)
         enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + offset, self.enemy.screen_position.y)
 
-        if self.state == "player_animation":
+        if self.state == BattleState.PLAYER_ANIMATION:
             self.damage_group.update(enemy_dmg_position)
-        elif self.state == "enemy_animation":
+        elif self.state == BattleState.ENEMY_ANIMATION:
             self.damage_group.update(player_dmg_position)
 
         self.damage_group.draw(self.window)
@@ -156,7 +148,7 @@ class BattleLoop:
             self.player.perfect_block_messages.clear()
 
     def draw_ui(self, window):
-        if self.state == "player_turn" or self.state == "end_screen":
+        if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_SCREEN:
             self.combat_menu.draw(self.window)
 
         if (self.player.hit_landed or self.enemy.hit_landed
@@ -210,32 +202,32 @@ class BattleLoop:
                     self.block_cooldown_end = current_time + self.block_duration  # Next time we can block again
 
     def player_run(self):
-        self.state = "end_battle"
+        self.state = BattleState.END_BATTLE
 
     def player_attack(self, attack):
         attack_ = attack.replace(" ", "_")
 
-        self.player_attack = attack_.lower()
+        self.player_attack_option = attack_.lower()
         self.perfect_block_counter = 0
         self.damage_counter = 0
 
-        if self.player_attack == "fire_ball":
+        if self.player_attack_option == "fire_ball":
             self.delay = pygame.time.get_ticks() + 1000
             self.player.spawn_projectile = True
 
             self.player.animation_state = AnimationState.WAIT
 
         else:
-            if self.player_attack == "combustion":
+            if self.player_attack_option == "combustion":
                 print("check")
                 self.player.spawn_projectile = True
             self.player.animation_state = AnimationState.APPROACH
 
             # self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
-        self.state = "player_animation"
+        self.state = BattleState.PLAYER_ANIMATION
 
     def animation(self):
-        if self.state == "player_animation":
+        if self.state == BattleState.PLAYER_ANIMATION:
             if self.player.animation_state == AnimationState.APPROACH:
                 self.player.approach_animation(self.enemy)
                 self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
@@ -247,7 +239,7 @@ class BattleLoop:
                     self.delay = None
 
             elif self.player.animation_state == AnimationState.ATTACK:
-                self.player.attack_animation(self.enemy, self.player_attack) # self.player_attack
+                self.player.attack_animation(self.enemy, self.player_attack_option) # self.player_attack
 
                 if self.enemy.hp <= 0 and not self.enemy.death:
                     self.enemy.death_animation()
@@ -259,17 +251,17 @@ class BattleLoop:
                     self.player.return_animation(self.player_position)
 
             elif self.enemy.hp <= 0:
-                self.state = "end_screen"
+                self.state = BattleState.END_SCREEN
 
             elif self.player.animation_state == AnimationState.IDLE:
                 if not self.delay: self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.delay = None
 
-                    self.state = "enemy_turn"
+                    self.state = BattleState.ENEMY_TURN
                     self.critical_floated = False
 
-        elif self.state == "enemy_animation":
+        elif self.state == BattleState.ENEMY_ANIMATION:
             if self.enemy.animation_state == AnimationState.APPROACH:
                 self.enemy.approach_animation(self.player)
                 self.delay = pygame.time.get_ticks() + random.randint(500, 3000) # random wait time before attacking
@@ -292,7 +284,7 @@ class BattleLoop:
                     self.enemy.return_animation(self.enemy_position)
 
             elif self.player.hp <= 0:
-                self.state = "end_screen"
+                self.state = BattleState.END_SCREEN
 
             elif self.enemy.animation_state == AnimationState.IDLE:
                 # End of enemy's animation
@@ -302,7 +294,7 @@ class BattleLoop:
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.combat_menu.state = "main_menu"
                     self.combat_menu.buttons_group = pygame.sprite.Group()
-                    self.state = "player_turn"
+                    self.state = BattleState.PLAYER_TURN
                     self.critical_floated = False
                     self.delay = None
                     self.clock_time = pygame.time.get_ticks() + 20000
@@ -312,7 +304,7 @@ class BattleLoop:
     def enemy_attack(self):
         self.damage_counter = 0
         self.perfect_block_counter = 0
-        self.state = "enemy_animation"
+        self.state = BattleState.ENEMY_ANIMATION
         self.enemy.animation_state = AnimationState.APPROACH
 
     def untoggle(self):

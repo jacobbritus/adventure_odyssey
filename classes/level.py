@@ -7,6 +7,7 @@ from classes.player import Player, DustParticle
 from classes.Tiles import StaticTile, AnimatedTile
 from pytmx.util_pygame import load_pygame
 
+from classes.states import BattleState, LevelState
 from other.settings import *
 
 class Level:
@@ -97,7 +98,7 @@ class Level:
 
 
     def run(self) -> None:
-        if self.visible_sprites.state == "OVERWORLD":
+        if self.visible_sprites.state == LevelState.OVERWORLD:
             self.visible_sprites.update_soundtrack()
             self.overworld()
         else:
@@ -114,7 +115,7 @@ class Level:
 
 
     def overworld_transition(self):
-        if self.visible_sprites.battle_loop.state == "end_battle" and not self.visible_sprites.delay:
+        if self.visible_sprites.battle_loop.state == BattleState.END_BATTLE and not self.visible_sprites.delay:
             self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
             self.visible_sprites.transition_timer = pygame.time.get_ticks()
 
@@ -134,8 +135,7 @@ class Level:
 
     def battle(self):
         # Make camera follow the animation
-        self.visible_sprites.battle_loop.offset = self.visible_sprites.offset
-        self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
+        # self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
 
         # self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
@@ -144,7 +144,6 @@ class Level:
 
 
         self.visible_sprites.update_enemies(self.player)
-
         self.visible_sprites.battle_loop.update()
 
         # end battle

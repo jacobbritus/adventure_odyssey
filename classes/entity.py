@@ -116,7 +116,6 @@ class Entity(pygame.sprite.Sprite):
         )
         for sprite in self.obstacle_sprites:
             if self.hitbox.inflate(-16,  -32).colliderect(sprite.hitbox):
-                print("yes")
                 return True
         return False
 
@@ -164,7 +163,6 @@ class Entity(pygame.sprite.Sprite):
 
     def projectile_animation(self, target):
         if self.spawn_projectile:
-            print("check")
             Projectile(self.projectiles, pygame.Vector2(WINDOW_WIDTH // 2 + 48, WINDOW_HEIGHT // 2 + 16),
                        pygame.Vector2(target.hitbox.x, WINDOW_HEIGHT // 2), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
@@ -214,7 +212,6 @@ class Entity(pygame.sprite.Sprite):
 
             self.projectile_animation(target)
             self.current_action = action
-            print("check")
             return
         else:
             self.current_action = action
@@ -275,7 +272,6 @@ class Entity(pygame.sprite.Sprite):
             target.perfect_block_messages.append("")
 
         if not self.sound_played and not self.current_action in ["fire_ball", "combustion"]:
-            print(self.action)
             pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
             self.sound_played = True
         else:
@@ -295,11 +291,6 @@ class Entity(pygame.sprite.Sprite):
 
         target.dmg_taken.append(base_dmg)
 
-
-        # if target.hp <= 0:
-        #     target.death_animation()
-        #     print("check")
-
         if not target.hp <= 0:
             target.frame = 0
             target.action = "death"
@@ -314,7 +305,6 @@ class Entity(pygame.sprite.Sprite):
         # Play the animation frame by frame
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2:
             self.death = True
-            print("yes")
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""

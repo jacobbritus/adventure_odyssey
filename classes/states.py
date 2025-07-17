@@ -17,3 +17,14 @@ class AnimationState(Enum):
     ATTACK = auto()
     RETURN = auto()
 
+class BattleState(Enum):
+    PLAYER_TURN = auto()
+    ENEMY_TURN = auto()
+    PLAYER_ANIMATION = auto()
+    ENEMY_ANIMATION = auto()
+    END_SCREEN = auto()
+    END_BATTLE = auto()
+
+class LevelState(Enum):
+    OVERWORLD = auto()
+    BATTLE = auto()

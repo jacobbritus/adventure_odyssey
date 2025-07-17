@@ -1,6 +1,7 @@
 import random
 
 from classes.UI import Hpbar
+from classes.states import BattleState, LevelState
 from other.settings import *
 from classes.battleloop import BattleLoop
 
@@ -26,7 +27,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.obstacles: []
 
         # Game state
-        self.state = "OVERWORLD"
+        self.state = LevelState.OVERWORLD
         self.battle_participants = None
         self.current_music = None
         self.player_position = None
@@ -48,14 +49,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         if not hasattr(self, 'current_music'):
             self.current_music = None
 
-        if self.state == "OVERWORLD" and self.current_music != "forest":
+        if self.state == LevelState.OVERWORLD and self.current_music != "forest":
             pygame.mixer.music.stop()
             pygame.mixer.music.load(FOREST_MUSIC)
             pygame.mixer.music.set_volume(0.1)
             pygame.mixer.music.play(-1)
             self.current_music = "forest"
 
-        elif self.state == "BATTLE" and self.current_music != "battle":
+        elif self.state == LevelState.BATTLE and self.current_music != "battle":
             pygame.mixer.music.stop()
             pygame.mixer.music.load(BATTLE_MUSIC_1)
             pygame.mixer.music.set_volume(0.1)
@@ -70,64 +71,54 @@ class YSortCameraGroup(pygame.sprite.Group):
             if inflated_display_rect.collidepoint(offset_pos):
                 yield sprite
 
-
     def update_camera(self, player):
         player.update_player(self.offset, self.display_surface)
 
-
-        if self.state == "OVERWORLD":
-
-            self.offset.x = player.rect.centerx - self.screen_center_x  # Move all sprite
+        if self.state == LevelState.OVERWORLD:
+            self.offset.x = player.rect.centerx - self.screen_center_x
             self.offset.y = player.rect.centery - self.screen_center_y
 
-        elif self.state == "BATTLE":
+        elif self.state == LevelState.BATTLE:
             camera_speed = 0.2
 
-            if player.projectiles:
-                for projectile in player.projectiles:
-                    if not projectile.hit:
-                        target_x = projectile.rect.x
-                        target_y = player.rect.centery - self.screen_center_y
-                    else:
-                        target_x = player.rect.centerx - self.screen_center_x
-                        target_y = player.rect.centery - self.screen_center_y
+            # Default to center battle position
+            target_x = self.battle_position[0] - self.screen_center_x
+            target_y = self.battle_position[1] - self.screen_center_y
 
-            if not self.shake_duration and player.hit_landed or self.battle_participants[1].hit_landed:
-                self.shake_duration = 3
-                self.shake_intensity = 2
-
-            elif self.animation_camera == "player_animation":
+            # Decide target camera position
+            if self.battle_loop.state == BattleState.PLAYER_ANIMATION:
                 target_x = player.rect.centerx - self.screen_center_x
                 target_y = player.rect.centery - self.screen_center_y
 
-            elif self.animation_camera == "enemy_animation":
-                target_x = self.battle_participants[1].rect.centerx - self.screen_center_x
-                target_y = self.battle_participants[1].rect.centery - self.screen_center_y
+                # Trigger shake only if player landed hit
+                if not self.shake_duration and player.hit_landed:
+                    self.shake_duration = 3
+                    self.shake_intensity = 2
 
-            else:
-                target_x = self.battle_position[0] - self.screen_center_x
-                target_y = self.battle_position[1] - self.screen_center_y
+            elif self.battle_loop.state == BattleState.ENEMY_ANIMATION:
+                enemy = self.battle_participants[1]
+                target_x = enemy.rect.centerx - self.screen_center_x
+                target_y = enemy.rect.centery - self.screen_center_y
 
+                # Trigger shake only if enemy landed hit
+                if not self.shake_duration and enemy.hit_landed:
+                    self.shake_duration = 3
+                    self.shake_intensity = 2
 
-
+            # Apply shake offset
             if self.shake_duration > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_duration -= 1
             else:
                 self.shake_offset = pygame.Vector2(0, 0)
-                self.shake_duration = 0
-                self.shake_intensity = 0
 
-                # Smoothly move offset toward the target
-                # Keep float offset for calculations
-                self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
-                self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
+            # Smooth camera movement
+            self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
+            self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
 
-                # Round offset before drawing
-                self.offset.x = round(self.offset_float.x)
-                self.offset.y = round(self.offset_float.y)
-
+            self.offset.x = round(self.offset_float.x + self.shake_offset.x)
+            self.offset.y = round(self.offset_float.y + self.shake_offset.y)
 
     def draw_sprites(self):
         # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
@@ -176,10 +167,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
-        if self.state == "OVERWORLD":
+        if self.state == LevelState.OVERWORLD:
             for sprite in self.enemy_sprites:
                 sprite.update_enemy(player, self.display_surface, self.offset)
-        elif self.state == "BATTLE":
+        elif self.state == LevelState.BATTLE:
             self.battle_participants[1].update_enemy(player, self.display_surface, self.offset)
     def start_battle(self):
         player, enemy = self.battle_participants
@@ -187,7 +178,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         spots2 = self.find_battle_spot(player.rect)
 
         if spots2:
-            self.state = "BATTLE"
+            self.state = LevelState.BATTLE
             self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
 
             def get_positions_in_rect(rect, n):
@@ -210,7 +201,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
             self.battle_position.update(battle_center_x, battle_center_y)
 
-            self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
+            self.battle_loop = BattleLoop(player, enemy, self.display_surface)
 
 
 
@@ -255,7 +246,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
     def end_battle(self):
-        self.state = "OVERWORLD"
+        self.state = LevelState.OVERWORLD
         player, enemy = self.battle_participants
 
         # Put the participants out of the battle state.
@@ -273,7 +264,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         player.rect.topleft = self.player_position
         player.x, player.y = self.player_position
 
-
+    print("g")
 
     def find_battle_spot(self, player_rect, search_radius = 640, step = 32):
         """Find a nearby unobstructed rectangular area for battle."""
