@@ -1,6 +1,7 @@
 import math
 import pygame
 
+from classes.states import AnimationState
 from classes.projectile import Projectile
 from other.settings import *
 
@@ -39,14 +40,9 @@ class Entity(pygame.sprite.Sprite):
         self.in_battle = False
         self.obstacle_sprites = None
 
-        self.approach_trigger = False
-        self.return_trigger = False
-        self.attack_trigger = False
         self.death = False
         self.hit_landed = False
         self.blocking = False
-        self.wait_trigger = False
-        self.death_trigger = False
         self.current_action = None
 
         self.perfect_block = False
@@ -69,9 +65,12 @@ class Entity(pygame.sprite.Sprite):
         # Stats
         self.dmg = None
 
+        # Animation states
+        self.animation_state = AnimationState.IDLE
+
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
-        if self.in_battle and not self.approach_trigger and not self.return_trigger:
+        if self.in_battle and not self.animation_state in [AnimationState.APPROACH, AnimationState.RETURN]:
             return
         dx, dy = move_vector
         self.speed = 4 if self.sprinting else 2
@@ -97,7 +96,7 @@ class Entity(pygame.sprite.Sprite):
         """Iterate over the sprite list assigned to the action > direction."""
         iterate_speed: float = 0.2 if self.sprinting else 0.12
 
-        if self.attack_trigger or self.death:
+        if self.animation_state.ATTACK or self.death:
             iterate_speed = 0.12
 
         self.frame += iterate_speed
@@ -154,18 +153,18 @@ class Entity(pygame.sprite.Sprite):
 
             if self.hitbox.inflate(+ hitbox_offset, 0).colliderect(target.hitbox):
 
-                self.approach_trigger = False
-                self.frame = 0
+
 
                 self.sprinting = False
+                self.animation_state = AnimationState.WAIT
 
-                self.wait_trigger = True
 
     def wait(self):
         self.action = "idle"
 
     def projectile_animation(self, target):
         if self.spawn_projectile:
+            print("check")
             Projectile(self.projectiles, pygame.Vector2(WINDOW_WIDTH // 2 + 48, WINDOW_HEIGHT // 2 + 16),
                        pygame.Vector2(target.hitbox.x, WINDOW_HEIGHT // 2), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
@@ -179,32 +178,35 @@ class Entity(pygame.sprite.Sprite):
                 self.hit_landed = True
 
 
+
         if not self.projectiles:
 
             # ___if critical hit___
             if self.critical_hit and not self.critical_hit_is_done:
                 self.action = "idle"
-                self.attack_trigger = True
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
+                self.animation_state = AnimationState.ATTACK
+
 
 
             # ___end attack sequence___
             else:
                 self.action = "idle"
-                self.attack_trigger = False
-                self.return_trigger = True
                 self.critical_hit_is_done = False
                 self.critical_hit = False
                 target.perfect_block = False
                 self.hit_landed = False
                 self.casted_spell = False
+                self.animation_state = AnimationState.RETURN
+
+
 
 
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
-        if action == "fire_ball":
+        if action in ["fire_ball", "combustion"]:
             if not self.casted_spell:
                 self.frame = 0
                 self.action = "cast"
@@ -212,7 +214,7 @@ class Entity(pygame.sprite.Sprite):
 
             self.projectile_animation(target)
             self.current_action = action
-
+            print("check")
             return
         else:
             self.current_action = action
@@ -243,7 +245,8 @@ class Entity(pygame.sprite.Sprite):
             # ___if critical hit___
             if self.critical_hit and not self.critical_hit_is_done:
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
-                self.attack_trigger = True
+                self.animation_state = AnimationState.ATTACK
+
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
@@ -252,8 +255,7 @@ class Entity(pygame.sprite.Sprite):
             # ___end attack sequence___
             else:
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
-                self.attack_trigger = False
-                self.return_trigger = True
+                self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False
                 self.critical_hit = False
                 target.perfect_block = False
@@ -272,8 +274,7 @@ class Entity(pygame.sprite.Sprite):
             target.perfect_block = True
             target.perfect_block_messages.append("")
 
-
-        if not self.sound_played and not self.current_action == "fire_ball":
+        if not self.sound_played and not self.current_action in ["fire_ball", "combustion"]:
             print(self.action)
             pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
             self.sound_played = True
@@ -333,11 +334,8 @@ class Entity(pygame.sprite.Sprite):
                 self.direction = "left" if self.direction == "right" else "right"
                 self.action = "idle"
 
-                if self.frame != 0 and self.action != "sword_slash":
-                    self.frame = 0
-                if self.frame < len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
-                    self.return_trigger = False
-                    self.sprinting = False
+                self.animation_state = AnimationState.IDLE
+                self.sprinting = False
 
 
     def update_animations(self) -> None:
