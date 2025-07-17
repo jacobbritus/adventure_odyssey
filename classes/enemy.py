@@ -28,7 +28,7 @@ class Enemy(Entity):
         self.image = surf
         self.width, self.height = pygame.Surface.get_size(surf)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.hitbox = self.rect.inflate(32, 32)
+        self.hitbox = self.rect.inflate(-16, -48)
         self.exclamation_mark = pygame.image.load(EXCLAMATION_MARK)
 
         self.screen_position = None
@@ -92,6 +92,10 @@ class Enemy(Entity):
     def update_enemy(self, player, window, offset) -> None:
         self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                    self.y - offset.y)
+        hitbox_offset = self.width if self.monster_name == "Skeleton" else 0
+        self.hitbox.topleft = (int(self.screen_position.x + hitbox_offset), int(self.screen_position.y + self.height // 2))
+
+        # pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2)  # Red rectangle with 2px border
 
         if self.detected_player and not self.in_battle:
             window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + self.width // 2, self.rect.y - offset.y - 8))

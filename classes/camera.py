@@ -83,11 +83,20 @@ class YSortCameraGroup(pygame.sprite.Group):
         elif self.state == "BATTLE":
             camera_speed = 0.2
 
-            if not self.shake_duration and player.hit_landed or self.battle_participants[1].hit_landed:
-                self.shake_duration = 5
-                self.shake_intensity = 3
+            if player.projectiles:
+                for projectile in player.projectiles:
+                    if not projectile.hit:
+                        target_x = projectile.rect.x
+                        target_y = player.rect.centery - self.screen_center_y
+                    else:
+                        target_x = player.rect.centerx - self.screen_center_x
+                        target_y = player.rect.centery - self.screen_center_y
 
-            if self.animation_camera == "player_animation":
+            if not self.shake_duration and player.hit_landed or self.battle_participants[1].hit_landed:
+                self.shake_duration = 3
+                self.shake_intensity = 2
+
+            elif self.animation_camera == "player_animation":
                 target_x = player.rect.centerx - self.screen_center_x
                 target_y = player.rect.centery - self.screen_center_y
 
@@ -210,8 +219,8 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
-            if player.rect.inflate(-player.rect.width // 4, -player.rect.height // 4).colliderect(
-                    enemy.rect.inflate(-enemy.rect.width // 4, -enemy.rect.height // 4)):
+            if player.hitbox.colliderect(
+                    enemy.hitbox):
                 self.battle_participants = [player, enemy]
                 self.transition_timer = pygame.time.get_ticks()
                 self.delay = pygame.time.get_ticks() + self.delay_time

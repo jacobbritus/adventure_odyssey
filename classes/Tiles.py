@@ -35,7 +35,7 @@ class AnimatedTile(pygame.sprite.Sprite):
         self.image = self.frames[self.frame_index]
         self.rect: pygame.Rect = self.image.get_rect(topleft = pos)
         self.type = tile_type
-        self.hitbox: pygame.Rect = (self.rect.inflate(-32, -32) if tile_type == "tree" else self.rect)
+        self.hitbox: pygame.Rect = (self.rect.inflate(-32, -16) if tile_type == "tree" else self.rect)
 
 
     def update(self):

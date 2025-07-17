@@ -12,6 +12,10 @@ WINDOW_HEIGHT = 720
 FPS = 60
 TILE_SIZE = 32
 
+
+# Sprites
+fireball_sprites = fireball_sprites
+
 player_sprites = player_sprites
 sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites

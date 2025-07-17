@@ -3,6 +3,7 @@ import random
 import pygame
 from classes.UI import Hpbar, Button, CombatMenu
 from classes.floatingdamage import FloatingDamage
+from classes.projectile import Projectile
 from other.settings import *
 
 
@@ -67,6 +68,7 @@ class BattleLoop:
 
 
 
+
     def timer_(self):
         if self.state == "player_turn" and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
 
@@ -83,7 +85,13 @@ class BattleLoop:
             # self.window.blit(box, (WINDOW_WIDTH // 2 - box_size // 2, self.player_hp_bar.box_position[1] ))
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_position[1] - 2))
 
+
+
     def update(self):
+        self.player.projectiles.draw(self.window)
+        self.player.projectiles.update(self.enemy.screen_position)
+
+
         self.timer_()
         self.player_hp_bar.set_hp(self.player.hp)
         self.enemy_hp_bar.set_hp(self.enemy.hp)
@@ -149,7 +157,6 @@ class BattleLoop:
             self.player.critical_hit_messages.clear()
 
         if self.enemy.critical_hit and self.enemy.critical_hit_messages:
-            print("check")
             FloatingDamage(self.damage_group, "CRITICAL HIT", player_dmg_position, -3)
             self.enemy.critical_hit_messages.clear()
 
@@ -221,7 +228,13 @@ class BattleLoop:
         self.perfect_block_counter = 0
         self.damage_counter = 0
 
-        self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
+        if self.player_attack == "fire_ball":
+            self.delay = pygame.time.get_ticks() + 1000
+            self.player.spawn_projectile = True
+
+            self.player.wait_trigger = True
+        else:
+            self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
         self.state = "player_animation"
 
     def animation(self):
@@ -238,14 +251,13 @@ class BattleLoop:
                     self.delay = None
 
             elif self.player.attack_trigger:
-                self.player.attack_animation(self.enemy, self.player_attack)
+                self.player.attack_animation(self.enemy, self.player_attack) # self.player_attack
                 self.delay = pygame.time.get_ticks() + 500  # delay before returning
-
-            elif self.player.return_trigger:
-                self.enemy.action = "idle"
-                if self.enemy.hp <= 0:
+                if self.enemy.hp <= 0 and not self.enemy.death:
                     self.enemy.death_animation()
 
+            elif self.player.return_trigger:
+                if not self.enemy.hp <= 0: self.enemy.action = "idle"
                 if pygame.time.get_ticks() >= self.delay:
                     self.player.return_animation(self.player_position)
 
@@ -254,10 +266,9 @@ class BattleLoop:
 
             elif not self.player.attack_trigger and not self.player.return_trigger:
                 # End of player's animation
-                self.delay = pygame.time.get_ticks() + 500
+                self.delay = pygame.time.get_ticks() + 1000
                 self.state = "enemy_turn"
                 self.critical_floated = False
-
 
         elif self.state == "enemy_animation":
             if self.enemy.approach_trigger:
@@ -274,15 +285,13 @@ class BattleLoop:
             elif self.enemy.attack_trigger:
                 self.player_hp_bar.update()
                 self.enemy.attack_animation(self.player, "sword_slash")
-
                 self.delay = pygame.time.get_ticks() + 500  # delay before returning
+                if self.player.hp <= 0:
+                    self.player.death_animation()
 
 
             elif self.enemy.return_trigger:
-                self.player.action = "idle"
-                if self.player.hp <= 0:
-                    self.state = "end_screen"
-
+                if not self.player.hp <= 0: self.player.action = "idle"
                 if pygame.time.get_ticks() >= self.delay:
                     self.enemy.return_animation(self.enemy_position)
                     self.clock_time = pygame.time.get_ticks() + 20000

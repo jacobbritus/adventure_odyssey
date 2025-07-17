@@ -1,6 +1,8 @@
 import os
 import pygame
 
+
+
 def get_file_location(file_location: str) -> str:
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,7 +79,14 @@ player_sprites = {
             "left": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, True),
         },
         "sound": "sounds/death.wav"
-    }
+    },
+"cast": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, False),
+            "left": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, True),
+        },
+        "sound": "sounds/skeleton_death.wav",
+        "impact_frame": None}
 }
 
 
@@ -121,6 +130,7 @@ skeleton_sprites = {
         "impact_frame": None
 
     }
+
 }
 
 
@@ -143,4 +153,36 @@ slime_sprites = {
             "up": sprite_converter("sprites/characters/slime.png", 5, 6, 64, 64, False),
         },
         "sound": "sounds/skeleton_run.wav",
-                 "impact_frame": None}}
+                 "impact_frame": None},
+
+
+
+    "death": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/slime.png", 12, 4, 64, 64, False),
+            "left": sprite_converter("sprites/characters/slime.png", 12, 4, 64, 64, True),
+        },
+        "sound": "sounds/skeleton_death.wav",
+        "impact_frame": None
+
+}}
+
+fireball_sprites = {
+        "sprites": {
+                "right": sprite_converter("sprites/particles/fireball.png", 0, 4, 96, 128, False),
+                "righ1": sprite_converter("sprites/particles/fireball.png", 1, 4, 96, 128, False),
+                "right1": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 128, False),
+                "right4": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 128, False),
+
+            "left": sprite_converter("sprites/particles/fireball.png", 0, 4, 96, 96, True),
+            "left2": sprite_converter("sprites/particles/fireball.png", 1, 4, 96, 96, True),
+                "left3": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 96, True),
+                "left4": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 96, True),
+
+            "hit": sprite_converter("sprites/particles/fire_hit.png", 0, 4, 80, 80, False)}
+                ,
+
+        "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")],
+
+
+                    }

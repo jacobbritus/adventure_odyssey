@@ -30,7 +30,7 @@ class Player(Entity):
         self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.hitbox = self.rect.inflate(-16, -16)
+        self.hitbox = self.rect.inflate(-64, -32)
 
         # Sound
         self.footstep_sound = pygame.mixer.Sound(GRASS_FOOTSTEP)
@@ -42,8 +42,8 @@ class Player(Entity):
         # Stats
         self.hp: int = 20
         self.max_hp: int = 20
-        self.dmg: int = 10
-        
+        self.dmg: int = 5
+
         self.speed: int = 2 # dont forget to implement this in entity class move()
 
         # Other
@@ -55,7 +55,7 @@ class Player(Entity):
         self.mask_image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
 
 
-        self.attacks = ["sword_slash", "punch"]
+        self.attacks = ["sword_slash", "punch", "fire_ball"]
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -119,6 +119,11 @@ class Player(Entity):
         else:
             self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                        self.y - offset.y)
+
+        self.hitbox.topleft = (int(self.screen_position.x + self.width // 3), int(self.screen_position.y + self.height // 4))
+        # pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2)  # Red rectangle with 2px border
+
+
 
         # if self.blocking:
         #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
