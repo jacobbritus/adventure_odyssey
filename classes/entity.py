@@ -1,5 +1,5 @@
 import math
-import pygame
+import random
 
 from classes.states import AnimationState
 from classes.projectile import Projectile
@@ -37,8 +37,10 @@ class Entity(pygame.sprite.Sprite):
         self.speed = 2
 
         # Battle related.
+        self.hp = None
         self.in_battle = False
         self.obstacle_sprites = None
+        self.critical_hit_chance = None
 
         self.death = False
         self.hit_landed = False
@@ -259,8 +261,12 @@ class Entity(pygame.sprite.Sprite):
 
     def handle_attack_impact(self, target):
         if self.type == "enemy" and not self.critical_hit_is_done:
-            self.critical_hit = True
-            self.critical_hit_messages.append("")
+            bools = [True, False]
+            weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
+            self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
+            if self.critical_hit:
+                self.critical_hit_messages.append("")
+                pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
 
         if self.blocking and not self.critical_hit_is_done:
             pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
@@ -297,7 +303,6 @@ class Entity(pygame.sprite.Sprite):
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
-
         if self.action != "death":
             self.frame = 0
             self.action = "death"

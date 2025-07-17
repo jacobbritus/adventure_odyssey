@@ -138,7 +138,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                          if sprite.type in ["player", "tree", "enemy", "battle_spot"]]
 
         # Decide if enemy needs to be drawn last
-        draw_enemy_last = self.animation_camera == "enemy_animation"
+        draw_enemy_last = self.animation_camera == BattleState.ENEMY_ANIMATION
         enemy_sprite = self.battle_participants[1] if draw_enemy_last else None
 
         # Sort by Y (with optional tree offset)
@@ -218,8 +218,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                 for participant in self.battle_participants:
                     participant.in_battle = True
                     participant.action = "idle"
-
-
                 break
 
 
@@ -242,9 +240,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
                 self.transition_timer = None
 
-
-
-
     def end_battle(self):
         self.state = LevelState.OVERWORLD
         player, enemy = self.battle_participants
@@ -264,7 +259,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         player.rect.topleft = self.player_position
         player.x, player.y = self.player_position
 
-    print("g")
 
     def find_battle_spot(self, player_rect, search_radius = 640, step = 32):
         """Find a nearby unobstructed rectangular area for battle."""

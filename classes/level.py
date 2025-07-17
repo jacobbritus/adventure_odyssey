@@ -135,7 +135,7 @@ class Level:
 
     def battle(self):
         # Make camera follow the animation
-        # self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
+        self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
 
         # self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()

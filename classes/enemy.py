@@ -14,17 +14,19 @@ class Enemy(Entity):
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
         self.detected_player = True
+        self.sprite_dict, self.moves, self.critical_hit_chance = self.initialize_enemy()
 
-        # Stats
+
+        # Battle related
         self.hp = 15
         self.dmg = 5
+
 
         # Location
         self.x = pos[0]
         self.y = pos[1]
 
         # Image
-        self.sprite_dict = self.get_sprites()
         self.image = surf
         self.width, self.height = pygame.Surface.get_size(surf)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
@@ -34,11 +36,13 @@ class Enemy(Entity):
         self.screen_position = None
 
 
-    def get_sprites(self) -> list or None:
+
+
+    def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites
+            return skeleton_sprites, ["sword_slash"], 0.25
         elif self.monster_name == "Slime":
-            return slime_sprites
+            return slime_sprites, ["stomp"], 0.25
         else:
             return None
 
