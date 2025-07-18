@@ -173,6 +173,7 @@ fireball_sprites = {
                 "righ1": sprite_converter("sprites/particles/fireball.png", 1, 4, 96, 128, False),
                 "right1": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 128, False),
                 "right4": sprite_converter("sprites/particles/fireball.png", 2, 4, 96, 128, False),
+            "explosion": sprite_converter("sprites/particles/explosion.png", 0, 7, 128, 144, False),
 
             "left": sprite_converter("sprites/particles/fireball.png", 0, 4, 96, 96, True),
             "left2": sprite_converter("sprites/particles/fireball.png", 1, 4, 96, 96, True),
@@ -186,3 +187,47 @@ fireball_sprites = {
 
 
                     }
+
+heal_sprites = {
+    "sprites": {
+        "right": sprite_converter("sprites/particles/heal.png", 0, 4, 96, 90, False),
+
+    }
+}
+
+goblin_sprites = {
+    "idle": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/goblin.png", 0, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/goblin.png", 1, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/goblin.png", 1, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/goblin.png", 2, 6, 96, 80, False),
+        },
+        "sound": get_file_location("sounds/sword_slash")
+    },
+    "running": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/goblin.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/goblin.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/goblin.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/goblin.png", 5, 6, 96, 80, False),
+        },
+        "sound": "sounds/footsteps.wav"
+    },
+    "sword_slash": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/goblin.png", 6, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/goblin.png", 6, 4, 96, 80, True),
+        },
+        "sound": get_file_location("sounds/sword_slash.wav"),
+        "impact_frame": 2
+    },
+
+    "death": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/goblin.png", 7, 3, 96, 80, False),
+            "left": sprite_converter("sprites/characters/goblin.png", 7, 3, 96, 80, True),
+        },
+        "sound": "sounds/death.wav"
+
+}}

@@ -1,7 +1,7 @@
 import random
 
 from classes.UI import Hpbar
-from classes.states import BattleState, LevelState
+from classes.states import BattleState, LevelState, AnimationState
 from other.settings import *
 from classes.battleloop import BattleLoop
 
@@ -79,33 +79,20 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.offset.y = player.rect.centery - self.screen_center_y
 
         elif self.state == LevelState.BATTLE:
-            camera_speed = 0.2
+            camera_speed = 0.3  # adjust for snappiness
 
-            # Default to center battle position
-            target_x = self.battle_position[0] - self.screen_center_x
-            target_y = self.battle_position[1] - self.screen_center_y
+            # Fallback to battle position
+            target = self.battle_position
 
-            # Decide target camera position
+            # Follow a projectile if active
+            # if player.projectiles:
+            #     target = self.battle_participants[1].rect.center
             if self.battle_loop.state == BattleState.PLAYER_ANIMATION:
-                target_x = player.rect.centerx - self.screen_center_x
-                target_y = player.rect.centery - self.screen_center_y
-
-                # Trigger shake only if player landed hit
-                if not self.shake_duration and player.hit_landed:
-                    self.shake_duration = 3
-                    self.shake_intensity = 2
-
+                target = player.rect.center
             elif self.battle_loop.state == BattleState.ENEMY_ANIMATION:
-                enemy = self.battle_participants[1]
-                target_x = enemy.rect.centerx - self.screen_center_x
-                target_y = enemy.rect.centery - self.screen_center_y
+                target = self.battle_participants[1].rect.center
 
-                # Trigger shake only if enemy landed hit
-                if not self.shake_duration and enemy.hit_landed:
-                    self.shake_duration = 3
-                    self.shake_intensity = 2
-
-            # Apply shake offset
+            # Apply shake
             if self.shake_duration > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
@@ -113,9 +100,9 @@ class YSortCameraGroup(pygame.sprite.Group):
             else:
                 self.shake_offset = pygame.Vector2(0, 0)
 
-            # Smooth camera movement
-            self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
-            self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
+            # Smooth camera
+            self.offset_float.x += (target[0] - self.screen_center_x - self.offset_float.x) * camera_speed
+            self.offset_float.y += (target[1] - self.screen_center_y - self.offset_float.y) * camera_speed
 
             self.offset.x = round(self.offset_float.x + self.shake_offset.x)
             self.offset.y = round(self.offset_float.y + self.shake_offset.y)

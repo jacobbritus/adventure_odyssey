@@ -15,6 +15,7 @@ class AnimationState(Enum):
     WAIT = auto()
     APPROACH = auto()
     ATTACK = auto()
+    BUFF = auto()
     RETURN = auto()
 
 class BattleState(Enum):

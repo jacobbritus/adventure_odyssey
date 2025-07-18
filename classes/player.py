@@ -55,7 +55,7 @@ class Player(Entity):
         self.mask_image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
 
 
-        self.attacks = ["sword_slash", "punch", "fire_ball", "combustion"]
+        self.attacks = ["sword_slash", "punch", "fire_ball", "combustion", "heal"]
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""

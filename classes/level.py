@@ -62,6 +62,10 @@ class Level:
                     Enemy(surf=obj.image, pos=pos, monster_name=obj.name, group=(self.enemies, self.visible_sprites),
                           obstacle_sprites=self.obstacle_sprites)
 
+                if obj.name == "Goblin":
+                    Enemy(surf=obj.image, pos=pos, monster_name=obj.name, group=(self.enemies, self.visible_sprites),
+                          obstacle_sprites=self.obstacle_sprites)
+
         obstacle_sprites = self.tmx_data.get_layer_by_name("Obstacles")
         if isinstance(obstacle_sprites, pytmx.TiledObjectGroup):
             for obj in obstacle_sprites:

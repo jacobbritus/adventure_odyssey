@@ -1,8 +1,10 @@
 import math
 import random
 
+import pygame.mixer
+
 from classes.states import AnimationState
-from classes.projectile import Projectile
+from classes.spells import Spells
 from other.settings import *
 
 
@@ -46,7 +48,7 @@ class Entity(pygame.sprite.Sprite):
         self.death = False
         self.hit_landed = False
         self.blocking = False
-        self.current_action = None
+        self.current_attack = None
 
         self.perfect_block = False
         self.perfect_block_messages = []
@@ -58,7 +60,6 @@ class Entity(pygame.sprite.Sprite):
         # projectiles
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
-        self.casted_spell = False
 
         # Sound
         self.sound_played = False
@@ -98,8 +99,11 @@ class Entity(pygame.sprite.Sprite):
         """Iterate over the sprite list assigned to the action > direction."""
         iterate_speed: float = 0.2 if self.sprinting else 0.12
 
-        if self.animation_state.ATTACK or self.death:
+
+        if self.animation_state == AnimationState.ATTACK or self.death:
             iterate_speed = 0.12
+
+
 
         self.frame += iterate_speed
 
@@ -153,9 +157,6 @@ class Entity(pygame.sprite.Sprite):
             self.hitbox.topleft = self.screen_position
 
             if self.hitbox.inflate(+ hitbox_offset, 0).colliderect(target.hitbox):
-
-
-
                 self.sprinting = False
                 self.animation_state = AnimationState.WAIT
 
@@ -163,26 +164,36 @@ class Entity(pygame.sprite.Sprite):
     def wait(self):
         self.action = "idle"
 
+    def buff_animation(self):
+        if not self.spawn_projectile:
+            Spells(self.projectiles, self.current_attack, pygame.Vector2(self.hitbox.x + 16, self.hitbox.y - 32), None, None)
+            self.spawn_projectile = True
+            self.hp += 5
+            pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
+
+        if not self.projectiles:
+            self.animation_state = AnimationState.IDLE
+
+            self.spawn_projectile = False
+
     def projectile_animation(self, target):
-        if self.spawn_projectile:
-            Projectile(self.projectiles, pygame.Vector2(WINDOW_WIDTH // 2 + 48, WINDOW_HEIGHT // 2 + 16),
-                       pygame.Vector2(target.hitbox.x, WINDOW_HEIGHT // 2), 5)
+        if not self.spawn_projectile:
+            Spells(self.projectiles, "fire_ball",pygame.Vector2(WINDOW_WIDTH // 2 + 48, WINDOW_HEIGHT // 2 + 16),
+                   pygame.Vector2(target.hitbox.x, WINDOW_HEIGHT // 2), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
 
 
-            self.spawn_projectile = False
+            self.spawn_projectile = True
 
         for projectile in self.projectiles:
             if projectile.hit and not self.hit_landed:
                 self.handle_attack_impact(target)
                 self.hit_landed = True
 
-
-
         if not self.projectiles:
 
             # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done:
+            if self.critical_hit and not self.critical_hit_is_done and moves[self.current_attack]["type"] == "physical":
                 self.action = "idle"
                 self.critical_hit = False
                 self.critical_hit_is_done = True
@@ -198,34 +209,29 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = False
                 target.perfect_block = False
                 self.hit_landed = False
-                self.casted_spell = False
+
                 self.animation_state = AnimationState.RETURN
-
-
 
 
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
-        if action in ["fire_ball", "combustion"]:
-            if not self.casted_spell:
-                self.current_attack = action
+        self.current_attack = action
+
+        if moves[action]["type"] == "special":
+            if not self.spawn_projectile:
                 self.frame = 0
                 self.action = "cast"
-                self.casted_spell = True
 
             self.projectile_animation(target)
-            self.current_action = action
+            self.current_attack = action
             return
-        else:
-            self.current_action = action
-
 
         # this part could be separated depending on the attack type:
 
         # ___sprite frame reset___
-        if self.frame != 0 and not self.action == self.current_action:
+        if self.frame != 0 and not self.action == self.current_attack:
             self.frame = 0
-            self.action = self.current_action
+            self.action = self.current_attack
 
         # ___impact frame logic____
         impact_frame = self.sprite_dict[self.action]["impact_frame"]
@@ -243,14 +249,14 @@ class Entity(pygame.sprite.Sprite):
             self.action = "idle"
 
             # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done:
+            if self.critical_hit and not self.critical_hit_is_done and not self.current_attack in ["fire_ball", "combustion"]:
+                print("check one")
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.ATTACK
 
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
-
 
             # ___end attack sequence___
             else:
@@ -261,17 +267,15 @@ class Entity(pygame.sprite.Sprite):
                 target.perfect_block = False
 
     def handle_attack_impact(self, target):
-        base_dmg = self.dmg
+        base_dmg = moves[self.current_attack]["dmg"]
 
         if self.blocking and not self.critical_hit_is_done:
-            if self.blocking and not self.critical_hit_is_done:
+
+            if self.type == "player":
                 pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
                 self.critical_hit = True
                 self.critical_hit_messages.append("")
 
-                # for projectile based / non repeating attacks:
-                if self.current_action in ["fire_ball", "combustion"]:
-                    base_dmg *= 2
 
 
             if self.type == "enemy":
@@ -279,9 +283,15 @@ class Entity(pygame.sprite.Sprite):
                 weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
+                    print("enemy critical")
                     self.critical_hit_messages.append("")
                     pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
 
+            # for projectile-based / non-repeating attacks:
+            if moves[self.current_attack]["type"] == "special":
+                base_dmg *= 2
+
+        # player attacks, enemy block chance
         if self.type == "player":
             bools = [True, False]
             weights = [target.blocking_chance, 1 - target.blocking_chance]
@@ -292,20 +302,22 @@ class Entity(pygame.sprite.Sprite):
             target.perfect_block = True
             target.perfect_block_messages.append("")
 
-
-
             base_dmg //= 2
             pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
 
 
-
-
-        if not self.sound_played and not self.current_action in ["fire_ball", "combustion"]:
-            pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
-            self.sound_played = True
+        if len(moves[self.current_attack]["sound"]) == 1:
+            pygame.mixer.Sound(moves[self.current_attack]["sound"][0]).play()
         else:
-            pygame.mixer.Sound(fireball_sprites["sound"][1]).play()
-            self.sound_played = False
+            pygame.mixer.Sound(moves[self.current_attack]["sound"][1]).play()
+        self.sound_played = True
+        #
+        # if not self.sound_played and not self.current_attack in ["fire_ball", "combustion"]:
+        #     pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
+        #     self.sound_played = True
+        # else:
+        #     pygame.mixer.Sound(fireball_sprites["sound"][1]).play()
+        #     self.sound_played = False
 
 
         target.hp -= base_dmg
@@ -314,7 +326,7 @@ class Entity(pygame.sprite.Sprite):
 
         if not target.hp <= 0:
             target.frame = 0
-            target.action = "death"
+            target.action = "death" # hurt
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
@@ -355,7 +367,6 @@ class Entity(pygame.sprite.Sprite):
                 self.image = self.sprite_dict[self.action]["sprites"][self.direction][death_frame]
             else:
                 self.animations()
-
 
         if self.action == "cast":
             cast_frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2

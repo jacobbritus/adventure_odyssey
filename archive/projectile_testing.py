@@ -1,6 +1,6 @@
 import pygame
 
-from classes.projectile import Projectile
+from classes.spells import Spells
 from other.settings import *
 
 pygame.init()
@@ -17,7 +17,7 @@ while True:
             exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
-                Projectile(projectiles, pygame.Vector2(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2), pygame.Vector2(0, WINDOW_HEIGHT // 2),6)
+                Spells(projectiles, "heal", pygame.Vector2(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 3), None, 6)
 
     projectiles.draw(window)
     projectiles.update((0, WINDOW_HEIGHT // 2))

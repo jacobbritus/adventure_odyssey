@@ -6,8 +6,8 @@ import os
 SCALE = 2
 
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
 
 FPS = 60
 TILE_SIZE = 32
@@ -19,6 +19,14 @@ fireball_sprites = fireball_sprites
 player_sprites = player_sprites
 sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites
+
+# moves
+moves = {"fire_ball": {"dmg": 5, "type": "special", "mana": 2, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
+         "sword_slash": {"dmg": 8, "type": "physical", "mana": 1, "sound": [get_file_location("sounds/sword_slash.wav")]},
+         "punch": {"dmg": 4, "type": "physical", "mana": 0},
+         "combustion": {"dmg": 4, "type": "special", "mana": 1, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
+         "heal": {"hp": 4, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")}
+         }
 
 # maps
 FOREST_MAP = get_file_location("tmx/untitled.tmx")

@@ -29,7 +29,7 @@ class BattleLoop:
         self.combat_menu.state = "main_menu"
         self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
-        self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, "SKELETON") #enemy.name in the future
+        self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, self.enemy.monster_name.upper()) #enemy.name in the future
 
         # ___used as an argument to perform the chosen attack option___
         self.player_attack_option = None
@@ -71,7 +71,17 @@ class BattleLoop:
 
     def update(self):
         self.player.projectiles.draw(self.window)
-        self.player.projectiles.update(self.enemy.screen_position)
+        if self.player.animation_state == AnimationState.ATTACK:
+            self.player.projectiles.update(self.enemy.screen_position)
+        elif self.player.animation_state == AnimationState.BUFF:
+            self.player.projectiles.update(self.player.screen_position)
+        elif self.enemy.animation_state == AnimationState.ATTACK:
+            self.enemy.projectiles.update(self.player.screen_position)
+        else:
+            self.enemy.projectiles.update(self.enemy.screen_position)
+
+
+
 
         self.player_hp_bar.set_hp(self.player.hp)
         self.enemy_hp_bar.set_hp(self.enemy.hp)
@@ -150,14 +160,12 @@ class BattleLoop:
     def draw_ui(self, window):
         self.timer_()
 
-
+        self.enemy_hp_bar.update()
+        self.player_hp_bar.update()
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_SCREEN:
             self.combat_menu.draw(self.window)
 
-        if (self.player.hit_landed or self.enemy.hit_landed
-                or self.player.animation_state == AnimationState.RETURN or self.enemy.animation_state == AnimationState.RETURN):
-            self.enemy_hp_bar.update()
-            self.player_hp_bar.update()
+
 
         if not self.action_lock() or self.player.hit_landed or self.enemy.hit_landed:
             self.player_hp_bar.draw(window)
@@ -213,21 +221,23 @@ class BattleLoop:
         self.player_attack_option = attack_.lower()
         self.perfect_block_counter = 0
         self.damage_counter = 0
-
-        if self.player_attack_option == "fire_ball":
-            self.delay = pygame.time.get_ticks() + 1000
-            self.player.spawn_projectile = True
-
-            self.player.animation_state = AnimationState.WAIT
-
-        else:
-            if self.player_attack_option == "combustion":
-                print("check")
-                self.player.spawn_projectile = True
-            self.player.animation_state = AnimationState.APPROACH
-
-            # self.player.approach_trigger = True # depending on animation else we can do wait and then attack trigger
         self.state = BattleState.PLAYER_ANIMATION
+        self.player.current_attack = self.player_attack_option
+
+        if moves[self.player_attack_option]["type"] == "physical":
+            self.player.animation_state = AnimationState.APPROACH
+        elif moves[self.player_attack_option]["type"] == "buff":
+            self.player.spawn_projectile = False
+            self.player.animation_state = AnimationState.BUFF
+        elif moves[self.player_attack_option]["type"] == "special":
+            if self.player.current_attack == "combustion":
+                self.player.animation_state = AnimationState.APPROACH
+            else:
+                self.player.spawn_projectile = False
+                self.delay = pygame.time.get_ticks() + 1000
+                self.player.animation_state = AnimationState.WAIT
+
+
 
     def animation(self):
         if self.state == BattleState.PLAYER_ANIMATION:
@@ -248,6 +258,11 @@ class BattleLoop:
                     self.enemy.death_animation()
                 self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
 
+            elif self.player.animation_state == AnimationState.BUFF:
+                self.player.buff_animation()
+                self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
+
+
             elif self.player.animation_state == AnimationState.RETURN:
                 if not self.enemy.hp <= 0: self.enemy.action = "idle"
                 if self.delay and pygame.time.get_ticks() >= self.delay:
@@ -257,7 +272,7 @@ class BattleLoop:
                 self.state = BattleState.END_SCREEN
 
             elif self.player.animation_state == AnimationState.IDLE:
-                if not self.delay: self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
+                if not self.delay: self.delay = pygame.time.get_ticks() + 1000  # wait time enemy attacking
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.delay = None
 
@@ -280,6 +295,10 @@ class BattleLoop:
                 if self.player.hp <= 0:
                     self.player.death_animation()
                 self.delay = pygame.time.get_ticks() + 1000
+
+            elif self.enemy.animation_state == AnimationState.BUFF:
+                self.enemy.buff_animation()
+                self.delay = pygame.time.get_ticks() + 1000  # wait time before player turn
 
             elif self.enemy.animation_state == AnimationState.RETURN:
                 if not self.player.hp <= 0: self.player.action = "idle"
@@ -309,7 +328,13 @@ class BattleLoop:
         self.perfect_block_counter = 0
         self.state = BattleState.ENEMY_ANIMATION
         self.enemy_attack_option = random.choice(self.enemy.moves)
-        self.enemy.animation_state = AnimationState.APPROACH
+
+        self.enemy.current_attack = self.enemy_attack_option
+
+        if moves[self.enemy_attack_option]["type"] == "physical":
+            self.enemy.animation_state = AnimationState.APPROACH
+        elif moves[self.enemy_attack_option]["type"] == "buff":
+            self.enemy.animation_state = AnimationState.BUFF
 
     def untoggle(self):
         for participant in [self.player, self.enemy]:

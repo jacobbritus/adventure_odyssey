@@ -43,6 +43,8 @@ class Enemy(Entity):
             return skeleton_sprites, ["sword_slash"], 0.25, 0.75
         elif self.monster_name == "Slime":
             return slime_sprites, ["stomp"], 0.25, 0.75
+        elif self.monster_name == "Goblin":
+            return goblin_sprites, ["sword_slash"], 0.25, 0.50
         else:
             return None
 
