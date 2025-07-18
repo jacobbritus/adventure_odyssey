@@ -166,7 +166,10 @@ class Entity(pygame.sprite.Sprite):
 
     def buff_animation(self):
         if not self.spawn_projectile:
-            Spells(self.projectiles, self.current_attack, pygame.Vector2(self.hitbox.x + 16, self.hitbox.y - 32), None, None)
+            offset = pygame.Vector2(32, 0) if self.type == "enemy" else pygame.Vector2(0, 0)
+            position = pygame.Vector2(self.rect.centerx, self.rect.centery) + offset
+
+            Spells(self.projectiles, self.current_attack, position, None, None)
             self.spawn_projectile = True
             self.hp += 5
             pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
@@ -178,8 +181,9 @@ class Entity(pygame.sprite.Sprite):
 
     def projectile_animation(self, target):
         if not self.spawn_projectile:
-            Spells(self.projectiles, "fire_ball",pygame.Vector2(WINDOW_WIDTH // 2 + 48, WINDOW_HEIGHT // 2 + 16),
-                   pygame.Vector2(target.hitbox.x, WINDOW_HEIGHT // 2), 5)
+            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.rect.centerx, self.rect.centery + 16)
+,
+                   pygame.Vector2(target.rect.centerx + 16, target.rect.centery + 16), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
 
 
@@ -210,12 +214,11 @@ class Entity(pygame.sprite.Sprite):
                 target.perfect_block = False
                 self.hit_landed = False
 
-                self.animation_state = AnimationState.RETURN
+                self.animation_state = AnimationState.IDLE
 
 
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
-        self.current_attack = action
 
         if moves[action]["type"] == "special":
             if not self.spawn_projectile:
@@ -234,12 +237,13 @@ class Entity(pygame.sprite.Sprite):
             self.action = self.current_attack
 
         # ___impact frame logic____
-        impact_frame = self.sprite_dict[self.action]["impact_frame"]
-        if impact_frame is not None and self.frame > impact_frame and not self.hit_landed and not target.death:
-            self.hit_landed = True
-            self.handle_attack_impact(target)
-            # Mask when hit
-            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
+        if self.sprite_dict[self.action]["impact_frame"] is not None:
+            impact_frame = self.sprite_dict[self.action]["impact_frame"]
+            if self.frame > impact_frame and not self.hit_landed and not target.death:
+                self.hit_landed = True
+                self.handle_attack_impact(target)
+                # Mask when hit
+                target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
 
 
         # ___hit ends____
@@ -249,8 +253,7 @@ class Entity(pygame.sprite.Sprite):
             self.action = "idle"
 
             # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done and not self.current_attack in ["fire_ball", "combustion"]:
-                print("check one")
+            if self.critical_hit and not self.critical_hit_is_done:
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.ATTACK
 
@@ -260,6 +263,7 @@ class Entity(pygame.sprite.Sprite):
 
             # ___end attack sequence___
             else:
+
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False

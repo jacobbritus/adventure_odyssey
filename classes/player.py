@@ -55,7 +55,7 @@ class Player(Entity):
         self.mask_image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
 
 
-        self.attacks = ["sword_slash", "punch", "fire_ball", "combustion", "heal"]
+        self.attacks = ["sword_slash", "punch", "fire_ball", "heal"]
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -114,10 +114,8 @@ class Player(Entity):
     def update_player(self, offset, window) -> None:
         """Draw the player in the game window."""
         # print(offset)
-        if not self.in_battle:
-            self.screen_position = pygame.math.Vector2(WINDOW_WIDTH // 2 - self.width // 2, WINDOW_HEIGHT // 2 - self.height // 2)
-        else:
-            self.screen_position = pygame.math.Vector2(self.x - offset.x,
+
+        self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                        self.y - offset.y)
 
         self.hitbox.topleft = (int(self.screen_position.x + self.width // 3), int(self.screen_position.y + self.height // 4))

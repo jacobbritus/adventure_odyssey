@@ -1,5 +1,7 @@
 import random
 
+import pygame
+
 from classes.UI import Hpbar
 from classes.states import BattleState, LevelState, AnimationState
 from other.settings import *
@@ -83,14 +85,24 @@ class YSortCameraGroup(pygame.sprite.Group):
 
             # Fallback to battle position
             target = self.battle_position
+            enemy = self.battle_participants[1]
 
             # Follow a projectile if active
-            # if player.projectiles:
-            #     target = self.battle_participants[1].rect.center
-            if self.battle_loop.state == BattleState.PLAYER_ANIMATION:
+            if player.projectiles:
+                if player.animation_state == AnimationState.ATTACK:
+                    target = self.battle_position
+                elif player.animation_state == AnimationState.BUFF:
+                    target = player.rect.center
+            elif enemy.projectiles:
+                if enemy.animation_state == AnimationState.ATTACK:
+                    target = self.battle_position
+                elif enemy.animation_state == AnimationState.BUFF:
+                    target = enemy.rect.center
+
+            elif self.battle_loop.state == BattleState.PLAYER_ANIMATION:
                 target = player.rect.center
             elif self.battle_loop.state == BattleState.ENEMY_ANIMATION:
-                target = self.battle_participants[1].rect.center
+                target = enemy.rect.center
 
             # Apply shake
             if self.shake_duration > 0:
@@ -188,7 +200,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
             self.battle_position.update(battle_center_x, battle_center_y)
 
-            self.battle_loop = BattleLoop(player, enemy, self.display_surface)
+            self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
 
 
 

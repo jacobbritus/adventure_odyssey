@@ -40,7 +40,7 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash"], 0.25, 0.75
+            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.75
         elif self.monster_name == "Slime":
             return slime_sprites, ["stomp"], 0.25, 0.75
         elif self.monster_name == "Goblin":
@@ -98,7 +98,7 @@ class Enemy(Entity):
     def update_enemy(self, player, window, offset) -> None:
         self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                    self.y - offset.y)
-        hitbox_offset = self.width if self.monster_name == "Skeleton" else 0
+        hitbox_offset = self.width if self.monster_name == "Skeleton" else 32
         self.hitbox.topleft = (int(self.screen_position.x + hitbox_offset), int(self.screen_position.y + self.height // 2))
 
         # pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2)  # Red rectangle with 2px border

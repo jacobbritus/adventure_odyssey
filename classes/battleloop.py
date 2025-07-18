@@ -11,11 +11,12 @@ from other.settings import *
 # Let the player choose a target if multiple enemies exist.
 
 class BattleLoop:
-    def __init__(self, player, enemy, window: pygame.Surface):
+    def __init__(self, player, enemy, window: pygame.Surface, offset):
         # __general___
         self.player = player
         self.enemy = enemy
         self.window: pygame.Surface = window
+        self.offset = offset
 
         # ___idle positions___
         self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
@@ -71,14 +72,16 @@ class BattleLoop:
 
     def update(self):
         self.player.projectiles.draw(self.window)
+        self.enemy.projectiles.draw(self.window)
         if self.player.animation_state == AnimationState.ATTACK:
-            self.player.projectiles.update(self.enemy.screen_position)
+            self.player.projectiles.update(self.offset)
         elif self.player.animation_state == AnimationState.BUFF:
-            self.player.projectiles.update(self.player.screen_position)
+            self.player.projectiles.update(self.offset)
         elif self.enemy.animation_state == AnimationState.ATTACK:
-            self.enemy.projectiles.update(self.player.screen_position)
-        else:
-            self.enemy.projectiles.update(self.enemy.screen_position)
+            self.enemy.projectiles.update(self.offset)
+        elif self.enemy.animation_state == AnimationState.BUFF:
+            self.enemy.projectiles.update(self.offset)
+
 
 
 
@@ -272,6 +275,8 @@ class BattleLoop:
                 self.state = BattleState.END_SCREEN
 
             elif self.player.animation_state == AnimationState.IDLE:
+                if not self.enemy.hp <= 0: self.enemy.action = "idle"
+
                 if not self.delay: self.delay = pygame.time.get_ticks() + 1000  # wait time enemy attacking
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.delay = None
@@ -285,6 +290,7 @@ class BattleLoop:
                 self.delay = pygame.time.get_ticks() + random.randint(500, 3000) # random wait time before attacking
 
             elif self.enemy.animation_state == AnimationState.WAIT:
+                if not self.player.hp <= 0: self.player.action = "idle"
                 self.enemy.wait()
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.enemy.animation_state = AnimationState.ATTACK
@@ -334,6 +340,7 @@ class BattleLoop:
         if moves[self.enemy_attack_option]["type"] == "physical":
             self.enemy.animation_state = AnimationState.APPROACH
         elif moves[self.enemy_attack_option]["type"] == "buff":
+            self.enemy.spawn_projectile = False
             self.enemy.animation_state = AnimationState.BUFF
 
     def untoggle(self):

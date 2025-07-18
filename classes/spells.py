@@ -34,14 +34,20 @@ class Spells(pygame.sprite.Sprite):
 
         return None
 
-    def update(self, target):
+    def update(self, offset):
         if self.end_pos:
             self.directions()
+            self.rect.center = (self.pos.x - offset[0], self.pos.y - offset[1])
         else:
-            self.rect.topleft = pygame.Vector2(target.x, target.y - 16)
-        self.projectile_animations(target)
+            self.rect.center = (self.pos.x - offset[0], self.pos.y - offset[1])
+
+        self.projectile_animations(offset)
 
         self.handle_life_time()
+
+        print(self.rect)
+
+        # Set rect position relative to camera offset for drawing
 
     def register_hit(self):
         if not self.hit:
@@ -86,7 +92,7 @@ class Spells(pygame.sprite.Sprite):
                     self.kill()
 
 
-    def projectile_animations(self, target):
+    def projectile_animations(self, offset):
         self.frame += self.iterate_speed
         sprites_list = self.sprites["sprites"]["hit"] if self.hit else self.sprites["sprites"][self.direction]
 
@@ -96,11 +102,12 @@ class Spells(pygame.sprite.Sprite):
         if self.hit:
             self.image = self.sprites["sprites"]["hit"][int(self.frame)]
             if self.hit_center is not None:
-                shifted_center = (target[0] + 48, target[1] + 32)  # Shift right by 32px once
+                shifted_center = (self.end_pos[0] - offset.x , self.end_pos[1] - offset.y)  # Shift right by 32px once
                 self.rect = self.image.get_rect(center=shifted_center)
+
             else:
-                self.rect = self.image.get_rect(center=self.rect.center)
+                self.rect = self.image.get_rect(center=self.end_pos)
         else:
             self.image = self.sprites["sprites"][self.direction][int(self.frame)].copy()
-            self.rect = self.image.get_rect(center=self.rect.center)
             self.image.set_alpha(self.opacity)
+
