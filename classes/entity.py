@@ -180,13 +180,15 @@ class Entity(pygame.sprite.Sprite):
             self.spawn_projectile = False
 
     def projectile_animation(self, target):
-        if not self.spawn_projectile:
-            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.rect.centerx, self.rect.centery + 16)
-,
+        if not self.spawn_projectile and self.current_attack == "fire_ball":
+            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.rect.centerx, self.rect.centery + 16),
                    pygame.Vector2(target.rect.centerx + 16, target.rect.centery + 16), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
+            self.spawn_projectile = True
 
 
+        elif not self.spawn_projectile and self.current_attack == "lightning_strike":
+            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.rect.centerx + 16, target.rect.centery - 24), None, None)
             self.spawn_projectile = True
 
         for projectile in self.projectiles:
@@ -214,7 +216,7 @@ class Entity(pygame.sprite.Sprite):
                 target.perfect_block = False
                 self.hit_landed = False
 
-                self.animation_state = AnimationState.IDLE
+                self.animation_state = AnimationState.RETURN
 
 
     def attack_animation(self, target, action) -> None:

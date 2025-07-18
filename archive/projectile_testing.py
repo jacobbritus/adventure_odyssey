@@ -17,7 +17,7 @@ while True:
             exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
-                Spells(projectiles, "heal", pygame.Vector2(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2), None, 6)
+                Spells(projectiles, "lightning_strike", pygame.Vector2(WINDOW_WIDTH // 3, WINDOW_HEIGHT // 1), None, 6)
 
     projectiles.draw(window)
     projectiles.update((0, WINDOW_HEIGHT // 2))

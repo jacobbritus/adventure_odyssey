@@ -249,6 +249,7 @@ class BattleLoop:
                 self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
 
             elif self.player.animation_state == AnimationState.WAIT:
+
                 self.player.wait()
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.player.animation_state = AnimationState.ATTACK

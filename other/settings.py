@@ -24,7 +24,9 @@ skeleton_sprites = skeleton_sprites
 moves = {"fire_ball": {"dmg": 5, "type": "special", "mana": 2, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
          "sword_slash": {"dmg": 8, "type": "physical", "mana": 1, "sound": [get_file_location("sounds/sword_slash.wav")]},
          "punch": {"dmg": 4, "type": "physical", "mana": 0, "sound": [get_file_location("sounds/effects/punch.mp3")]},
-         "heal": {"hp": 4, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")}
+         "heal": {"hp": 4, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")},
+        "lightning_strike": {"dmg": 20, "type": "special", "mana": 2, "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
+
          }
 
 # maps

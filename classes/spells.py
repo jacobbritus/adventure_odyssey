@@ -14,23 +14,23 @@ class Spells(pygame.sprite.Sprite):
             self.direction = "right"
             self.end_pos = None
         self.pos = pygame.Vector2(start_pos)
-        self.sprites, self.iterate_speed = self.get_sprites()
+        self.sprites, self.iterate_speed, self.life_time, self.fade_time = self.get_sprites()
         self.image = self.sprites["sprites"][self.direction][int(self.frame)]
         self.rect = self.image.get_rect(center=start_pos)
         self.hit = False
         self.kill_delay = 0
         self.hit_center = None  # Store center position when hit starts
 
-        self.life_time = pygame.time.get_ticks() + 3000
-        self.fade_time = pygame.time.get_ticks() + 2000
         self.opacity = 255
 
 
     def get_sprites(self):
         if self.type == "fire_ball":
-            return fireball_sprites, 0.17
+            return fireball_sprites, 0.17, None, None
         if self.type == "heal":
-            return heal_sprites, 0.1
+            return heal_sprites, 0.1, pygame.time.get_ticks() + 3000, pygame.time.get_ticks() + 2000
+        if self.type == "lightning_strike":
+            return lightning_sprites, 0.13, pygame.time.get_ticks() + 1200, pygame.time.get_ticks() + 800
 
         return None
 
@@ -84,6 +84,7 @@ class Spells(pygame.sprite.Sprite):
                 self.hit_center = None  # Reset for safety
         if not self.end_pos:
             if current_time >= self.fade_time :
+                self.hit = True
                 print(self.opacity)
                 self.opacity -= 10
                 if self.opacity >= 0:
@@ -94,12 +95,12 @@ class Spells(pygame.sprite.Sprite):
 
     def projectile_animations(self, offset):
         self.frame += self.iterate_speed
-        sprites_list = self.sprites["sprites"]["hit"] if self.hit else self.sprites["sprites"][self.direction]
+        sprites_list = self.sprites["sprites"]["hit"] if self.hit and self.type == "fire_ball" else self.sprites["sprites"][self.direction]
 
         if self.frame >= len(sprites_list):
             self.frame = 0
 
-        if self.hit:
+        if self.hit and self.type == "fire_ball":
             self.image = self.sprites["sprites"]["hit"][int(self.frame)]
             if self.hit_center is not None:
                 shifted_center = (self.end_pos[0] - offset.x , self.end_pos[1] - offset.y)  # Shift right by 32px once

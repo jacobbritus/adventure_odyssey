@@ -231,3 +231,12 @@ goblin_sprites = {
         "sound": "sounds/death.wav"
 
 }}
+
+
+lightning_sprites = {
+    "sprites": {
+        "right": sprite_converter("sprites/particles/lightning.png", 0, 10, 64, 128, False),
+        "left": sprite_converter("sprites/particles/lightning.png", 0, 10, 64, 128, True),
+
+    }
+}
