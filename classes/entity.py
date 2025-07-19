@@ -81,8 +81,9 @@ class Entity(pygame.sprite.Sprite):
         dy *= self.movement_speed
 
         self.x += dx
-        self.rect.topleft = (self.x, self.y)  # update rect
-        self.hitbox.topleft = self.rect.topleft
+
+
+
         if self.obstacle_collisions():
             self.x -= dx
             self.rect.topleft = (self.x, self.y)  # update rect after correction
@@ -114,14 +115,14 @@ class Entity(pygame.sprite.Sprite):
     def obstacle_collisions(self) -> bool:
         """Check if the player is colliding with any other obstacle sprite."""
         # Centered hitbox of 32x32 relative to current sprite position
-        self.hitbox = pygame.Rect(
-            self.rect.centerx + 16,
-            self.rect.centery  - 16,
-            32,
-            48
-        )
+        # self.hitbox = pygame.Rect(
+        #     self.rect.centerx + 16,
+        #     self.rect.centery  - 16,
+        #     32,
+        #     48
+        # )
         for sprite in self.obstacle_sprites:
-            if self.hitbox.inflate(-16,  -32).colliderect(sprite.hitbox):
+            if self.hitbox.colliderect(sprite.hitbox):
                 return True
         return False
 
@@ -154,9 +155,9 @@ class Entity(pygame.sprite.Sprite):
 
             self.move((dx / distance, dy / distance))
 
-            self.hitbox.topleft = self.screen_position
-
-            if self.hitbox.inflate(+ hitbox_offset, 0).colliderect(target.hitbox):
+            # inflate to get a bit more distance.
+            distance = 8 if self.current_attack == "punch" else 24
+            if self.hitbox.colliderect(target.hitbox.inflate(+ distance, 0)):
                 self.sprinting = False
                 self.animation_state = AnimationState.WAIT
 
@@ -166,8 +167,8 @@ class Entity(pygame.sprite.Sprite):
 
     def buff_animation(self):
         if not self.spawn_projectile:
-            offset = pygame.Vector2(32, 0) if self.type == "enemy" else pygame.Vector2(0, 0)
-            position = pygame.Vector2(self.rect.centerx, self.rect.centery) + offset
+            offset = pygame.Vector2 (32, 16)
+            position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset
 
             Spells(self.projectiles, self.current_attack, position, None, None)
             self.spawn_projectile = True
@@ -181,14 +182,16 @@ class Entity(pygame.sprite.Sprite):
 
     def projectile_animation(self, target):
         if not self.spawn_projectile and self.current_attack == "fire_ball":
-            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.rect.centerx, self.rect.centery + 16),
-                   pygame.Vector2(target.rect.centerx + 16, target.rect.centery + 16), 5)
+            offset = pygame.Vector2(48, 40)
+            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
+                   pygame.Vector2(target.rect.centerx , target.rect.centery), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
 
         elif not self.spawn_projectile and self.current_attack == "lightning_strike":
-            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.rect.centerx + 16, target.rect.centery - 70), None, None)
+            offset = pygame.Vector2(28, -70)
+            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.hitbox.centerx, target.hitbox.centery) + offset, None, None)
             self.spawn_projectile = True
 
         for projectile in self.projectiles:

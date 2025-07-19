@@ -30,7 +30,8 @@ class Player(Entity):
         self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.hitbox = self.rect.inflate(-64, -32)
+        self.hitbox = self.rect.inflate(-64, -48)
+        print(self.hitbox)
 
         # Sound
         self.footstep_sound = pygame.mixer.Sound(GRASS_FOOTSTEP)
@@ -118,11 +119,8 @@ class Player(Entity):
 
         self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                        self.y - offset.y)
-
-        self.hitbox.topleft = (int(self.screen_position.x + self.width // 3), int(self.screen_position.y + self.height // 4))
-        # pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2)  # Red rectangle with 2px border
-
-
+        self.rect.topleft = (self.x, self.y)  # update rect
+        self.hitbox.topleft = self.rect.topleft
 
         # if self.blocking:
         #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
