@@ -86,6 +86,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             # Fallback to battle position
             target = self.battle_position
             enemy = self.battle_participants[1]
+            player = self.battle_participants[0]
 
             # Follow a projectile if active
             if player.projectiles:
@@ -99,9 +100,9 @@ class YSortCameraGroup(pygame.sprite.Group):
                 elif enemy.animation_state == AnimationState.BUFF:
                     target = enemy.rect.center
 
-            elif self.battle_loop.state == BattleState.PLAYER_ANIMATION:
+            elif self.battle_loop.state == BattleState.PLAYER_ANIMATION and not player.animation_state == AnimationState.IDLE :
                 target = player.rect.center
-            elif self.battle_loop.state == BattleState.ENEMY_ANIMATION:
+            elif self.battle_loop.state == BattleState.ENEMY_ANIMATION and not enemy.animation_state == AnimationState.IDLE :
                 target = enemy.rect.center
 
             # Apply shake
@@ -170,7 +171,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             for sprite in self.enemy_sprites:
                 sprite.update_enemy(player, self.display_surface, self.offset)
         elif self.state == LevelState.BATTLE:
-            self.battle_participants[1].update_enemy(player, self.display_surface, self.offset)
+            for sprite in self.enemy_sprites:
+                sprite.update_enemy(player, self.display_surface, self.offset)
+                if not sprite.in_battle:
+                    sprite.action = "idle" 
+
     def start_battle(self):
         player, enemy = self.battle_participants
 

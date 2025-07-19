@@ -36,11 +36,17 @@ class BattleLoop:
         self.player_attack_option = None
         self.enemy_attack_option = None
 
-        # ___states___ (to change based on speed stat)
-        self.state = BattleState.PLAYER_TURN
+        # ___state___
+        if self.player.speed >= self.enemy.speed:
+            self.state = BattleState.PLAYER_TURN
+        elif self.enemy.speed >= self.player.speed:
+            self.state = BattleState.ENEMY_TURN
+        else:
+            self.state = random.choice([BattleState.PLAYER_TURN, BattleState.ENEMY_TURN])
+
 
         # ___delays and the clock___
-        self.delay = pygame.time.get_ticks() + 0 # set if enemy starts first
+        self.delay = pygame.time.get_ticks() + 1000 # set if enemy starts first
         self.clock_time = pygame.time.get_ticks() + 10000
 
         # ___screen messages___
@@ -127,8 +133,11 @@ class BattleLoop:
 
         if self.state == BattleState.PLAYER_ANIMATION:
             self.screen_messages_group.update(enemy_dmg_position)
-        elif self.state == BattleState.ENEMY_ANIMATION:
+        elif self.state == BattleState.ENEMY_ANIMATION :
             self.screen_messages_group.update(player_dmg_position)
+        else:
+            self.screen_messages_group.update(enemy_dmg_position)
+
 
         self.screen_messages_group.draw(self.window)
 

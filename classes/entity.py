@@ -36,7 +36,7 @@ class Entity(pygame.sprite.Sprite):
         self.direction = "down"
         self.action = "idle"
         self.sprinting = None
-        self.speed = 2
+        self.movement_speed = 2
 
         # Battle related.
         self.in_battle = False
@@ -76,9 +76,9 @@ class Entity(pygame.sprite.Sprite):
         if self.in_battle and not self.animation_state in [AnimationState.APPROACH, AnimationState.RETURN]:
             return
         dx, dy = move_vector
-        self.speed = 4 if self.sprinting else 2
-        dx *= self.speed
-        dy *= self.speed
+        self.movement_speed = 4 if self.sprinting else 2
+        dx *= self.movement_speed
+        dy *= self.movement_speed
 
         self.x += dx
         self.rect.topleft = (self.x, self.y)  # update rect
@@ -188,7 +188,7 @@ class Entity(pygame.sprite.Sprite):
 
 
         elif not self.spawn_projectile and self.current_attack == "lightning_strike":
-            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.rect.centerx + 16, target.rect.centery - 24), None, None)
+            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.rect.centerx + 16, target.rect.centery - 70), None, None)
             self.spawn_projectile = True
 
         for projectile in self.projectiles:
@@ -216,7 +216,7 @@ class Entity(pygame.sprite.Sprite):
                 target.perfect_block = False
                 self.hit_landed = False
 
-                self.animation_state = AnimationState.RETURN
+                self.animation_state = AnimationState.IDLE
 
 
     def attack_animation(self, target, action) -> None:

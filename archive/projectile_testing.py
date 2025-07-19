@@ -3,6 +3,11 @@ import pygame
 from classes.spells import Spells
 from other.settings import *
 
+a = 5
+b = 5
+print(max(a, b))
+
+
 pygame.init()
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = pygame.time.Clock()

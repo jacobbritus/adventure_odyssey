@@ -14,7 +14,7 @@ class Enemy(Entity):
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
         self.detected_player = True
-        self.sprite_dict, self.moves, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
+        self.sprite_dict, self.moves, self.critical_hit_chance, self.blocking_chance, self.speed = self.initialize_enemy()
 
 
         # Battle related
@@ -40,11 +40,11 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.75
+            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.75, 2
         elif self.monster_name == "Slime":
-            return slime_sprites, ["stomp"], 0.25, 0.75
+            return slime_sprites, ["stomp"], 0.25, 0.75, 3
         elif self.monster_name == "Goblin":
-            return goblin_sprites, ["sword_slash"], 0.25, 0.50
+            return goblin_sprites, ["sword_slash"], 0.25, 0.50, 4
         else:
             return None
 
@@ -103,10 +103,12 @@ class Enemy(Entity):
 
         # pygame.draw.rect(window, (255, 0, 0), self.hitbox, 2)  # Red rectangle with 2px border
 
-        if self.detected_player and not self.in_battle:
-            window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + self.width // 2, self.rect.y - offset.y - 8))
+        if self.detected_player and not player.in_battle:
+            hitbox_offset = self.width //2 if self.monster_name == "Skeleton" else -4
 
-        if not self.in_battle: self.get_status(player)
+            window.blit(self.exclamation_mark, (self.rect.centerx - offset.x + hitbox_offset , self.rect.y - offset.y - 8))
+
+        if not player.in_battle: self.get_status(player)
 
         self.update_animations()
 

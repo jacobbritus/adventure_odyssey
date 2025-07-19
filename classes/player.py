@@ -43,8 +43,9 @@ class Player(Entity):
         self.hp: int = 20
         self.max_hp: int = 20
         self.dmg: int = 5
+        self.speed = 3
 
-        self.speed: int = 2 # dont forget to implement this in entity class move()
+        self.movement_speed: int = 2 # dont forget to implement this in entity class move()
 
         # Other
         self.obstacle_sprites = obstacle_sprites

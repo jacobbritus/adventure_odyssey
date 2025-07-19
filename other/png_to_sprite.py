@@ -235,8 +235,8 @@ goblin_sprites = {
 
 lightning_sprites = {
     "sprites": {
-        "right": sprite_converter("sprites/particles/lightning.png", 0, 10, 64, 128, False),
-        "left": sprite_converter("sprites/particles/lightning.png", 0, 10, 64, 128, True),
+        "right": sprite_converter("sprites/particles/lightning.png", 0, 10, 128, 256, False),
+        "left": sprite_converter("sprites/particles/lightning.png", 0, 10, 128, 156, True),
 
     }
 }
