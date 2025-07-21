@@ -45,7 +45,6 @@ class Spells(pygame.sprite.Sprite):
 
         self.handle_life_time()
 
-        print(self.rect)
 
         # Set rect position relative to camera offset for drawing
 
@@ -85,7 +84,6 @@ class Spells(pygame.sprite.Sprite):
         if not self.end_pos:
             if current_time >= self.fade_time :
                 self.hit = True
-                print(self.opacity)
                 self.opacity -= 10
                 if self.opacity >= 0:
                     self.image.set_alpha(max(self.opacity, 0))

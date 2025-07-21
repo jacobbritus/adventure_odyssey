@@ -2,7 +2,7 @@ import random
 
 from classes.UI import CombatMenu, Hpbar
 from classes.states import AnimationState, BattleState
-from classes.floatingdamage import FloatingDamage
+from classes.screenmessages import ScreenMessages
 from other.settings import *
 
 # Add options like Defend, Use Item, etc.
@@ -44,17 +44,12 @@ class BattleLoop:
         else:
             self.state = random.choice([BattleState.PLAYER_TURN, BattleState.ENEMY_TURN])
 
-
         # ___delays and the clock___
         self.delay = pygame.time.get_ticks() + 1000 # set if enemy starts first
-        self.clock_time = pygame.time.get_ticks() + 10000
+        self.clock_time = pygame.time.get_ticks() + 20000
 
         # ___screen messages___
         self.screen_messages_group = pygame.sprite.Group()
-        self.damage_counter = 0
-        self.critical_floated = False
-        self.perfect_block_floated = False
-        self.perfect_block_counter = 0
 
         # ___block and crit hotkey___
         self.block_duration = 250 # blocking last time
@@ -62,7 +57,7 @@ class BattleLoop:
         self.block = False # whether blocking is True
         self.block_delay = 250
 
-    def timer_(self):
+    def timer_(self) -> None:
         if self.state == BattleState.PLAYER_TURN and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
 
             current_time = ((self.clock_time - pygame.time.get_ticks()) // 1000)
@@ -70,13 +65,9 @@ class BattleLoop:
             font = pygame.font.Font(FONT_TWO, 33)
             time_text = font.render(str(current_time), True, (255, 255, 255))
             time_size = time_text.get_width()
-            # box = pygame.image.load(TIME_BACKGROUND)
-            # # box_size = box.get_width()
-
-            # self.window.blit(box, (WINDOW_WIDTH // 2 - box_size // 2, self.player_hp_bar.box_position[1] ))
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_pos[1] - 2))
 
-    def update(self):
+    def handle_projectiles(self) -> None:
         self.player.projectiles.draw(self.window)
         self.enemy.projectiles.draw(self.window)
         if self.player.animation_state == AnimationState.ATTACK:
@@ -88,10 +79,11 @@ class BattleLoop:
         elif self.enemy.animation_state == AnimationState.BUFF:
             self.enemy.projectiles.update(self.offset)
 
-
+    def run(self) -> None:
+        self.handle_projectiles()
         self.handle_input()
         self.animation()
-        self.draw_ui(self.window)
+        self.draw_ui()
 
         if not self.delay or pygame.time.get_ticks() >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -105,11 +97,9 @@ class BattleLoop:
 
             elif self.state == BattleState.END_BATTLE:
                     self.return_to_overworld = True
-                    self.untoggle()
 
             elif self.state == self.state.END_SCREEN:
                 self.combat_menu.state = "end_screen"
-
 
     def action_lock(self) -> bool:
         return (
@@ -120,49 +110,36 @@ class BattleLoop:
         )
 
     def screen_messages(self):
-        offset = 32
-        player_dmg_position = pygame.Vector2(self.player.screen_position.x + offset, self.player.screen_position.y)
-        enemy_dmg_position = pygame.Vector2(self.enemy.screen_position.x + offset, self.enemy.screen_position.y)
-
-        if self.state == BattleState.PLAYER_ANIMATION:
-            self.screen_messages_group.update(enemy_dmg_position)
-        elif self.state == BattleState.ENEMY_ANIMATION :
-            self.screen_messages_group.update(player_dmg_position)
-        else:
-            self.screen_messages_group.update(enemy_dmg_position)
-
+        self.screen_messages_group.update()
 
         self.screen_messages_group.draw(self.window)
 
-        if self.player.hit_landed and not self.enemy.death:
-            for index, dmg in enumerate(self.enemy.dmg_taken):
-                FloatingDamage(self.screen_messages_group, dmg, enemy_dmg_position, self.damage_counter)
-                self.damage_counter += 1
-            self.enemy.dmg_taken.clear()
 
-        elif self.enemy.hit_landed and not self.player.death:
-            for index, dmg in enumerate(self.player.dmg_taken):
-                FloatingDamage(self.screen_messages_group, dmg, enemy_dmg_position, self.damage_counter)
-                self.damage_counter += 1
-            self.player.dmg_taken.clear()
+        for participant in [self.player, self.enemy]:
+            damage_counter = 0
+            for dmg in participant.dmg_taken:
+                ScreenMessages(self.screen_messages_group, dmg, (255, 0, 0), damage_counter, participant)
+                damage_counter += 1 # increments moce the x position
+            participant.dmg_taken.clear()
 
-        if self.player.critical_hit and self.player.critical_hit_messages:
-            FloatingDamage(self.screen_messages_group, "CRITICAL HIT", player_dmg_position, 1)
-            self.player.critical_hit_messages.clear()
+            for mana in participant.mana_messages:
+                ScreenMessages(self.screen_messages_group, mana, (150, 206, 255), 0, participant)
+            participant.mana_messages.clear()
 
-        if self.enemy.critical_hit and self.enemy.critical_hit_messages:
-            FloatingDamage(self.screen_messages_group, "CRITICAL HIT", player_dmg_position, -3)
-            self.enemy.critical_hit_messages.clear()
+            if participant.critical_hit_messages:
+                offset = -2 if participant == self.player else 0.5
 
-        if self.player.perfect_block and self.player.perfect_block_messages:
-            FloatingDamage(self.screen_messages_group, "PERFECT BLOCK", player_dmg_position, -4)
-            self.player.perfect_block_messages.clear()
+                ScreenMessages(self.screen_messages_group, "CRITICAL HIT", (0, 0, 255), offset, participant)
+                participant.critical_hit_messages.clear()
 
-        if self.enemy.perfect_block and self.enemy.perfect_block_messages:
-            FloatingDamage(self.screen_messages_group, "PERFECT BLOCK", enemy_dmg_position, -4)
-            self.enemy.perfect_block_messages.clear()
+            if participant.perfect_block_messages:
+                offset = -3.5 if participant == self.player else 1
+                ScreenMessages(self.screen_messages_group, "PERFECT BLOCK", (0, 255, 0), offset, participant)
+                participant.perfect_block_messages.clear()
 
-    def draw_ui(self, window):
+
+
+    def draw_ui(self):
         self.timer_()
 
         self.player_hp_bar.set_hp(self.player.hp)
@@ -174,12 +151,10 @@ class BattleLoop:
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_SCREEN:
             self.combat_menu.draw(self.window, self.player.mana)
 
+        self.player_hp_bar.draw(self.window)
+        self.enemy_hp_bar.draw(self.window)
+        self.screen_messages()
 
-
-        if not self.action_lock() or self.player.hit_landed or self.enemy.hit_landed:
-            self.player_hp_bar.draw(window)
-            self.enemy_hp_bar.draw(window)
-            self.screen_messages()
 
 
     def handle_input(self):
@@ -189,31 +164,6 @@ class BattleLoop:
 
     def hotkeys(self, event):
             current_time = pygame.time.get_ticks()
-
-            # if event.type == pygame.KEYDOWN:
-
-                # # Navigate up
-                # if event.key == pygame.K_UP and self.number == 0:
-                #     self.buttons[self.number].hovering = True
-                #
-                # elif event.key == pygame.K_DOWN and self.number == len(self.buttons) - 1:
-                #     self.buttons[self.number].hovering = True
-                #
-                #
-                # elif event.key == pygame.K_UP and self.number > 0:
-                #     self.buttons[self.number].hovering = False
-                #     self.number -= 1
-                #     self.buttons[self.number].hovering = True
-                #
-                # # Navigate down
-                # elif event.key == pygame.K_DOWN and self.number < len(self.buttons) - 1:
-                #     self.buttons[self.number].hovering = False
-                #     self.number += 1
-                #     self.buttons[self.number].hovering = True
-                #
-                # # Confirm selection
-                # elif event.key == pygame.K_RETURN:
-                #     self.buttons[self.number].clicked = True
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
                 if not self.block and current_time >= self.block_cooldown_end + self.block_delay:
@@ -228,8 +178,6 @@ class BattleLoop:
         attack_ = attack.replace(" ", "_")
 
         self.player_attack_option = attack_.lower()
-        self.perfect_block_counter = 0
-        self.damage_counter = 0
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = self.player_attack_option
         self.player.mana -= moves[self.player_attack_option]["mana"]
@@ -290,7 +238,6 @@ class BattleLoop:
                     self.delay = None
 
                     self.state = BattleState.ENEMY_TURN
-                    self.critical_floated = False
 
         elif self.state == BattleState.ENEMY_ANIMATION:
             if self.enemy.animation_state == AnimationState.APPROACH:
@@ -328,23 +275,19 @@ class BattleLoop:
                     self.delay = pygame.time.get_ticks() + 1000 # delay before player turn
 
                 if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.player.mana += 1
-
                     self.combat_menu.state = "main_menu"
                     self.combat_menu.buttons_group = pygame.sprite.Group()
                     self.state = BattleState.PLAYER_TURN
-                    self.critical_floated = False
+                    self.player.mana += 1
+                    self.player.mana_messages.append(1)
                     self.delay = None
                     self.clock_time = pygame.time.get_ticks() + 20000
 
 
 
-    def enemy_attack(self):
-        self.damage_counter = 0
-        self.perfect_block_counter = 0
+    def enemy_turn(self):
         self.state = BattleState.ENEMY_ANIMATION
         self.enemy_attack_option = random.choice(self.enemy.moves)
-
         self.enemy.current_attack = self.enemy_attack_option
 
         if moves[self.enemy_attack_option]["type"] == "physical":
@@ -353,29 +296,6 @@ class BattleLoop:
             self.enemy.spawn_projectile = False
             self.enemy.animation_state = AnimationState.BUFF
 
-    def untoggle(self):
-        for participant in [self.player, self.enemy]:
-            participant.approach_trigger = False
-            participant.return_trigger = False
-            participant.attack_trigger = False
-            if not participant.hp <= 0: participant.death = False
-            participant.hit_landed = False
-            participant.blocking = False
-            participant.wait_trigger = False
-            participant.death_trigger = False
-            participant.current_action = None
-            participant.critical_hit = False
-            participant.critical_hit_is_done = False
-
-    def enemy_turn(self):
-        # add random actions in the future
-        self.enemy_attack()
 
 
 
-
-# state	Meaning
-# "idle"	Waiting for player input
-# "animation"	Currently animating a move (moving, attacking, returning)
-# "battle_start"	Intro sequence or setup
-# "result"	Show victory/loss screen

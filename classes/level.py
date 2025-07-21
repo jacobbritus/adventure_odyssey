@@ -147,7 +147,7 @@ class Level:
 
 
         self.visible_sprites.update_enemies(self.player)
-        self.visible_sprites.battle_loop.update()
+        self.visible_sprites.battle_loop.run()
 
         # end battle
         self.overworld_transition()

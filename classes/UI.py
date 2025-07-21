@@ -189,11 +189,7 @@ class Button(pygame.sprite.Sprite):
             self.text = None
 
 
-        # Sounds
-        self.hover_sound = pygame.mixer.Sound(HOVER_SOUND)
-        self.click_sound = pygame.mixer.Sound(PRESS_SOUND)
-        # self.hover_sound.set_volume(0.3)
-        # self.click_sound.set_volume(0.3)
+
 
         # Status
         self.clicked = False
@@ -222,20 +218,28 @@ class Button(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
 
-        if not self.disabled and self.rect.collidepoint(mouse_pos) and press or self.clicked:
+        if self.rect.collidepoint(mouse_pos) and press or self.clicked:
             self.image = self.image_pressed
-            if not self.click_sound_played: self.click_sound.play()
-            self.click_sound_played = True
-            self.clicked = True
+
+            if not self.disabled:
+                if not self.click_sound_played: pygame.mixer.Sound(PRESS_SOUND).play()
+                self.click_sound_played = True
+                self.clicked = True
+            else:
+                if not self.click_sound_played: pygame.mixer.Sound(DISABLED_SOUND).play()
+                self.click_sound_played = True
 
         elif self.rect.collidepoint(mouse_pos) or self.hovering:
             self.image = self.image_selected
-            if not self.sound_played: self.hover_sound.play()
+            if not self.sound_played: pygame.mixer.Sound(HOVER_SOUND).play()
             self.sound_played = True
+            self.click_sound_played = False
+
         else:
             self.image = self.image_normal
             self.hovering = False
             self.sound_played = False
+            self.click_sound_played = False
 
 
     def kill_delay(self):
@@ -336,7 +340,6 @@ class CombatMenu:
         self.state = "skills"
 
         # Skill buttons
-        print(self.player_mana)
 
         if not self.buttons_group:
             for index, attack_name in enumerate(self.attacks):
@@ -346,7 +349,6 @@ class CombatMenu:
                 name = attack_name.replace("_", " ")
 
                 if self.player_mana < moves[attack_name]["mana"]:
-                    print(attack_name)
                     Button(self.buttons_group, "parameter", self.functions[0], name.upper(), "large", pos, True)
 
                 else:
@@ -354,8 +356,8 @@ class CombatMenu:
 
 
             # Back button
-            width = pygame.image.load(BUTTON_NORMAL).get_size()
-            pos = (self.background_image_position.x + width[0] // 3, self.background_image_position.y + 188)
+            size = pygame.image.load(BUTTON_NORMAL).get_size()
+            pos = (self.background_image_position.x + size[0] // 3, self.background_image.get_height() + size[1] // 4)
             Button(self.buttons_group, "no parameter",  self.main_menu, "BACK", "small", pos, False)
 
 

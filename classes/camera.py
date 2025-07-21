@@ -216,7 +216,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(
                     enemy.hitbox):
-                print("check")
                 self.battle_participants = [player, enemy]
                 self.transition_timer = pygame.time.get_ticks()
                 self.delay = pygame.time.get_ticks() + self.delay_time

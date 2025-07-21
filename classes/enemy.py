@@ -30,7 +30,6 @@ class Enemy(Entity):
         # Image
         self.image = surf
         self.width, self.height = pygame.Surface.get_size(surf)
-        print(self.width, self.height)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(-64, -48)
         self.exclamation_mark = pygame.image.load(EXCLAMATION_MARK)
@@ -98,11 +97,7 @@ class Enemy(Entity):
 
 
     def update_enemy(self, player, window, offset) -> None:
-        self.screen_position = pygame.math.Vector2(self.x - offset.x,
-                                                   self.y - offset.y)
-
-        self.rect.topleft = (self.x, self.y)  # update rect
-        self.hitbox.topleft = self.rect.topleft
+        self.update_pos(offset)
 
         if not player.in_battle: self.get_status(player)
 

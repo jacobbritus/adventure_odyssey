@@ -56,6 +56,10 @@ class Entity(pygame.sprite.Sprite):
         self.critical_hit_is_done = False
         self.critical_hit_messages = []
         self.dmg_taken = []
+        self.dmg_position = None
+
+        self.mana_messages = []
+
 
         # projectiles
         self.spawn_projectile = False
@@ -71,6 +75,15 @@ class Entity(pygame.sprite.Sprite):
         # Animation states
         self.animation_state = AnimationState.IDLE
 
+    def update_pos(self, offset) -> None:
+        self.screen_position = pygame.math.Vector2(self.x - offset.x,
+                                                   self.y - offset.y)
+        offset = 32
+        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width //2, self.screen_position.y)
+
+        self.rect.topleft = (self.x, self.y)  # update rect
+        self.hitbox.topleft = self.rect.topleft
+
     def move(self, move_vector: tuple[int, int]) -> None:
         """Move the player based on the move vector."""
         if self.in_battle and not self.animation_state in [AnimationState.APPROACH, AnimationState.RETURN]:
@@ -82,18 +95,20 @@ class Entity(pygame.sprite.Sprite):
 
         self.x += dx
 
-
-
-        if self.obstacle_collisions():
-            self.x -= dx
-            self.rect.topleft = (self.x, self.y)  # update rect after correction
-
-        # Move on Y
         self.y += dy
         self.rect.topleft = (self.x, self.y)
         if self.obstacle_collisions():
+            self.x -= dx
+            self.rect.topleft = (self.x, self.y)  # update rect after correction
+            self.hitbox.topleft = self.rect.topleft
+
+            print(self.rect)
+
+        if self.obstacle_collisions():
             self.y -= dy
             self.rect.topleft = (self.x, self.y)
+            self.hitbox.topleft = self.rect.topleft
+
 
 
     def animations(self) -> None:
@@ -114,13 +129,7 @@ class Entity(pygame.sprite.Sprite):
 
     def obstacle_collisions(self) -> bool:
         """Check if the player is colliding with any other obstacle sprite."""
-        # Centered hitbox of 32x32 relative to current sprite position
-        # self.hitbox = pygame.Rect(
-        #     self.rect.centerx + 16,
-        #     self.rect.centery  - 16,
-        #     32,
-        #     48
-        # )
+
         for sprite in self.obstacle_sprites:
             if self.hitbox.colliderect(sprite.hitbox):
                 return True
@@ -147,10 +156,8 @@ class Entity(pygame.sprite.Sprite):
             self.action = "running"
             if dx > 0:
                 self.direction = "right"
-                hitbox_offset = 64
             else:
                 self.direction = "left"
-                hitbox_offset = 0
 
 
             self.move((dx / distance, dy / distance))
@@ -266,7 +273,6 @@ class Entity(pygame.sprite.Sprite):
 
             # ___end attack sequence___
             else:
-
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False
@@ -277,20 +283,16 @@ class Entity(pygame.sprite.Sprite):
         base_dmg = moves[self.current_attack]["dmg"]
 
         if self.blocking and not self.critical_hit_is_done:
-
             if self.type == "player":
                 pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
                 self.critical_hit = True
                 self.critical_hit_messages.append("")
 
-
-
-            if self.type == "enemy":
+            elif self.type == "enemy":
                 bools = [True, False]
                 weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
-                    print("enemy critical")
                     self.critical_hit_messages.append("")
                     pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
 
