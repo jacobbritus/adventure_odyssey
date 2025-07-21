@@ -234,10 +234,8 @@ class Entity(pygame.sprite.Sprite):
             self.current_attack = action
             return
 
-        # this part could be separated depending on the attack type:
-
         # ___sprite frame reset___
-        if self.frame != 0 and not self.action == self.current_attack:
+        if not self.action == self.current_attack:
             self.frame = 0
             self.action = self.current_attack
 

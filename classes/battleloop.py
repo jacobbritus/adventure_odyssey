@@ -1,6 +1,7 @@
 import random
 
-from classes.UI import Hpbar, CombatMenu
+from archive.old_hp_ui import Hpbar
+from classes.UI import CombatMenu
 from classes.states import AnimationState, BattleState
 from classes.floatingdamage import FloatingDamage
 from other.settings import *
@@ -67,7 +68,7 @@ class BattleLoop:
 
             current_time = ((self.clock_time - pygame.time.get_ticks()) // 1000)
 
-            font = pygame.font.Font(TEXT_TWO, 33)
+            font = pygame.font.Font(FONT_TWO, 33)
             time_text = font.render(str(current_time), True, (255, 255, 255))
             time_size = time_text.get_width()
             # box = pygame.image.load(TIME_BACKGROUND)

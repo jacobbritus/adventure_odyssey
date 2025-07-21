@@ -91,12 +91,12 @@ class YSortCameraGroup(pygame.sprite.Group):
             # Follow a projectile if active
             if player.projectiles:
                 if player.animation_state == AnimationState.ATTACK:
-                    target = self.battle_position
+                    target = enemy.rect.center
                 elif player.animation_state == AnimationState.BUFF:
                     target = player.rect.center
             elif enemy.projectiles:
                 if enemy.animation_state == AnimationState.ATTACK:
-                    target = self.battle_position
+                    target = player.rect.center
                 elif enemy.animation_state == AnimationState.BUFF:
                     target = enemy.rect.center
 

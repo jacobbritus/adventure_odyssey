@@ -1,6 +1,5 @@
 import pytmx
 
-from classes.UI import Hpbar
 from classes.camera import YSortCameraGroup
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle

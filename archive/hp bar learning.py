@@ -1,6 +1,6 @@
 import pygame
 
-from classes.UI import *
+from archive.old_hp_ui import Hpbar
 from other.settings import *
 
 
@@ -16,22 +16,24 @@ clock = pygame.time.Clock()
 
 buttons_group = pygame.sprite.Group()
 
-player_hp_bar = Hpbar((window.get_size()), "left", 20, 20, "JACOB")
-enemy_hp_bar = Hpbar((window.get_size()), "right", 20, 20, "SKELETON")
+player_hp_bar = Hpbar((WINDOW_WIDTH, WINDOW_HEIGHT), "left", 20, 20,
+                           "PLAYER")  # enemy.name in the future
 
-button = Button(buttons_group, "no parameter", one, "ATTACK", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25))
-button_two = Button(buttons_group, "no parameter", one, "RUN", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))
+# button = Button(buttons_group, "no parameter", one, "ATTACK", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25))
+# button_two = Button(buttons_group, "no parameter", one, "RUN", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))
 
 skills = pygame.image.load(LARGE_BACKGROUND_BOX)
 
 def attack(name):
     print(name)
-
+#
 attacks = ["SWORD SLASH", "BALLS", "FORTNITE"]
 
-combat_menu = CombatMenu(attacks, [attack, two, one])
+# combat_menu = CombatMenu(attacks, [attack, two, one])
+hp = 20
+mana = 5
 
-combat_menu.state = "main_menu"
+# combat_menu.state = "main_menu"
 while True:
     window.fill((255, 255, 255))
     for event in pygame.event.get():
@@ -41,21 +43,33 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
-                combat_menu.state = "end_screen"
-                combat_menu.buttons_group = pygame.sprite.Group()
+                hp -= 5
+                # combat_menu.state = "end_screen"
+                # combat_menu.buttons_group = pygame.sprite.Group()
+
+            if event.key == pygame.K_a:
+                mana -= 1
 
             if event.key == pygame.K_r:
-                combat_menu.state = "main_menu"
+                hp += 5
+
+                # combat_menu.state = "main_menu"
 
 
-    # player_hp_bar.draw(window)
+    player_hp_bar.set_hp(hp)
+    player_hp_bar.update()
+    player_hp_bar.draw(window)
+
     # enemy_hp_bar.draw(window)
+
+
+
     # button.draw(window)
     # button.update()
     # button_two.draw(window)
     # button_two.update()
 
-    combat_menu.draw(window)
+    # combat_menu.draw(window)
 
     clock.tick(60)
     pygame.display.update()

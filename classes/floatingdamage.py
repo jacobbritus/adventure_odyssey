@@ -4,7 +4,7 @@ from other.settings import *
 class FloatingDamage(pygame.sprite.Sprite):
     def __init__(self, group, value, position, counter):
         super().__init__(group)
-        font = pygame.font.Font(TEXT_ONE, 16)
+        font = pygame.font.Font(FONT_ONE, 16)
         if value == "CRITICAL HIT":
             color = (0, 0, 255)
         elif value == "PERFECT BLOCK":

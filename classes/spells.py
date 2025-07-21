@@ -2,10 +2,10 @@ import pygame.sprite
 from other.settings import *
 
 class Spells(pygame.sprite.Sprite):
-    def __init__(self, group, type,  start_pos, end_pos, speed):
+    def __init__(self, group, spell_type, start_pos, end_pos, speed):
         super().__init__(group)
         self.frame = 0
-        self.type = type
+        self.type = spell_type
         if end_pos:
             self.direction = "left" if (end_pos - start_pos).normalize().x < 0 else "right"
             self.end_pos = pygame.Vector2(end_pos)
