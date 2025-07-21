@@ -41,8 +41,10 @@ class Player(Entity):
         self.last_footstep_time = pygame.time.get_ticks()
 
         # Stats
+        self.level = 1
         self.hp: int = 20
         self.max_hp: int = 20
+        self.mana: int = 5
         self.dmg: int = 5
         self.speed = 3
 

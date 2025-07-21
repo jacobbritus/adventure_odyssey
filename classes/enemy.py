@@ -18,6 +18,7 @@ class Enemy(Entity):
 
 
         # Battle related
+        self.level = 1
         self.hp = 15
         self.dmg = 5
 

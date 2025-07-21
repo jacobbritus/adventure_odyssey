@@ -1,7 +1,6 @@
 import random
 
-from archive.old_hp_ui import Hpbar
-from classes.UI import CombatMenu
+from classes.UI import CombatMenu, Hpbar
 from classes.states import AnimationState, BattleState
 from classes.floatingdamage import FloatingDamage
 from other.settings import *
@@ -29,9 +28,9 @@ class BattleLoop:
         # ___UI setup___
         self.combat_menu = CombatMenu(self.player.attacks, [self.player_attack, self.player_run, self.player_run])
         self.combat_menu.state = "main_menu"
-        self.player_hp_bar = Hpbar((self.window.get_size()), "left", self.player.hp, self.player.max_hp, "PLAYER") #enemy.name in the future
+        self.player_hp_bar = Hpbar("left", self.player.level, self.player.hp, self.player.max_hp, self.player.mana,"PLAYER") #enemy.name in the future
         self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
-        self.enemy_hp_bar = Hpbar((self.window.get_size()), "right", self.enemy.hp, self.enemy.hp, self.enemy.monster_name.upper()) #enemy.name in the future
+        self.enemy_hp_bar = Hpbar("right", self.enemy.level, self.enemy.hp, self.enemy.hp, None, self.enemy.monster_name.upper()) #enemy.name in the future
 
         # ___used as an argument to perform the chosen attack option___
         self.player_attack_option = None
@@ -75,7 +74,7 @@ class BattleLoop:
             # # box_size = box.get_width()
 
             # self.window.blit(box, (WINDOW_WIDTH // 2 - box_size // 2, self.player_hp_bar.box_position[1] ))
-            self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_position[1] - 2))
+            self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_pos[1] - 2))
 
     def update(self):
         self.player.projectiles.draw(self.window)
@@ -89,12 +88,6 @@ class BattleLoop:
         elif self.enemy.animation_state == AnimationState.BUFF:
             self.enemy.projectiles.update(self.offset)
 
-
-
-
-
-        self.player_hp_bar.set_hp(self.player.hp)
-        self.enemy_hp_bar.set_hp(self.enemy.hp)
 
         self.handle_input()
         self.animation()
@@ -116,7 +109,6 @@ class BattleLoop:
 
             elif self.state == self.state.END_SCREEN:
                 self.combat_menu.state = "end_screen"
-                self.combat_menu.draw(self.window)
 
 
     def action_lock(self) -> bool:
@@ -173,10 +165,14 @@ class BattleLoop:
     def draw_ui(self, window):
         self.timer_()
 
+        self.player_hp_bar.set_hp(self.player.hp)
+        self.enemy_hp_bar.set_hp(self.enemy.hp)
+        self.player_hp_bar.set_mana(self.player.mana)  
         self.enemy_hp_bar.update()
         self.player_hp_bar.update()
+
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_SCREEN:
-            self.combat_menu.draw(self.window)
+            self.combat_menu.draw(self.window, self.player.mana)
 
 
 
@@ -236,6 +232,7 @@ class BattleLoop:
         self.damage_counter = 0
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = self.player_attack_option
+        self.player.mana -= moves[self.player_attack_option]["mana"]
 
         if moves[self.player_attack_option]["type"] == "physical":
             self.player.animation_state = AnimationState.APPROACH
@@ -331,6 +328,8 @@ class BattleLoop:
                     self.delay = pygame.time.get_ticks() + 1000 # delay before player turn
 
                 if self.delay and pygame.time.get_ticks() >= self.delay:
+                    self.player.mana += 1
+
                     self.combat_menu.state = "main_menu"
                     self.combat_menu.buttons_group = pygame.sprite.Group()
                     self.state = BattleState.PLAYER_TURN

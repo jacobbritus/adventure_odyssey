@@ -16,8 +16,11 @@ clock = pygame.time.Clock()
 
 buttons_group = pygame.sprite.Group()
 
-player_hp_bar = Hpbar((WINDOW_WIDTH, WINDOW_HEIGHT), "left", 20, 20,
+player_hp_bar = Hpbar("left", 67, 20, 20, 5,
                            "PLAYER")  # enemy.name in the future
+
+enemy = Hpbar("right", 5, 20, 20, 5,
+                           "SKELETON")  # enemy.name in the future
 
 # button = Button(buttons_group, "no parameter", one, "ATTACK", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25))
 # button_two = Button(buttons_group, "no parameter", one, "RUN", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))
@@ -60,7 +63,9 @@ while True:
     player_hp_bar.update()
     player_hp_bar.draw(window)
 
-    # enemy_hp_bar.draw(window)
+    enemy.draw(window)
+
+    # enemy.draw(window)
 
 
 
