@@ -5,8 +5,8 @@ from other.png_to_sprite import *
 SCALE = 2
 
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 360
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 FPS = 60
 TILE_SIZE = 32
@@ -20,11 +20,11 @@ sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites
 
 # moves
-moves = {"fire_ball": {"dmg": 5, "type": "special", "mana": 5, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
-         "sword_slash": {"dmg": 8, "type": "physical", "mana": 1, "sound": [get_file_location("sounds/sword_slash.wav")]},
-         "punch": {"dmg": 4, "type": "physical", "mana": 0, "sound": [get_file_location("sounds/effects/punch.mp3")]},
-         "heal": {"hp": 4, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")},
-        "lightning_strike": {"dmg": 20, "type": "special", "mana": 3, "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
+moves = {"fire_ball": {"dmg": 7, "type": "special", "mana": 5, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
+         "sword_slash": {"dmg": 5, "type": "physical", "mana": 1, "sound": [get_file_location("sounds/sword_slash.wav")]},
+         "punch": {"dmg": 10, "type": "physical", "mana": 0, "sound": [get_file_location("sounds/effects/punch.mp3")]},
+         "heal": {"hp": 5, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")},
+        "lightning_strike": {"dmg": 7, "type": "special", "mana": 5, "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
 
          }
 
@@ -53,6 +53,8 @@ LEVEL_BOX = get_file_location(f"sprites/UI/level_box.png")
 MANA_BOX = get_file_location(f"sprites/UI/mana_box.png")
 HP_BAR = get_file_location(f"sprites/UI/hp_bar.png")
 HP_ICON = get_file_location(f"sprites/UI/heart_icon.png")
+
+SPELLBOOK = get_file_location("sprites/UI/spellbook.png")
 
 
 # ___hp bar___

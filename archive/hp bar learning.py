@@ -1,6 +1,5 @@
 import pygame
 
-from archive.old_hp_ui import Hpbar
 from other.settings import *
 
 
@@ -15,12 +14,12 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = pygame.time.Clock()
 
 buttons_group = pygame.sprite.Group()
-
-player_hp_bar = Hpbar("left", 67, 20, 20, 5,
-                           "PLAYER")  # enemy.name in the future
-
-enemy = Hpbar("right", 5, 20, 20, 5,
-                           "SKELETON")  # enemy.name in the future
+#
+# player_hp_bar = Hpbar("left", 67, 20, 20, 5,
+#                            "PLAYER")  # enemy.name in the future
+#
+# enemy = Hpbar("right", 5, 20, 20, 5,
+#                            "SKELETON")  # enemy.name in the future
 
 # button = Button(buttons_group, "no parameter", one, "ATTACK", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25))
 # button_two = Button(buttons_group, "no parameter", one, "RUN", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))
@@ -59,13 +58,16 @@ while True:
                 # combat_menu.state = "main_menu"
 
 
-    player_hp_bar.set_hp(hp)
-    player_hp_bar.update()
-    player_hp_bar.draw(window)
-
-    enemy.draw(window)
+    # player_hp_bar.set_hp(hp)
+    # player_hp_bar.update()
+    # player_hp_bar.draw(window)
+    #
+    # enemy.draw(window)
 
     # enemy.draw(window)
+    spellbook = pygame.image.load(SPELLBOOK)
+
+    window.blit(spellbook, (WINDOW_WIDTH // 2 - spellbook.get_width()//2, WINDOW_HEIGHT // 2 - spellbook.get_height() // 2))
 
 
 

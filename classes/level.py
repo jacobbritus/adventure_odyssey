@@ -128,7 +128,7 @@ class Level:
 
     def overworld(self) -> None:
         self.battle_transition()
-
+        self.visible_sprites.respawn_enemies()
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
         self.visible_sprites.update_camera(self.player)

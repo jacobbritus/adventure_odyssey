@@ -1,5 +1,3 @@
-import pygame
-
 from other.settings import *
 
 class Damage:
@@ -13,7 +11,6 @@ class Damage:
         window.blit(self.damage, self.pos)
 
 
-from other.settings import *
 class Hpbar:
     def __init__(self, side, level, current_hp: int, max_hp: int, current_mana, name: str):
         # ___stats___
@@ -50,7 +47,7 @@ class Hpbar:
                 "level_box": pygame.Vector2(self.background_box.get_width() - self.level_box.get_width() + 4, 4),
                 "level": pygame.Vector2(self.level_box.get_width() // 2 - self.level.get_width() // 2 + 1,
                                         self.level_box.get_height() // 2 - self.level.get_height() // 2 - 1),
-                "mana_box": pygame.Vector2(self.background_box.get_width() - self.mana_box.get_width() + 2, self.background_box.get_height() - self.mana_box.get_height() // 2),
+                "mana_box": pygame.Vector2(self.background_box.get_width() - self.mana_box.get_width() + 4, self.background_box.get_height() - self.mana_box.get_height() // 2),
                 "mana": pygame.Vector2(self.mana_box.get_width() // 2 - self.mana.get_width() // 2 + 1, self.mana_box.get_height() // 2 - self.mana.get_height() // 2 - 1),
                 "hp_bar": pygame.Vector2(34, 18),
                 "hp_icon": pygame.Vector2(26, 4),
@@ -357,7 +354,7 @@ class CombatMenu:
 
             # Back button
             size = pygame.image.load(BUTTON_NORMAL).get_size()
-            pos = (self.background_image_position.x + size[0] // 3, self.background_image.get_height() + size[1] // 4)
+            pos = (self.background_image_position.x + size[0] // 3, self.background_image_position.y + self.background_image.get_height() - size[1] * 1.25)
             Button(self.buttons_group, "no parameter",  self.main_menu, "BACK", "small", pos, False)
 
 

@@ -43,7 +43,7 @@ class Player(Entity):
         self.level = 1
         self.hp: int = 20
         self.max_hp: int = 20
-        self.mana: int = 5
+        self.mana: int = 0
         self.dmg: int = 5
         self.speed = 3
 

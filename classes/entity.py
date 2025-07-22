@@ -40,6 +40,7 @@ class Entity(pygame.sprite.Sprite):
 
         # Battle related.
         self.in_battle = False
+        self.pre_battle_pos = None
         self.obstacle_sprites = None
         self.critical_hit_chance = None
         self.blocking_chance = None
@@ -70,6 +71,7 @@ class Entity(pygame.sprite.Sprite):
 
         # Stats
         self.hp = None
+        self.max_hp = None
         self.dmg = None
 
         # Animation states
@@ -180,6 +182,7 @@ class Entity(pygame.sprite.Sprite):
             Spells(self.projectiles, self.current_attack, position, None, None)
             self.spawn_projectile = True
             self.hp += 5
+            if self.hp > self.max_hp: self.hp = self.max_hp
             pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
 
         if not self.projectiles:
@@ -270,6 +273,8 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
+                target.blocking = False
+
 
             # ___end attack sequence___
             else:
@@ -277,6 +282,7 @@ class Entity(pygame.sprite.Sprite):
                 self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False
                 self.critical_hit = False
+                target.blocking = False
                 target.perfect_block = False
 
     def handle_attack_impact(self, target):
@@ -301,11 +307,10 @@ class Entity(pygame.sprite.Sprite):
                 base_dmg *= 2
 
         # player attacks, enemy block chance
-        if self.type == "player":
+        if target.type == "enemy":
             bools = [True, False]
             weights = [target.blocking_chance, 1 - target.blocking_chance]
             target.blocking = random.choices(bools, k=1, weights=weights)[0]
-            target.perfect_block_messages.append("")
 
         if target.blocking:
             target.perfect_block = True
@@ -336,6 +341,7 @@ class Entity(pygame.sprite.Sprite):
         if not target.hp <= 0:
             target.frame = 0
             target.action = "death" # hurt
+
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
@@ -371,6 +377,7 @@ class Entity(pygame.sprite.Sprite):
 
     def update_animations(self) -> None:
         if self.hp <= 0:
+            self.direction = "left"
             death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
             if self.frame >= death_frame:
                 self.image = self.sprite_dict[self.action]["sprites"][self.direction][death_frame]

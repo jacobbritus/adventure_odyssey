@@ -32,7 +32,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.state = LevelState.OVERWORLD
         self.battle_participants = None
         self.current_music = None
-        self.player_position = None
+        self.player_pre_battle_pos = None
+        self.enemy_pre_battle_pos = None
         self.battle_loop = None
         self.battle_position: pygame.math.Vector2 = pygame.math.Vector2()
 
@@ -159,8 +160,6 @@ class YSortCameraGroup(pygame.sprite.Group):
             offset_pos = enemy_sprite.rect.topleft - self.offset
             self.display_surface.blit(enemy_sprite.image, offset_pos)
 
-        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
-
         self.offset += self.shake_offset
 
     def update_enemies(self, player):
@@ -168,13 +167,20 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
         if self.state == LevelState.OVERWORLD:
-            for sprite in self.enemy_sprites:
-                sprite.update_enemy(player, self.display_surface, self.offset)
+            for enemy in self.enemy_sprites:
+                if not enemy.death: enemy.update_enemy(player, self.display_surface, self.offset)
         elif self.state == LevelState.BATTLE:
-            for sprite in self.enemy_sprites:
-                sprite.update_enemy(player, self.display_surface, self.offset)
-                if not sprite.in_battle:
-                    sprite.action = "idle"
+            for enemy in self.enemy_sprites:
+                enemy.update_enemy(player, self.display_surface, self.offset)
+                if not enemy.in_battle:
+                    enemy.action = "idle"
+
+    def respawn_enemies(self):
+        for enemy in self.enemy_sprites:
+            if enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
+                enemy.hp = enemy.max_hp
+                enemy.action = "idle"
+                enemy.death = False
 
     def start_battle(self):
         player, enemy = self.battle_participants
@@ -183,7 +189,8 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         if spots2:
             self.state = LevelState.BATTLE
-            self.player_position = (player.x, player.y) # Used to put the player back to where the battle was initiated.
+            player.pre_battle_pos = (player.x, player.y)
+            enemy.pre_battle_pos = (enemy.x, enemy.y)
 
             def get_positions_in_rect(rect, n):
                 spacing = 320
@@ -216,6 +223,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(
                     enemy.hitbox):
+                if enemy.death:
+                    continue
                 self.battle_participants = [player, enemy]
                 self.transition_timer = pygame.time.get_ticks()
                 self.delay = pygame.time.get_ticks() + self.delay_time
@@ -256,12 +265,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_loop = None
 
         # Kill whoever lost. (Removes them from all sprite groups)
-        enemy.kill()
         self.battle_participants = None
 
-        # Set player to initiate location.
-        player.rect.topleft = self.player_position
-        player.x, player.y = self.player_position
+        # Set player and enemy to initiate location.
+        player.rect.topleft = player.pre_battle_pos
+        player.x, player.y = player.pre_battle_pos
+
+        enemy.rect.topleft = enemy.pre_battle_pos
+        enemy.x, enemy.y = enemy.pre_battle_pos
 
 
     def find_battle_spot(self, player_rect, search_radius = 640, step = 32):

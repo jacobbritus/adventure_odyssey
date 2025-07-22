@@ -1,3 +1,5 @@
+import random
+
 import pygame.mixer
 
 from classes.entity import Entity
@@ -13,19 +15,20 @@ class Enemy(Entity):
         # General
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
-        self.detected_player = True
+        self.detected_player = False
         self.sprite_dict, self.moves, self.critical_hit_chance, self.blocking_chance, self.speed = self.initialize_enemy()
 
 
         # Battle related
         self.level = 1
         self.hp = 15
+        self.max_hp: int = 15
         self.dmg = 5
 
 
         # Location
-        self.x = pos[0]
-        self.y = pos[1]
+        self.x, self.y = pygame.Vector2(pos)
+
 
         # Image
         self.image = surf
@@ -36,20 +39,27 @@ class Enemy(Entity):
 
         self.screen_position = None
 
+        self.respawn_time = None
+        self.moving_randomly = False
+
+        self.random_target = None
+        self.random_target_reached = True
+        self.move_delay = pygame.time.get_ticks() + 0
+
 
 
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.75, 2
+            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.25, 2
         elif self.monster_name == "Slime":
-            return slime_sprites, ["stomp"], 0.25, 0.75, 3
+            return slime_sprites, ["stomp"], 0.25, 0.25, 3
         elif self.monster_name == "Goblin":
-            return goblin_sprites, ["sword_slash"], 0.25, 0.50, 4
+            return goblin_sprites, ["sword_slash"], 0.25, 0.25, 4
         else:
             return None
 
-    def get_status(self, player) -> None:
+    def chase_player(self, player) -> None:
         # Calculate distances between enemy and player
         x_distance = player.x - self.x  # Positive if player is to the right
         y_distance = player.y - self.y  # Positive if player is below
@@ -92,14 +102,57 @@ class Enemy(Entity):
                 self.move((dx, dy))
         else:
             # Player is too far - enemy stops
-            self.action = "idle"
+            if not self.moving_randomly: self.action = "idle"
             self.detected_player = False
+
+    def random_movement(self):
+        current_time = pygame.time.get_ticks()
+
+        # 1. If target was reached and delay passed → get new target
+        if self.random_target_reached and current_time >= self.move_delay:
+            target_range = 128
+            self.random_target = pygame.Vector2(
+                self.x + random.randint(-target_range, target_range),
+                self.y + random.randint(-target_range, target_range)
+            )
+            self.random_target_reached = False  # Start moving again
+            self.action = "running"
+            self.moving_randomly = True
+
+        # 2. If target not reached → move toward it
+        if not self.random_target_reached:
+            x_distance = self.random_target.x - self.x
+            y_distance = self.random_target.y - self.y
+            distance = math.hypot(x_distance, y_distance)
+
+            # Set direction
+            if abs(x_distance) > abs(y_distance):
+                self.direction = "right" if x_distance > 0 else "left"
+            else:
+                self.direction = "down" if y_distance > 0 else "up"
+
+            # Move
+            if distance > 1:
+                dx = x_distance / distance
+                dy = y_distance / distance
+                self.move((dx, dy))
+            else:
+                # Target reached
+                self.random_target_reached = True
+                self.move_delay = current_time + 3000  # wait half a second before next target
+                self.moving_randomly = False
+                self.action = "idle"
 
 
     def update_enemy(self, player, window, offset) -> None:
         self.update_pos(offset)
+        if not self.detected_player: self.random_movement()
 
-        if not player.in_battle: self.get_status(player)
+        if self.blocking:
+            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            window.blit(mask, self.screen_position)
+
+        if not player.in_battle: self.chase_player(player)
 
         self.update_animations()
 
