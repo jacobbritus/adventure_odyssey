@@ -172,8 +172,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         elif self.state == LevelState.BATTLE:
             for enemy in self.enemy_sprites:
                 enemy.update_enemy(player, self.display_surface, self.offset)
-                if not enemy.in_battle:
-                    enemy.action = "idle"
+
 
     def respawn_enemies(self):
         for enemy in self.enemy_sprites:
@@ -208,21 +207,21 @@ class YSortCameraGroup(pygame.sprite.Group):
             player.face_target(enemy)
             enemy.face_target(player)
 
+            player.sprinting = False
+            enemy.sprinting = False
+
             battle_center_x = (player.rect.centerx + enemy.rect.centerx) // 2
             battle_center_y = (player.rect.centery + enemy.rect.centery) // 2
             self.battle_position.update(battle_center_x, battle_center_y)
 
             self.battle_loop = BattleLoop(player, enemy, self.display_surface, self.offset)
 
-
-
     def enemy_collision(self, player):
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
-            if player.hitbox.colliderect(
-                    enemy.hitbox):
+            if player.hitbox.colliderect(enemy.hitbox):
                 if enemy.death:
                     continue
                 self.battle_participants = [player, enemy]
@@ -232,7 +231,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                     participant.in_battle = True
                     participant.action = "idle"
                 break
-
 
     def transition_screen(self):
         if self.transition_timer:
@@ -255,27 +253,18 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def end_battle(self):
         self.state = LevelState.OVERWORLD
-        player, enemy = self.battle_participants
 
-        # Put the participants out of the battle state.
-        player.in_battle = False
-        enemy.in_battle = False
+        for participant in self.battle_participants:
+            participant.in_battle = False
+            participant.rect.topleft = participant.pre_battle_pos
+            participant.x, participant.y = participant.pre_battle_pos
 
-        # Stop the battle loop
         self.battle_loop = None
-
-        # Kill whoever lost. (Removes them from all sprite groups)
         self.battle_participants = None
 
-        # Set player and enemy to initiate location.
-        player.rect.topleft = player.pre_battle_pos
-        player.x, player.y = player.pre_battle_pos
-
-        enemy.rect.topleft = enemy.pre_battle_pos
-        enemy.x, enemy.y = enemy.pre_battle_pos
 
 
-    def find_battle_spot(self, player_rect, search_radius = 640, step = 32):
+    def find_battle_spot(self, player_rect, search_radius = 640, step = 32) -> pygame.Rect or None:
         """Find a nearby unobstructed rectangular area for battle."""
 
         spot_size = (640, 64)

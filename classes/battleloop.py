@@ -96,7 +96,7 @@ class BattleLoop:
                     self.delay = None
 
             elif self.state == BattleState.END_BATTLE:
-                    if self.enemy.death: self.enemy.respawn_time = pygame.time.get_ticks() + 20000
+                    if self.enemy.death: self.enemy.respawn_time = pygame.time.get_ticks() + 120000
                     self.return_to_overworld = True
 
             elif self.state == self.state.END_SCREEN:

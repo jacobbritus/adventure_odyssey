@@ -37,6 +37,7 @@ class Entity(pygame.sprite.Sprite):
         self.action = "idle"
         self.sprinting = None
         self.movement_speed = 2
+        self.sprint_speed = None
 
         # Battle related.
         self.in_battle = False
@@ -77,51 +78,47 @@ class Entity(pygame.sprite.Sprite):
         # Animation states
         self.animation_state = AnimationState.IDLE
 
-    def update_pos(self, offset) -> None:
-        self.screen_position = pygame.math.Vector2(self.x - offset.x,
-                                                   self.y - offset.y)
-        offset = 32
-        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width //2, self.screen_position.y)
-
+    def update_pos(self) -> None:
         self.rect.topleft = (self.x, self.y)  # update rect
-        self.hitbox.topleft = self.rect.topleft
+        self.hitbox.center = self.rect.center
 
-    def move(self, move_vector: tuple[int, int]) -> None:
+    def move(self, move_vector: tuple[int or float, int or float]) -> bool or None:
         """Move the player based on the move vector."""
         if self.in_battle and not self.animation_state in [AnimationState.APPROACH, AnimationState.RETURN]:
-            return
+            return None
         dx, dy = move_vector
-        self.movement_speed = 4 if self.sprinting else 2
+        if self.in_battle:
+            self.movement_speed = 4
+        elif self.sprinting:
+            self.movement_speed = self.sprint_speed
+        else:
+            self.movement_speed = self.movement_speed
+
         dx *= self.movement_speed
         dy *= self.movement_speed
 
+        # ___move horizontally___
         self.x += dx
+        self.update_pos()
 
-        self.y += dy
-        self.rect.topleft = (self.x, self.y)
         if self.obstacle_collisions():
             self.x -= dx
-            self.rect.topleft = (self.x, self.y)  # update rect after correction
-            self.hitbox.topleft = self.rect.topleft
+            self.update_pos()
+            return True
 
-            print(self.rect)
+        #
+        self.y += dy
+        self.update_pos()
 
         if self.obstacle_collisions():
             self.y -= dy
-            self.rect.topleft = (self.x, self.y)
-            self.hitbox.topleft = self.rect.topleft
-
-
+            self.update_pos()
+            return True
+        return False
 
     def animations(self) -> None:
         """Iterate over the sprite list assigned to the action > direction."""
         iterate_speed: float = 0.2 if self.sprinting else 0.12
-
-
-        if self.animation_state == AnimationState.ATTACK or self.death:
-            iterate_speed = 0.12
-
-
 
         self.frame += iterate_speed
 
@@ -148,7 +145,7 @@ class Entity(pygame.sprite.Sprite):
             self.direction = "down" if dy > 0 else "up"
 
     def approach_animation(self, target) -> None:
-        """Run towards the target."""
+        """Approach the target in battle."""
         self.sprinting = True
         dx = target.x - self.x
         dy = target.y - self.y
@@ -161,23 +158,22 @@ class Entity(pygame.sprite.Sprite):
             else:
                 self.direction = "left"
 
-
             self.move((dx / distance, dy / distance))
 
-            # inflate to get a bit more distance.
+            # inflate to get a bit more distance depending on the move
             distance = 8 if self.current_attack == "punch" else 24
             if self.hitbox.colliderect(target.hitbox.inflate(+ distance, 0)):
                 self.sprinting = False
                 self.animation_state = AnimationState.WAIT
 
-
     def wait(self):
+        """Idle before attacking."""
         self.action = "idle"
 
     def buff_animation(self):
+        """Stationary battle actions"""
         if not self.spawn_projectile:
-            offset = pygame.Vector2 (32, 16)
-            position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset
+            position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery)
 
             Spells(self.projectiles, self.current_attack, position, None, None)
             self.spawn_projectile = True
@@ -191,16 +187,16 @@ class Entity(pygame.sprite.Sprite):
             self.spawn_projectile = False
 
     def projectile_animation(self, target):
+        """Projectile battle actions."""
         if not self.spawn_projectile and self.current_attack == "fire_ball":
-            offset = pygame.Vector2(48, 40)
+            offset = pygame.Vector2(12, 12)
             Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
                    pygame.Vector2(target.rect.centerx , target.rect.centery), 5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
-
         elif not self.spawn_projectile and self.current_attack == "lightning_strike":
-            offset = pygame.Vector2(28, -70)
+            offset = pygame.Vector2(0, -106)
             Spells(self.projectiles, self.current_attack, pygame.Vector2(target.hitbox.centerx, target.hitbox.centery) + offset, None, None)
             self.spawn_projectile = True
 
@@ -211,25 +207,14 @@ class Entity(pygame.sprite.Sprite):
 
         if not self.projectiles:
 
-            # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done and moves[self.current_attack]["type"] == "physical":
-                self.action = "idle"
-                self.critical_hit = False
-                self.critical_hit_is_done = True
-                target.perfect_block = False
-                self.animation_state = AnimationState.ATTACK
-
-
-
             # ___end attack sequence___
-            else:
-                self.action = "idle"
-                self.critical_hit_is_done = False
-                self.critical_hit = False
-                target.perfect_block = False
-                self.hit_landed = False
+            self.action = "idle"
+            self.critical_hit = False
+            target.perfect_block = False
+            target.blocking = False
+            self.hit_landed = False
 
-                self.animation_state = AnimationState.IDLE
+            self.animation_state = AnimationState.IDLE
 
 
     def attack_animation(self, target, action) -> None:
@@ -394,6 +379,5 @@ class Entity(pygame.sprite.Sprite):
 
 
         elif not self.hp <=0:
-
             self.animations()
 

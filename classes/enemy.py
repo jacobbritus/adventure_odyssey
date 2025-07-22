@@ -26,8 +26,10 @@ class Enemy(Entity):
         self.dmg = 5
 
 
-        # Location
+        # Location and Movement
+        self.spawn = pygame.Vector2(pos)
         self.x, self.y = pygame.Vector2(pos)
+        self.sprint_speed = 3
 
 
         # Image
@@ -46,9 +48,6 @@ class Enemy(Entity):
         self.random_target_reached = True
         self.move_delay = pygame.time.get_ticks() + 0
 
-
-
-
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
             return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.25, 2
@@ -65,14 +64,15 @@ class Enemy(Entity):
         y_distance = player.y - self.y  # Positive if player is below
         
         # Calculate total distance using Pythagorean theorem
-        distance = math.sqrt(x_distance**2 + y_distance**2)
-        
+        distance = math.hypot(x_distance, y_distance)
+
         # Define detection radius (how far the enemy can see)
         detection_radius = 200  # Adjust this value as needed
         
         if distance <= detection_radius:
             # Enemy sees player - start chasing
             self.action = "running"
+            self.sprinting = True
 
             if not self.detected_player:
                 sound = pygame.mixer.Sound(ENEMY_ALERT)
@@ -102,8 +102,8 @@ class Enemy(Entity):
                 self.move((dx, dy))
         else:
             # Player is too far - enemy stops
-            if not self.moving_randomly: self.action = "idle"
             self.detected_player = False
+            self.sprinting = False
 
     def random_movement(self):
         current_time = pygame.time.get_ticks()
@@ -112,8 +112,8 @@ class Enemy(Entity):
         if self.random_target_reached and current_time >= self.move_delay:
             target_range = 128
             self.random_target = pygame.Vector2(
-                self.x + random.randint(-target_range, target_range),
-                self.y + random.randint(-target_range, target_range)
+                self.spawn.x + random.randint(-target_range, target_range),
+                self.spawn.y + random.randint(-target_range, target_range)
             )
             self.random_target_reached = False  # Start moving again
             self.action = "running"
@@ -131,11 +131,20 @@ class Enemy(Entity):
             else:
                 self.direction = "down" if y_distance > 0 else "up"
 
+
             # Move
             if distance > 1:
                 dx = x_distance / distance
                 dy = y_distance / distance
-                self.move((dx, dy))
+
+                collision = self.move((dx, dy))
+
+                if collision:
+                    self.random_target_reached = True
+                    self.move_delay = current_time + 3000  # wait half a second before next target
+                    self.moving_randomly = False
+                    self.action = "idle"
+
             else:
                 # Target reached
                 self.random_target_reached = True
@@ -145,14 +154,21 @@ class Enemy(Entity):
 
 
     def update_enemy(self, player, window, offset) -> None:
-        self.update_pos(offset)
+        self.update_pos()
+        self.screen_position = pygame.math.Vector2(self.x - offset.x,
+                                                   self.y - offset.y)
+        offset = 32
+        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
+                                           self.screen_position.y)
+
         if not self.detected_player: self.random_movement()
 
         if self.blocking:
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             window.blit(mask, self.screen_position)
 
-        if not player.in_battle: self.chase_player(player)
+        if not player.in_battle:
+            self.chase_player(player)
 
         self.update_animations()
 

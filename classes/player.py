@@ -24,6 +24,7 @@ class Player(Entity):
         self.direction: str = direction
         self.action: str = "idle"
         self.blocking = False
+        self.sprint_speed = 4
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites
@@ -43,7 +44,7 @@ class Player(Entity):
         self.level = 1
         self.hp: int = 20
         self.max_hp: int = 20
-        self.mana: int = 0
+        self.mana: int = 5
         self.dmg: int = 5
         self.speed = 3
 
@@ -116,9 +117,18 @@ class Player(Entity):
 
     def update_player(self, offset, window) -> None:
         """Draw the player in the game window."""
-        # print(offset)
+        # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
+        # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
+        # window.blit(debug_surface, (self.hitbox.topleft - offset))
 
-        self.update_pos(offset)
+        self.update_pos()
+        self.screen_position = pygame.math.Vector2(self.x - offset.x,
+                                                   self.y - offset.y)
+        offset = 32
+        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
+                                           self.screen_position.y)
+
+
         if self.blocking:
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             window.blit(mask, self.screen_position)
