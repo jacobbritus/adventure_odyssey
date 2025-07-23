@@ -131,7 +131,6 @@ class Level:
     def overworld(self) -> None:
 
         # if not self.menu.running:
-        self.menu.update()
         self.battle_transition()
         self.visible_sprites.respawn_enemies()
         self.visible_sprites.update()
@@ -140,8 +139,10 @@ class Level:
 
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.transition_screen()
-        if self.menu.running:
-            self.menu.draw(self.display_surface)
+
+        self.menu.draw(self.display_surface)
+
+
 
 
     def battle(self):

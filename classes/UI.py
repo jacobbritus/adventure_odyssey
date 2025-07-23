@@ -367,7 +367,10 @@ class MenuBook:
     def __init__(self):
         self.image = pygame.image.load(BOOK)
         self.frame = 0
-        self.state = BookState.OPEN_BOOK
+        self.state = None
+        self.base_pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
+                                       WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
+
         self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
                                  WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
@@ -383,17 +386,20 @@ class MenuBook:
 
     def draw(self, window):
         self.update()
-        window.blit(self.image, self.pos)
+        if self.running:
+            self.image.set_alpha(235)
+            window.blit(self.image, self.pos)
+
+        if not self.state and self.running: self.contents(window)
 
     def keybinds(self, event):
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN and not self.state:
             if event.key == pygame.K_m:
                 if self.running:
                     self.state = BookState.CLOSE_BOOK
                 else:
                     self.running = True
                     self.state = BookState.OPEN_BOOK
-
 
             if event.key == pygame.K_n:
                 self.state = BookState.NEXT_PAGE
@@ -404,14 +410,11 @@ class MenuBook:
         if self.state:
             if self.frame >= len(book_sprites[self.animations[self.state]["sprites"]]) - 1:
                 if self.state == BookState.CLOSE_BOOK: self.running = False
-
                 self.state = None
-
-
 
             else:
                 self.pos = self.animations[self.state]["offset"]
-                self.frame += 0.17
+                self.frame += 0.06
                 self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
         else:
             self.frame = 0
@@ -420,3 +423,11 @@ class MenuBook:
                                       WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
 
+
+    def contents(self, window):
+        title_font = pygame.font.Font(FONT_TWO, 33)
+
+        title = title_font.render("Info", True, (99, 61, 76))
+        title_pos = self.base_pos + (120, 32)
+
+        window.blit(title, title_pos)

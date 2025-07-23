@@ -379,6 +379,6 @@ class Entity(pygame.sprite.Sprite):
             self.animations()
 
 
-        elif not self.hp <=0:
+        if not self.death:
             self.animations()
 

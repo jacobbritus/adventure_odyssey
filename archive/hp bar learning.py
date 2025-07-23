@@ -1,5 +1,6 @@
 import pygame
 
+from classes.UI import MenuBook
 from other.settings import *
 
 
@@ -36,6 +37,8 @@ hp = 20
 mana = 5
 
 # combat_menu.state = "main_menu"
+
+menu_book = MenuBook()
 while True:
     window.fill((255, 255, 255))
     for event in pygame.event.get():
@@ -55,7 +58,10 @@ while True:
             if event.key == pygame.K_r:
                 hp += 5
 
-                # combat_menu.state = "main_menu"
+        menu_book.keybinds(event)
+
+
+    menu_book.draw(window)
 
 
     # player_hp_bar.set_hp(hp)
@@ -65,10 +71,6 @@ while True:
     # enemy.draw(window)
 
     # enemy.draw(window)
-    spellbook = pygame.image.load(BOOK)
-
-    window.blit(spellbook, (WINDOW_WIDTH // 2 - spellbook.get_width()//2, WINDOW_HEIGHT // 2 - spellbook.get_height() // 2))
-
 
 
     # button.draw(window)
@@ -78,5 +80,5 @@ while True:
 
     # combat_menu.draw(window)
 
-    clock.tick(60)
+    clock.tick(120)
     pygame.display.update()
