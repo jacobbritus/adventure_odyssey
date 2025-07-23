@@ -24,7 +24,7 @@ class Player(Entity):
         self.direction: str = direction
         self.action: str = "idle"
         self.blocking = False
-        self.sprint_speed = 4
+        self.sprint_speed = 2
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites
@@ -65,8 +65,6 @@ class Player(Entity):
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
         current_time = pygame.time.get_ticks()
-
-
 
         if self.in_battle:
             return

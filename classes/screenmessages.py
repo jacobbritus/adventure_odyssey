@@ -20,7 +20,7 @@ class ScreenMessages(pygame.sprite.Sprite):
 
         self.rect.topleft = (position.x + 32 * self.counter, position.y - self.y_float )
 
-        self.y_float += 0.5
+        self.y_float += 0.25
 
         self.timer -= 1
         if self.timer <= 0:

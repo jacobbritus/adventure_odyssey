@@ -29,3 +29,9 @@ class BattleState(Enum):
 class LevelState(Enum):
     OVERWORLD = auto()
     BATTLE = auto()
+
+class BookState(Enum):
+    NEXT_PAGE = auto()
+    PREVIOUS_PAGE = auto()
+    OPEN_BOOK = auto()
+    CLOSE_BOOK = auto()

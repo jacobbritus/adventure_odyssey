@@ -1,4 +1,6 @@
+from classes.UI import MenuBook
 from classes.level import Level
+from classes.states import BookState
 from other.settings import *
 
 class Game:
@@ -19,8 +21,12 @@ class Game:
                     pygame.quit()
                     exit()
 
+                if not self.level.visible_sprites.battle_loop:
+                    self.level.menu.keybinds(event)
+
                 if self.level.visible_sprites.battle_loop:
                     self.level.visible_sprites.battle_loop.hotkeys(event)
+
 
             self.level.run()
             self.clock.tick(FPS)

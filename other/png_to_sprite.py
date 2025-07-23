@@ -240,3 +240,11 @@ lightning_sprites = {
 
     }
 }
+
+book_sprites = {
+    "open_book": sprite_converter("sprites/UI/book_stuff/open_book.png", 0, 8, 512, 480, False),
+    "close_book": sprite_converter("sprites/UI/book_stuff/close_book.png", 0, 8, 512, 480, False),
+    "next_page": sprite_converter("sprites/UI/book_stuff/next_page.png", 0, 8, 512, 352, False),
+    "previous_page": sprite_converter("sprites/UI/book_stuff/previous_page.png", 0, 8, 512, 352, False),
+
+}

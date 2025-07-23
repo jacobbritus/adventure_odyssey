@@ -5,10 +5,10 @@ from other.png_to_sprite import *
 SCALE = 2
 
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 360
 
-FPS = 60
+FPS = 120
 TILE_SIZE = 32
 
 
@@ -54,7 +54,7 @@ MANA_BOX = get_file_location(f"sprites/UI/mana_box.png")
 HP_BAR = get_file_location(f"sprites/UI/hp_bar.png")
 HP_ICON = get_file_location(f"sprites/UI/heart_icon.png")
 
-SPELLBOOK = get_file_location("sprites/UI/spellbook.png")
+BOOK = get_file_location("sprites/UI/book_stuff/book.png")
 
 
 # ___hp bar___

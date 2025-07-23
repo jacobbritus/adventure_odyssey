@@ -30,13 +30,14 @@ class Entity(pygame.sprite.Sprite):
 
         # Animation related.
         self.frame = 0
-        self.animation_speed = 0.12
+        self.animation_speed = 0.6
 
         # Action related.
         self.direction = "down"
         self.action = "idle"
         self.sprinting = None
-        self.movement_speed = 2
+        self.movement_speed = None
+        self.walking_speed = 1
         self.sprint_speed = None
 
         # Battle related.
@@ -88,11 +89,11 @@ class Entity(pygame.sprite.Sprite):
             return None
         dx, dy = move_vector
         if self.in_battle:
-            self.movement_speed = 4
+            self.movement_speed = 2
         elif self.sprinting:
             self.movement_speed = self.sprint_speed
         else:
-            self.movement_speed = self.movement_speed
+            self.movement_speed = self.walking_speed
 
         dx *= self.movement_speed
         dy *= self.movement_speed
@@ -106,7 +107,7 @@ class Entity(pygame.sprite.Sprite):
             self.update_pos()
             return True
 
-        #
+        # ___move vertically___
         self.y += dy
         self.update_pos()
 
@@ -118,7 +119,7 @@ class Entity(pygame.sprite.Sprite):
 
     def animations(self) -> None:
         """Iterate over the sprite list assigned to the action > direction."""
-        iterate_speed: float = 0.2 if self.sprinting else 0.12
+        iterate_speed: float = 0.1 if self.sprinting else 0.06
 
         self.frame += iterate_speed
 
@@ -191,7 +192,7 @@ class Entity(pygame.sprite.Sprite):
         if not self.spawn_projectile and self.current_attack == "fire_ball":
             offset = pygame.Vector2(12, 12)
             Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
-                   pygame.Vector2(target.rect.centerx , target.rect.centery), 5)
+                   pygame.Vector2(target.rect.centerx , target.rect.centery), 2.5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 

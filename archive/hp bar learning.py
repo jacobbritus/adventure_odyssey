@@ -65,7 +65,7 @@ while True:
     # enemy.draw(window)
 
     # enemy.draw(window)
-    spellbook = pygame.image.load(SPELLBOOK)
+    spellbook = pygame.image.load(BOOK)
 
     window.blit(spellbook, (WINDOW_WIDTH // 2 - spellbook.get_width()//2, WINDOW_HEIGHT // 2 - spellbook.get_height() // 2))
 

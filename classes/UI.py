@@ -1,3 +1,6 @@
+import pygame
+
+from classes.states import BookState
 from other.settings import *
 
 class Damage:
@@ -356,5 +359,64 @@ class CombatMenu:
             size = pygame.image.load(BUTTON_NORMAL).get_size()
             pos = (self.background_image_position.x + size[0] // 3, self.background_image_position.y + self.background_image.get_height() - size[1] * 1.25)
             Button(self.buttons_group, "no parameter",  self.main_menu, "BACK", "small", pos, False)
+
+
+
+
+class MenuBook:
+    def __init__(self):
+        self.image = pygame.image.load(BOOK)
+        self.frame = 0
+        self.state = BookState.OPEN_BOOK
+        self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
+                                 WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
+
+        self.running = False
+
+        self.animations = {
+            BookState.NEXT_PAGE: {"sprites": "next_page", "offset": self.pos + pygame.Vector2(0, -32)},
+            BookState.PREVIOUS_PAGE: {"sprites": "previous_page", "offset": self.pos + pygame.Vector2(0, -32)},
+            BookState.OPEN_BOOK: {"sprites": "open_book", "offset": self.pos + pygame.Vector2(0, -160)},
+            BookState.CLOSE_BOOK: {"sprites": "close_book", "offset": self.pos + pygame.Vector2(0, -160)}
+
+        }
+
+    def draw(self, window):
+        self.update()
+        window.blit(self.image, self.pos)
+
+    def keybinds(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_m:
+                if self.running:
+                    self.state = BookState.CLOSE_BOOK
+                else:
+                    self.running = True
+                    self.state = BookState.OPEN_BOOK
+
+
+            if event.key == pygame.K_n:
+                self.state = BookState.NEXT_PAGE
+            elif event.key == pygame.K_p:
+                self.state = BookState.PREVIOUS_PAGE
+
+    def update(self):
+        if self.state:
+            if self.frame >= len(book_sprites[self.animations[self.state]["sprites"]]) - 1:
+                if self.state == BookState.CLOSE_BOOK: self.running = False
+
+                self.state = None
+
+
+
+            else:
+                self.pos = self.animations[self.state]["offset"]
+                self.frame += 0.17
+                self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
+        else:
+            self.frame = 0
+            self.image = pygame.image.load(BOOK)
+            self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
+                                      WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
 

@@ -78,11 +78,19 @@ class YSortCameraGroup(pygame.sprite.Group):
         player.update_player(self.offset, self.display_surface)
 
         if self.state == LevelState.OVERWORLD:
-            self.offset.x = player.rect.centerx - self.screen_center_x
-            self.offset.y = player.rect.centery - self.screen_center_y
+            camera_speed = 0.1  # or try 0.2 ~ 0.4 for feel
+
+            target_x = player.rect.centerx - self.screen_center_x
+            target_y = player.rect.centery - self.screen_center_y
+
+            self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
+            self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
+
+            self.offset.x = self.offset_float.x
+            self.offset.y = self.offset_float.y
 
         elif self.state == LevelState.BATTLE:
-            camera_speed = 0.3  # adjust for snappiness
+            camera_speed = 0.1  # adjust for snappiness
 
             # Fallback to battle position
             target = self.battle_position
@@ -118,8 +126,8 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.offset_float.x += (target[0] - self.screen_center_x - self.offset_float.x) * camera_speed
             self.offset_float.y += (target[1] - self.screen_center_y - self.offset_float.y) * camera_speed
 
-            self.offset.x = round(self.offset_float.x + self.shake_offset.x)
-            self.offset.y = round(self.offset_float.y + self.shake_offset.y)
+            self.offset.x = self.offset_float.x + self.shake_offset.x
+            self.offset.y = self.offset_float.y + self.shake_offset.y
 
     def draw_sprites(self):
         # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
@@ -127,15 +135,16 @@ class YSortCameraGroup(pygame.sprite.Group):
         # If the camera / player.x increases, all the sprite's x positions decrease
         # If player move right all sprites move left
         # Draw all the ground sprites.
-        ground_sprites = [sprite for sprite in self.get_visible_sprites() if
+        visible_sprites = list(self.get_visible_sprites())
+        ground_sprites = [sprite for sprite in visible_sprites if
                           sprite.type and sprite.type in ["ground", "water"]]
         for sprite in ground_sprites:
-            offset_pos = sprite.rect.topleft - self.offset
+            offset_pos = sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
             self.display_surface.blit(sprite.image, offset_pos)
 
         # Draw the other sprites with overlapping.
         # Get all visible sprites
-        overlapping_sprites = [sprite for sprite in self.get_visible_sprites()
+        overlapping_sprites = [sprite for sprite in visible_sprites
                          if sprite.type in ["player", "tree", "enemy", "battle_spot"]]
 
         # Decide if enemy needs to be drawn last
@@ -150,14 +159,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in sorted_sprites:
             if draw_enemy_last and sprite == enemy_sprite:
                 continue  # Skip for now
-            offset_pos = sprite.rect.topleft - self.offset
+            offset_pos = sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
             if hasattr(sprite, "image"):
                 self.display_surface.blit(sprite.image, offset_pos)
                 # else it's invisible
 
         # Now draw the enemy on top
         if draw_enemy_last and enemy_sprite:
-            offset_pos = enemy_sprite.rect.topleft - self.offset
+            offset_pos = enemy_sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
             self.display_surface.blit(enemy_sprite.image, offset_pos)
 
         self.offset += self.shake_offset
@@ -223,13 +232,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(enemy.hitbox):
                 if enemy.death:
-                    continue
-                self.battle_participants = [player, enemy]
-                self.transition_timer = pygame.time.get_ticks()
-                self.delay = pygame.time.get_ticks() + self.delay_time
-                for participant in self.battle_participants:
-                    participant.in_battle = True
-                    participant.action = "idle"
+                    pass
+                else:
+                    self.battle_participants = [player, enemy]
+                    self.transition_timer = pygame.time.get_ticks()
+                    self.delay = pygame.time.get_ticks() + self.delay_time
+                    for participant in self.battle_participants:
+                        participant.in_battle = True
+                        participant.action = "idle"
                 break
 
     def transition_screen(self):
@@ -254,13 +264,15 @@ class YSortCameraGroup(pygame.sprite.Group):
     def end_battle(self):
         self.state = LevelState.OVERWORLD
 
+        self.battle_loop = None
+
         for participant in self.battle_participants:
             participant.in_battle = False
             participant.rect.topleft = participant.pre_battle_pos
             participant.x, participant.y = participant.pre_battle_pos
 
-        self.battle_loop = None
         self.battle_participants = None
+
 
 
 
