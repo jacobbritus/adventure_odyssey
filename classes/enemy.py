@@ -29,7 +29,7 @@ class Enemy(Entity):
         # Location and Movement
         self.spawn = pygame.Vector2(pos)
         self.x, self.y = pygame.Vector2(pos)
-        self.sprint_speed = 1.5
+        self.sprint_speed = 150
 
 
         # Image

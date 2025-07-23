@@ -24,7 +24,7 @@ class Player(Entity):
         self.direction: str = direction
         self.action: str = "idle"
         self.blocking = False
-        self.sprint_speed = 2
+        self.sprint_speed = 200
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites

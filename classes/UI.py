@@ -278,8 +278,9 @@ class CombatMenu:
         self.skills_title_position: pygame.Vector2 = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
 
         self.state: str = ""
-
         self.player_mana = None
+
+
 
 
     def draw(self, window, mana) -> None:
@@ -364,7 +365,8 @@ class CombatMenu:
 
 
 class MenuBook:
-    def __init__(self):
+    def __init__(self, player):
+        self.player = player
         self.image = pygame.image.load(BOOK)
         self.frame = 0
         self.state = None
@@ -381,13 +383,16 @@ class MenuBook:
             BookState.PREVIOUS_PAGE: {"sprites": "previous_page", "offset": self.pos + pygame.Vector2(0, -32)},
             BookState.OPEN_BOOK: {"sprites": "open_book", "offset": self.pos + pygame.Vector2(0, -160)},
             BookState.CLOSE_BOOK: {"sprites": "close_book", "offset": self.pos + pygame.Vector2(0, -160)}
-
         }
+
+        self.content = [{"title": pygame.image.load(INFO_TITLE), "content": self.info_page}]
+        self.current_page = 0
 
     def draw(self, window):
         self.update()
         if self.running:
-            self.image.set_alpha(235)
+            print(self.player.hp)
+            # self.image.set_alpha(235)
             window.blit(self.image, self.pos)
 
         if not self.state and self.running: self.contents(window)
@@ -401,9 +406,11 @@ class MenuBook:
                     self.running = True
                     self.state = BookState.OPEN_BOOK
 
-            if event.key == pygame.K_n:
+            if event.key == pygame.K_n and not self.current_page >= len(self.content) - 1:
+                self.current_page += 1
                 self.state = BookState.NEXT_PAGE
-            elif event.key == pygame.K_p:
+            elif event.key == pygame.K_p and not self.current_page == 0:
+                self.current_page -= 1
                 self.state = BookState.PREVIOUS_PAGE
 
     def update(self):
@@ -425,9 +432,43 @@ class MenuBook:
 
 
     def contents(self, window):
-        title_font = pygame.font.Font(FONT_TWO, 33)
 
-        title = title_font.render("Info", True, (99, 61, 76))
-        title_pos = self.base_pos + (120, 32)
+        title = self.content[self.current_page]["title"]
+        self.content[self.current_page]["content"](window)
 
+        container_width = 100
+        title_pos = self.base_pos + (container_width - title.get_width() // 2, 28)
+        divider = pygame.image.load(DIVIDER)
+        divider_pos = title_pos + (title.get_width() // 2 - divider.get_width() // 2 + 16, 8)
+        window.blit(divider, divider_pos)
         window.blit(title, title_pos)
+
+    def info_page(self, window):
+        image = pygame.image.load(INFO_PAGE)
+        image_pos = self.base_pos + (68, 64)
+        window.blit(image, image_pos)
+
+        font = pygame.font.Font(FONT_ONE, 16)
+
+        base_stats = {
+            "LEVEL": str(self.player.level),
+            "HP": f"{str(self.player.hp)}/{str(self.player.max_hp)}",
+            "MANA": str(self.player.mana),
+            "EXP": "None"
+        }
+        x_offset = 90
+        base_y = 58
+        for index, key in enumerate(list(base_stats.keys())):
+            position = self.base_pos + (105, base_y + 14 * index)
+            text = font.render(key, True, (255, 255, 255))
+            window.blit(text, position)
+
+
+        x_offset = 117
+        level = font.render(str(self.player.level), True, (255, 255, 255))
+        level_pos = image_pos + (x_offset, -6)
+        window.blit(level, level_pos)
+        hp = font.render(f"{str(self.player.hp)}/{self.player.max_hp}", True, (255, 255, 255))
+        hp_pos = image_pos + (x_offset, 8)
+        window.blit(hp, hp_pos)
+

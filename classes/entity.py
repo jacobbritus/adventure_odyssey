@@ -16,8 +16,8 @@ class Entity(pygame.sprite.Sprite):
         self.group = group
 
         # Position related.
-        self.x: int = 0
-        self.y: int = 0
+        self.x: float = 0
+        self.y: float = 0
         self.screen_position = None
 
         # Image related.
@@ -37,8 +37,9 @@ class Entity(pygame.sprite.Sprite):
         self.action = "idle"
         self.sprinting = None
         self.movement_speed = None
-        self.walking_speed = 1
+        self.walking_speed = 100
         self.sprint_speed = None
+        self.delta_time = 0.009
 
         # Battle related.
         self.in_battle = False
@@ -80,8 +81,11 @@ class Entity(pygame.sprite.Sprite):
         self.animation_state = AnimationState.IDLE
 
     def update_pos(self) -> None:
-        self.rect.topleft = (self.x, self.y)  # update rect
+        self.rect.topleft = (int(self.x), int(self.y))  # update rect
         self.hitbox.center = self.rect.center
+
+    def get_dt(self, dt):
+        self.delta_time = dt / 1000
 
     def move(self, move_vector: tuple[int or float, int or float]) -> bool or None:
         """Move the player based on the move vector."""
@@ -89,14 +93,14 @@ class Entity(pygame.sprite.Sprite):
             return None
         dx, dy = move_vector
         if self.in_battle:
-            self.movement_speed = 2
+            self.movement_speed = 200
         elif self.sprinting:
             self.movement_speed = self.sprint_speed
         else:
             self.movement_speed = self.walking_speed
 
-        dx *= self.movement_speed
-        dy *= self.movement_speed
+        dx *= self.movement_speed * self.delta_time
+        dy *= self.movement_speed * self.delta_time
 
         # ___move horizontally___
         self.x += dx

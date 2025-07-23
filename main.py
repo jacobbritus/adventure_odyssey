@@ -28,8 +28,14 @@ class Game:
                     self.level.visible_sprites.battle_loop.hotkeys(event)
 
 
+            delta_time = self.clock.tick(FPS)
+
+            self.level.player.get_dt(delta_time)
+            for enemy in self.level.visible_sprites.enemy_sprites:
+                enemy.get_dt(delta_time)
+
             self.level.run()
-            self.clock.tick(FPS)
+
             pygame.display.update()
 
 if __name__ == "__main__":

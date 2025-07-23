@@ -54,7 +54,13 @@ MANA_BOX = get_file_location(f"sprites/UI/mana_box.png")
 HP_BAR = get_file_location(f"sprites/UI/hp_bar.png")
 HP_ICON = get_file_location(f"sprites/UI/heart_icon.png")
 
+### book
 BOOK = get_file_location("sprites/UI/book_stuff/book.png")
+DIVIDER = get_file_location("sprites/UI/divider.png")
+INFO_TITLE = get_file_location("sprites/UI/book_stuff/info_title.png")
+INFO_PAGE = get_file_location("sprites/UI/book_stuff/info_page.png")
+BOOK_SKILLS_TITLE = get_file_location("sprites/UI/book_stuff/skills_title.png")
+
 
 
 # ___hp bar___

@@ -25,7 +25,7 @@ class Level:
         self.player = None
         self.player_hp_bar = None
         self.open_menu = False
-        self.menu = MenuBook()
+        self.menu = None
         self.create_map()
 
 
@@ -100,6 +100,7 @@ class Level:
                         obstacle_sprites=self.obstacle_sprites,
                         dust_particles=self.dust_particle,
                     )
+                    self.menu = MenuBook(self.player)
 
                 # enemy.name in the future
 
