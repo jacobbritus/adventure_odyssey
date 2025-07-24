@@ -5,8 +5,8 @@ from other.png_to_sprite import *
 SCALE = 2
 
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 360
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 FPS = 120
 TILE_SIZE = 32

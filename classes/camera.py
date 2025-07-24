@@ -1,8 +1,4 @@
 import random
-
-import pygame
-
-from classes.UI import Hpbar
 from classes.states import BattleState, LevelState, AnimationState
 from other.settings import *
 from classes.battleloop import BattleLoop

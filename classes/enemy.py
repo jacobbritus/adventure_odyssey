@@ -24,6 +24,7 @@ class Enemy(Entity):
         self.hp = 15
         self.max_hp: int = 15
         self.dmg = 5
+        self.exp = 30
 
 
         # Location and Movement
@@ -96,10 +97,14 @@ class Enemy(Entity):
                     self.direction = "up"     # Player is above
         
             # Normalize movement vector for consistent speed
-            if distance > 0:  # Prevent division by zero
+
+
+            if distance > 0 and not abs(self.spawn.y - self.y) > 300 and not abs(self.spawn.x - self.x) > 300: # Prevent division by zero
                 dx = x_distance / distance  # Creates value between -1 and 1
                 dy = y_distance / distance  # Creates value between -1 and 1
                 self.move((dx, dy))
+            else:
+                self.action = "idle"
         else:
             # Player is too far - enemy stops
             self.detected_player = False

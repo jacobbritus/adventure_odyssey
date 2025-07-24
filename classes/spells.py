@@ -34,12 +34,12 @@ class Spells(pygame.sprite.Sprite):
 
         return None
 
-    def update(self, offset):
+    def update(self, pos, offset):
         if self.end_pos:
             self.directions()
             self.rect.center = (self.pos.x - offset[0], self.pos.y - offset[1])
         else:
-            self.rect.center = (self.pos.x - offset[0], self.pos.y - offset[1])
+            self.rect.center = pos
 
         self.projectile_animations(offset)
 

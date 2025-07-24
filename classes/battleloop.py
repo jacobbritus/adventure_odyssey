@@ -57,6 +57,9 @@ class BattleLoop:
         self.block = False # whether blocking is True
         self.block_delay = 250
 
+        # ___reward___
+        self.reward_given = False
+
     def timer_(self) -> None:
         if self.state == BattleState.PLAYER_TURN and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
 
@@ -71,19 +74,18 @@ class BattleLoop:
         self.player.projectiles.draw(self.window)
         self.enemy.projectiles.draw(self.window)
         if self.player.animation_state == AnimationState.ATTACK:
-            self.player.projectiles.update(self.offset)
+            self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset)
         elif self.player.animation_state == AnimationState.BUFF:
-            self.player.projectiles.update(self.offset)
+            self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset)
         elif self.enemy.animation_state == AnimationState.ATTACK:
-            self.enemy.projectiles.update(self.offset)
+            self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset)
         elif self.enemy.animation_state == AnimationState.BUFF:
-            self.enemy.projectiles.update(self.offset)
+            self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset)
 
     def run(self) -> None:
         self.handle_projectiles()
         self.handle_input()
         self.animation()
-        self.draw_ui()
 
         if not self.delay or pygame.time.get_ticks() >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -98,6 +100,13 @@ class BattleLoop:
             elif self.state == BattleState.END_BATTLE:
                     if self.enemy.death: self.enemy.respawn_time = pygame.time.get_ticks() + 120000
                     self.return_to_overworld = True
+                    if self.enemy.hp <= 0 and not self.reward_given:
+                        self.player.exp += self.enemy.exp
+                        if self.player.exp >= self.player.exp_to_level:
+                            self.player.level += 1
+                            self.player.exp = 0
+                            self.player.exp_to_level += 20
+                        self.reward_given = True
 
             elif self.state == self.state.END_SCREEN:
                 self.combat_menu.state = "end_screen"

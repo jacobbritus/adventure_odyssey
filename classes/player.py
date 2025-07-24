@@ -3,6 +3,7 @@ import math
 import pygame
 
 from classes.entity import Entity
+from classes.spells import Spells
 from other.settings import *
 
 class Player(Entity):
@@ -42,6 +43,8 @@ class Player(Entity):
 
         # Stats
         self.level = 1
+        self.exp_to_level = 50
+        self.exp = 0
         self.hp: int = 20
         self.max_hp: int = 20
         self.mana: int = 5
@@ -111,15 +114,21 @@ class Player(Entity):
             self.direction_pause = 0
             self.action = "idle"
 
-    def update_player(self, offset, window) -> None:
+    def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
         # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
-
         self.update_pos()
-        self.screen_position = pygame.math.Vector2(int(self.x )- offset.x,
+        self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
+        #
+        # if self.sprinting and not self.in_battle:
+        #     Spells(self.projectiles, "heal", self.hitbox.center - offset, None, None)
+        # self.projectiles.draw(window)
+        # self.projectiles.update(self.hitbox.center - offset, offset)
+
+
         offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
                                            self.screen_position.y)

@@ -26,8 +26,8 @@ class Level:
         self.player_hp_bar = None
         self.open_menu = False
         self.menu = None
+        self.day_cycle_overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.create_map()
-
 
 
     def create_map(self):
@@ -114,6 +114,7 @@ class Level:
             self.visible_sprites.update_soundtrack()
             self.battle()
 
+
     def battle_transition(self):
         if not self.visible_sprites.battle_participants:
             self.visible_sprites.enemy_collision(self.player)
@@ -130,21 +131,62 @@ class Level:
             self.visible_sprites.end_battle()
 
     def overworld(self) -> None:
+        self.battle_transition()
 
         # if not self.menu.running:
-        self.battle_transition()
         self.visible_sprites.respawn_enemies()
+        self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
         self.visible_sprites.update_camera(self.player)
 
-        self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.transition_screen()
+
+
+        self.update_day_cycle()
+        self.display_surface.blit(self.day_cycle_overlay, (0,0))
 
         self.menu.draw(self.display_surface)
 
 
 
+    def update_day_cycle(self):
+        day_phases = {
+            5: {"color": (255,223,186), "opacity": 50},
+            8: {"color": (255, 250, 240), "opacity": 30},
+            12: {"color": (255, 255, 255), "opacity": 0},
+            16: {"color": (255, 238, 131), "opacity": 20},
+            18: {"color": (255, 174, 66), "opacity": 50},
+            20: {"color": (34, 0, 51), "opacity": 100},
+            22: {"color": (0, 0, 0), "opacity": 125},
+            0: {"color": (0, 0, 0), "opacity": 150},
+
+        }
+
+
+
+        current_phase = day_phases[5]
+        self.day_cycle_overlay.set_alpha(current_phase["opacity"])
+
+        self.day_cycle_overlay.fill(current_phase["color"])
+
+
+    # def get_day_overlay(hour):
+    #     # Define a keyframe list
+    #     keyframes = {
+    #         5: ((255, 223, 186), 100),
+    #         8: ((255, 250, 240), 30),
+    #         12: ((255, 255, 255), 0),
+    #         16: ((255, 238, 131), 40),
+    #         18: ((255, 174, 66), 100),
+    #         20: ((34, 0, 51), 140),
+    #         22: ((0, 0, 0), 180),
+    #         0: ((20, 24, 82), 200),
+    #         3: ((0, 0, 0), 220)
+    #     }
+    #     # Simple approach: snap to nearest defined hour
+    #     closest = min(keyframes.keys(), key=lambda k: abs(hour - k))
+    #     return keyframes[closest]
 
     def battle(self):
         # Make camera follow the animation
@@ -159,9 +201,16 @@ class Level:
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.battle_loop.run()
 
+        self.update_day_cycle()
+        self.display_surface.blit(self.day_cycle_overlay, (0, 0))
+
+        self.visible_sprites.battle_loop.draw_ui()
+
         # end battle
         self.overworld_transition()
         self.visible_sprites.transition_screen()
+
+
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)

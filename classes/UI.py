@@ -391,7 +391,6 @@ class MenuBook:
     def draw(self, window):
         self.update()
         if self.running:
-            print(self.player.hp)
             # self.image.set_alpha(235)
             window.blit(self.image, self.pos)
 
@@ -454,13 +453,13 @@ class MenuBook:
             "LEVEL": str(self.player.level),
             "HP": f"{str(self.player.hp)}/{str(self.player.max_hp)}",
             "MANA": str(self.player.mana),
-            "EXP": "None"
+            "EXP": f"{str(self.player.exp)}/{str(self.player.exp_to_level)}"
         }
         x_offset = 90
         base_y = 58
         for index, key in enumerate(list(base_stats.keys())):
             position = self.base_pos + (105, base_y + 14 * index)
-            text = font.render(key, True, (255, 255, 255))
+            text = font.render(key, True, (255, 238, 131))
             window.blit(text, position)
 
         for index, key in enumerate(list(base_stats.values())):

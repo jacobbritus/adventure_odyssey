@@ -196,7 +196,7 @@ class Entity(pygame.sprite.Sprite):
         if not self.spawn_projectile and self.current_attack == "fire_ball":
             offset = pygame.Vector2(12, 12)
             Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
-                   pygame.Vector2(target.rect.centerx , target.rect.centery), 2.5)
+                   pygame.Vector2(target.rect.centerx , target.rect.centery), 1.5)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
