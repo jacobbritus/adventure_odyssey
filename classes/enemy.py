@@ -170,11 +170,11 @@ class Enemy(Entity):
         if not self.detected_player: self.random_movement()
 
         if self.blocking:
-            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (-40, -36), offset)
+            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (-34, -36), offset)
             self.block_shield.draw(window, pos)
 
-            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            window.blit(mask, self.screen_position)
+            # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            # window.blit(mask, self.screen_position)
 
         if not player.in_battle:
             self.chase_player(player)

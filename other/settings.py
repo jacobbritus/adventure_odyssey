@@ -20,7 +20,7 @@ block_shield_sprites = block_shield_sprites
 # moves
 moves = {
     "fire_ball": {
-        "base_damage": 5,
+        "base_damage": 1000,
         "multiplier": 0.5,
         "stat": "magic",
         "type": "special",

@@ -37,14 +37,14 @@ class Spells(pygame.sprite.Sprite):
 
         return None
 
-    def update(self, pos, offset):
+    def update(self, pos, offset, target):
         if self.end_pos:
             self.directions()
             self.rect.center = (self.pos.x - offset[0], self.pos.y - offset[1])
         else:
             self.rect.center = pos
 
-        self.projectile_animations(offset)
+        self.projectile_animations(offset, target)
 
         self.handle_life_time()
 
@@ -93,22 +93,26 @@ class Spells(pygame.sprite.Sprite):
             if current_time >= self.life_time :
                     self.kill()
 
-
-    def projectile_animations(self, offset):
+    def projectile_animations(self, offset, target):
         self.frame += self.iterate_speed
         sprites_list = self.sprites["sprites"]["hit"] if self.hit and self.type == "fire_ball" else self.sprites["sprites"][self.direction]
 
         if self.frame >= len(sprites_list):
             self.frame = 0
 
-        if self.hit and self.type == "fire_ball":
+        if self.hit and self.type == "fire_ball" and not target.blocking:
             self.image = self.sprites["sprites"]["hit"][int(self.frame)]
             if self.hit_center is not None:
                 shifted_center = (self.end_pos[0] - offset.x , self.end_pos[1] - offset.y)  # Shift right by 32px once
                 self.rect = self.image.get_rect(center=shifted_center)
 
             else:
+
                 self.rect = self.image.get_rect(center=self.end_pos)
+
+        elif hasattr(target, "blocking") and target.blocking:
+            self.kill()
+
         else:
             self.image = self.sprites["sprites"][self.direction][int(self.frame)].copy()
             self.image.set_alpha(self.opacity)

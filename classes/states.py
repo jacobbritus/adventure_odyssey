@@ -23,7 +23,7 @@ class BattleState(Enum):
     ENEMY_TURN = auto()
     PLAYER_ANIMATION = auto()
     ENEMY_ANIMATION = auto()
-    END_SCREEN = auto()
+    END_MENU = auto()
     END_BATTLE = auto()
 
 class LevelState(Enum):
@@ -35,3 +35,12 @@ class BookState(Enum):
     PREVIOUS_PAGE = auto()
     OPEN_BOOK = auto()
     CLOSE_BOOK = auto()
+
+class CombatMenuState(Enum):
+    MAIN_MENU = auto()
+    SKILLS_MENU = auto()
+    END_MENU = auto()
+
+class ButtonType(Enum):
+    PARAMETER = auto()
+    NO_PARAMETER = auto()

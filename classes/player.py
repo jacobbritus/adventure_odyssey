@@ -122,9 +122,11 @@ class Player(Entity):
         if self.leveled_up:
             Spells(self.projectiles, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
             pygame.mixer.Sound(LEVEL_UP_SOUND).play()
-        self.projectiles.draw(window)
-        self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 20), offset)
-        self.leveled_up = False
+            self.leveled_up = False
+
+        if not self.in_battle:
+            self.projectiles.draw(window)
+            self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 20), offset, self.blocking)
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
@@ -144,8 +146,8 @@ class Player(Entity):
             self.block_shield.draw(window, pos)
 
 
-            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            window.blit(mask, self.screen_position + (1, 1))
+            # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            # window.blit(mask, self.screen_position + (1, 1))
 
         dmg_offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,

@@ -1,6 +1,6 @@
 import pygame
 
-from classes.states import BookState
+from classes.states import BookState, CombatMenuState, ButtonType
 from other.settings import *
 
 class Damage:
@@ -168,14 +168,14 @@ class Button(pygame.sprite.Sprite):
         self.image_normal, self.image_pressed, self.image_selected = self.get_images()
         self.image = self.image_normal
 
-        self.action_text = text
+        self.text_string = text
 
         self.pos = pos
 
         self.rect = self.image.get_rect(topleft = self.pos)
 
         self.action = action
-        self.action_type = action_type
+        self.button_type = action_type
         self.disabled = disabled
 
         if text:
@@ -210,7 +210,6 @@ class Button(pygame.sprite.Sprite):
         elif self.size == "large":
             return pygame.image.load(LARGE_BUTTON_NORMAL), pygame.image.load(LARGE_BUTTON_PRESSED), pygame.image.load(LARGE_BUTTON_SELECTED)
         return None
-
 
     def update(self):
         self.kill_delay()
@@ -250,8 +249,8 @@ class Button(pygame.sprite.Sprite):
             if self.delete_delay >= 2:
                 self.delete = True
 
-                if self.action_type == "parameter":
-                    self.action(self.action_text)
+                if self.button_type == ButtonType.PARAMETER:
+                    self.action(self.text_string)
                 else:
                     self.action()
         return None
@@ -263,105 +262,110 @@ class Button(pygame.sprite.Sprite):
 
 class CombatMenu:
     def __init__(self, attacks: list[str], functions):
-
-        self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
-        self.attacks: list[str] = attacks
+        # === player's attacks and functions ===
+        # e.g., attack(name of button clicked) and player_run(no parameter)
+        self.formatted_attacks: list[str] = [attack.replace("_", " ").upper() for attack in attacks]
         self.functions = functions
 
-        # skills background
+        # === sprite group for the buttons ===
+        self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
+        self.large_button_size = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
+        self.normal_button_size = pygame.image.load(BUTTON_NORMAL).get_size()
+        self.normal_button_two_width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
+
+        # === skills menu state images and their positions ===
         self.background_image: pygame.Surface = pygame.image.load(LARGE_BACKGROUND_BOX)
         self.background_image_position: pygame.Vector2 = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
                                                         WINDOW_HEIGHT // 2 - self.background_image.get_height() // 2)
-
         self.skills_title_image: pygame.Surface = pygame.image.load(SKILLS_TITLE)
         size = self.skills_title_image.get_size()
         self.skills_title_position: pygame.Vector2 = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
 
-        self.state: str = ""
-        self.player_mana = None
+        # === enum states ===
+        self.state = CombatMenuState.MAIN_MENU
 
+        # === player's mana amount ===
+        self.player_mana: int = 0
 
-
-
-    def draw(self, window, mana) -> None:
+    def draw(self, window: pygame.Surface, current_mana: int) -> None:
+        """Draw the buttons and images associated with the current state."""
         self.update()
-        self.player_mana = mana
-        if self.state == "main_menu":
-            self.main_menu()
+        self.player_mana = current_mana
+        if self.state == CombatMenuState.MAIN_MENU:
+            self.draw_main_menu()
 
-        elif self.state == "skills":
+        # === buttons are drawn through the main menu skills button's function ===
+        elif self.state == CombatMenuState.SKILLS_MENU:
             window.blit(self.background_image, self.background_image_position)
             window.blit(self.skills_title_image, self.skills_title_position)
 
-        elif self.state == "end_screen":
-            self.end_screen()
+        elif self.state == CombatMenuState.END_MENU:
+            self.draw_end_menu()
 
         for button in self.buttons_group:
             button.draw(window)
             button.update()
 
-
     def update(self) -> None:
+        """Update the state based on the button clicked."""
         for button in self.buttons_group:
-            if button.delete and button.action_text == "BACK":
-                self.state = "main_menu"
-                self.buttons_group = pygame.sprite.Group()
+            if button.delete:
+                # === skills menu -> main menu ===
+                if button.text_string == "BACK":
+                    self.state = CombatMenuState.MAIN_MENU
+                    self.buttons_group = pygame.sprite.Group()
 
-            elif button.delete and button.action_text == "END":
-                self.state = "done"
-                for buttons in self.buttons_group:
-                    buttons.kill()
+                # === skills menu -> player animation ===
+                elif button.text_string in self.formatted_attacks:
+                    self.state = None
+                    for buttons in self.buttons_group:
+                        buttons.kill()
 
-            elif button.delete and not button.text == "BACK":
-                self.state = "done"  # reset to main when calling again
-                for buttons in self.buttons_group:
-                    buttons.kill()
+                # === end screen -> overworld ===
+                elif button.text_string == "END":
+                    self.state = None
+                    for buttons in self.buttons_group:
+                        buttons.kill()
 
-
-
-    def main_menu(self) -> None:
+    def draw_main_menu(self) -> None:
+        """Draw the buttons for the main menu."""
         if not self.buttons_group:
-            width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
-            Button(self.buttons_group, "no parameter", self.show_skills, "SKILLS", "medium",
-                            ((WINDOW_WIDTH // 2) - width, WINDOW_HEIGHT // 1.25), False)
+            Button(self.buttons_group, "no parameter", self.draw_skills_menu, "SKILLS", "medium",
+                   ((WINDOW_WIDTH // 2) - self.normal_button_two_width, WINDOW_HEIGHT // 1.25), False)
             Button(self.buttons_group, "no parameter", self.functions[1], "RUN", "medium",
-                   ((WINDOW_WIDTH // 2) + width // 5,
+                   ((WINDOW_WIDTH // 2) + self.normal_button_two_width // 5,
                                  WINDOW_HEIGHT // 1.25), False)
 
-    def end_screen(self):
-
+    def draw_end_menu(self) -> None:
+        """Draw the buttons for the end menu."""
         if not self.buttons_group:
-            width = pygame.image.load(BUTTON_NORMAL).get_size()
-            pos = (self.background_image_position.x + width[0] // 3, self.background_image_position.y + 188)
+            pos = (self.background_image_position.x + self.normal_button_size[0] // 3, WINDOW_HEIGHT // 1.25)
             Button(self.buttons_group, "no parameter", self.functions[2], "END", "small", pos, False)
 
-
-    def show_skills(self) -> None:
+    def draw_skills_menu(self) -> None:
+        """Draw the buttons for the skills menu."""
         self.buttons_group = pygame.sprite.Group()
-        self.state = "skills"
+        self.state = CombatMenuState.SKILLS_MENU
 
-        # Skill buttons
+        def can_use_skill(skill_name, mana_amount) -> bool:
+            """check if the player has enough mana"""
+            internal_name = skill_name.replace(" ", "_").lower()
+            print(internal_name)
+            return mana_amount > moves[internal_name]["mana"]
 
         if not self.buttons_group:
-            for index, attack_name in enumerate(self.attacks):
-                width = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
+            for index, attack_name in enumerate(self.formatted_attacks):
                 y_offset = 48
-                pos = (self.background_image_position.x + width[0] // 8, self.background_image_position.y + y_offset + width[1] * index)
-                name = attack_name.replace("_", " ")
+                pos = (self.background_image_position.x + self.large_button_size[0] // 8, self.background_image_position.y + y_offset + self.large_button_size[1] * index)
 
-                if self.player_mana < moves[attack_name]["mana"]:
-                    Button(self.buttons_group, "parameter", self.functions[0], name.upper(), "large", pos, True)
-
+                if can_use_skill(attack_name, self.player_mana):
+                    Button(self.buttons_group, ButtonType.PARAMETER, self.functions[0], attack_name, "large", pos, False)
                 else:
-                    Button(self.buttons_group, "parameter", self.functions[0], name.upper(), "large", pos, False)
+                    Button(self.buttons_group, ButtonType.PARAMETER, self.functions[0], attack_name, "large", pos, True)
 
-
-            # Back button
-            size = pygame.image.load(BUTTON_NORMAL).get_size()
-            pos = (self.background_image_position.x + size[0] // 3, self.background_image_position.y + self.background_image.get_height() - size[1] * 1.25)
-            Button(self.buttons_group, "no parameter",  self.main_menu, "BACK", "small", pos, False)
-
-
+            # === skills menu > main menu button ===
+            pos = (self.background_image_position.x + self.normal_button_size[0] // 3, self.background_image_position.y + self.background_image.get_height() - self.normal_button_size[1] * 1.25)
+            Button(self.buttons_group, ButtonType.NO_PARAMETER, self.draw_main_menu, "BACK", "small", pos, False)
 
 
 class MenuBook:

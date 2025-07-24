@@ -165,7 +165,7 @@ class Level:
 
 
 
-        current_phase = day_phases[16]
+        current_phase = day_phases[18]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])

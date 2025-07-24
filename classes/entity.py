@@ -205,7 +205,7 @@ class Entity(pygame.sprite.Sprite):
         if not self.spawn_projectile and self.current_attack == "fire_ball":
             offset = pygame.Vector2(12, 12)
             Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
-                   pygame.Vector2(target.rect.centerx , target.rect.centery), 1)
+                   pygame.Vector2(target.rect.centerx , target.rect.centery), 2)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
@@ -225,7 +225,6 @@ class Entity(pygame.sprite.Sprite):
             self.action = "idle"
             self.critical_hit = False
             target.perfect_block = False
-            target.blocking = False
             self.hit_landed = False
 
             self.animation_state = AnimationState.IDLE
@@ -271,6 +270,7 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
+                target.blocking = False
 
 
             # ___end attack sequence___
@@ -279,7 +279,6 @@ class Entity(pygame.sprite.Sprite):
                 self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False
                 self.critical_hit = False
-                target.blocking = False
                 target.perfect_block = False
 
     def calculate_damage(self):
@@ -341,11 +340,12 @@ class Entity(pygame.sprite.Sprite):
 
         target.dmg_taken.append(damage)
 
-        if not target.hp <= 0:
+        if not target.hp <= 0 and not target.blocking:
             target.frame = 0
             target.action = "death" # hurt
-        else:
+        elif target.hp <= 0:
             target.death_animation()
+
 
 
     def death_animation(self) -> None:
@@ -409,7 +409,6 @@ class BlockShield:
     def draw(self, window, pos):
         self.update()
         window.blit(self.image, pos)
-        print(self.frame)
 
     def update(self):
         self.frame += 0.2
