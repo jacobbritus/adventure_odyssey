@@ -56,8 +56,6 @@ class Player(Entity):
         self.dust_cooldown = 400
         self.dust_particles = dust_particles
 
-        self.mask_image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-
 
         self.attacks = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
 
@@ -120,8 +118,8 @@ class Player(Entity):
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
 
         self.update_pos()
-        self.screen_position = pygame.math.Vector2(self.x - offset.x,
-                                                   self.y - offset.y)
+        self.screen_position = pygame.math.Vector2(int(self.x )- offset.x,
+                                                   int(self.y) - offset.y)
         offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
                                            self.screen_position.y)
@@ -129,7 +127,7 @@ class Player(Entity):
 
         if self.blocking:
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            window.blit(mask, self.screen_position)
+            window.blit(mask, self.screen_position + (1, 1))
 
         self.controls()
 

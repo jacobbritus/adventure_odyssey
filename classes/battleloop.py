@@ -204,6 +204,10 @@ class BattleLoop:
                 self.player.approach_animation(self.enemy)
                 self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
 
+
+            if self.enemy.hp <= 0 and not self.enemy.death:
+                self.enemy.death_animation()
+
             elif self.player.animation_state == AnimationState.WAIT:
 
                 self.player.wait()
@@ -214,8 +218,6 @@ class BattleLoop:
             elif self.player.animation_state == AnimationState.ATTACK:
                 self.player.attack_animation(self.enemy, self.player_attack_option) # self.player_attack
 
-                if self.enemy.hp <= 0 and not self.enemy.death:
-                    self.enemy.death_animation()
                 self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
 
             elif self.player.animation_state == AnimationState.BUFF:
@@ -254,8 +256,7 @@ class BattleLoop:
 
             elif self.enemy.animation_state == AnimationState.ATTACK:
                 self.enemy.attack_animation(self.player, self.enemy_attack_option)
-                if self.player.hp <= 0:
-                    self.player.death_animation()
+
                 self.delay = pygame.time.get_ticks() + 1000
 
             elif self.enemy.animation_state == AnimationState.BUFF:
@@ -266,6 +267,9 @@ class BattleLoop:
                 if not self.player.hp <= 0: self.player.action = "idle"
                 if self.delay and pygame.time.get_ticks() >= self.delay:
                     self.enemy.return_animation(self.enemy_position)
+
+            if self.player.hp <= 0:
+                self.player.death_animation()
 
             elif self.player.hp <= 0:
                 self.state = BattleState.END_SCREEN

@@ -331,17 +331,24 @@ class Entity(pygame.sprite.Sprite):
         if not target.hp <= 0:
             target.frame = 0
             target.action = "death" # hurt
+        else:
+            target.death_animation()
 
 
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
         if self.action != "death":
+            print("reset")
             self.frame = 0
             self.action = "death"
 
+
         # Play the animation frame by frame
-        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2:
+        death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
+        if self.frame >= death_frame:
             self.death = True
+
+            print("check")
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""
@@ -366,13 +373,6 @@ class Entity(pygame.sprite.Sprite):
 
 
     def update_animations(self) -> None:
-        if self.hp <= 0:
-            self.direction = "left"
-            death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
-            if self.frame >= death_frame:
-                self.image = self.sprite_dict[self.action]["sprites"][self.direction][death_frame]
-            else:
-                self.animations()
 
         if self.action == "cast":
             cast_frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2
@@ -380,9 +380,11 @@ class Entity(pygame.sprite.Sprite):
             if self.frame >= cast_frame:
                 self.action = "idle"
 
-            self.animations()
 
 
         if not self.death:
             self.animations()
+        else:
+            self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
+
 
