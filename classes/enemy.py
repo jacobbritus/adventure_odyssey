@@ -24,7 +24,7 @@ class Enemy(Entity):
         self.hp = 15
         self.max_hp: int = 15
         self.dmg = 5
-        self.exp = 30
+        self.exp = 50
 
 
         # Location and Movement

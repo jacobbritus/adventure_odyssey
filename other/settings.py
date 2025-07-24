@@ -14,6 +14,7 @@ TILE_SIZE = 32
 
 # Sprites
 fireball_sprites = fireball_sprites
+level_up_sprites = level_up_sprites
 
 player_sprites = player_sprites
 sprite_dust = sprite_dust
@@ -33,7 +34,10 @@ FOREST_MAP = get_file_location("tmx/untitled.tmx")
 
 # background music and sounds
 FOREST_MUSIC = get_file_location("sounds/background/forest_theme.mp3")
-BATTLE_MUSIC_1 = get_file_location("sounds/background/12-Fight3.mp3")
+BATTLE_MUSIC_1 = get_file_location("sounds/background/10-Fight.mp3")
+BATTLE_MUSIC_2 = get_file_location("sounds/background/11-Fight2.mp3")
+BATTLE_MUSIC_3 = get_file_location("sounds/background/12-Fight3.mp3")
+
 
 HOVER_SOUND = get_file_location("sounds/hover.wav")
 PRESS_SOUND = get_file_location("sounds/click.wav")
@@ -41,6 +45,7 @@ DISABLED_SOUND = get_file_location("sounds/disabled.wav")
 ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
 PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block_2.mp3")
 CRITICAL_HIT = get_file_location("sounds/effects/critical_hit_3.mp3")
+LEVEL_UP_SOUND = get_file_location("sounds/effects/level_up_sound.mp3")
 
 
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")

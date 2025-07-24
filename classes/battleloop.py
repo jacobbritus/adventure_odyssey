@@ -57,8 +57,7 @@ class BattleLoop:
         self.block = False # whether blocking is True
         self.block_delay = 250
 
-        # ___reward___
-        self.reward_given = False
+
 
     def timer_(self) -> None:
         if self.state == BattleState.PLAYER_TURN and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
@@ -100,16 +99,11 @@ class BattleLoop:
             elif self.state == BattleState.END_BATTLE:
                     if self.enemy.death: self.enemy.respawn_time = pygame.time.get_ticks() + 120000
                     self.return_to_overworld = True
-                    if self.enemy.hp <= 0 and not self.reward_given:
-                        self.player.exp += self.enemy.exp
-                        if self.player.exp >= self.player.exp_to_level:
-                            self.player.level += 1
-                            self.player.exp = 0
-                            self.player.exp_to_level += 20
-                        self.reward_given = True
+
 
             elif self.state == self.state.END_SCREEN:
                 self.combat_menu.state = "end_screen"
+
 
     def action_lock(self) -> bool:
         return (

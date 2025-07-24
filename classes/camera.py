@@ -57,7 +57,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         elif self.state == LevelState.BATTLE and self.current_music != "battle":
             pygame.mixer.music.stop()
-            pygame.mixer.music.load(BATTLE_MUSIC_1)
+            pygame.mixer.music.load(random.choice([BATTLE_MUSIC_1, BATTLE_MUSIC_2, BATTLE_MUSIC_3]))
             pygame.mixer.music.set_volume(0.1)
             pygame.mixer.music.play(-1)
             self.current_music = "battle"
@@ -259,6 +259,15 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def end_battle(self):
         self.state = LevelState.OVERWORLD
+        player, enemy = self.battle_participants
+        if enemy.hp <= 0:
+            player.exp += enemy.exp
+            if player.exp >= player.exp_to_level:
+                player.level += 1
+                player.exp = 0 # calculate left over (this function has to repeat)
+                player.exp_to_level += 20
+                player.leveled_up = True
+
 
         self.battle_loop = None
 
@@ -268,8 +277,6 @@ class YSortCameraGroup(pygame.sprite.Group):
             participant.x, participant.y = participant.pre_battle_pos
 
         self.battle_participants = None
-
-
 
 
     def find_battle_spot(self, player_rect, search_radius = 640, step = 32) -> pygame.Rect or None:

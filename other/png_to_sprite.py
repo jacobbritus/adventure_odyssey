@@ -248,3 +248,11 @@ book_sprites = {
     "previous_page": sprite_converter("sprites/UI/book_stuff/previous_page.png", 0, 8, 512, 352, False),
 
 }
+
+level_up_sprites = {
+    "sprites": {
+        "right": sprite_converter("sprites/particles/level_up.png", 0, 16, 96, 96, False),
+
+    }
+
+}

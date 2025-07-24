@@ -32,6 +32,9 @@ class Spells(pygame.sprite.Sprite):
         if self.type == "lightning_strike":
             return lightning_sprites, 0.06, pygame.time.get_ticks() + 1200, pygame.time.get_ticks() + 800
 
+        if self.type == "level_up":
+            return level_up_sprites, 0.06, pygame.time.get_ticks() + 3000, pygame.time.get_ticks() + 2000
+
         return None
 
     def update(self, pos, offset):

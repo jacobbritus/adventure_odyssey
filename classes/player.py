@@ -1,7 +1,4 @@
 import math
-
-import pygame
-
 from classes.entity import Entity
 from classes.spells import Spells
 from other.settings import *
@@ -34,16 +31,18 @@ class Player(Entity):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(-64, -48)
 
-        # Sound
-        self.footstep_sound = pygame.mixer.Sound(GRASS_FOOTSTEP)
-        self.footstep_sound.set_volume(0.2)
-
-        self.footstep_delay = 400
-        self.last_footstep_time = pygame.time.get_ticks()
+        # # Sound
+        # self.footstep_sound = pygame.mixer.Sound(GRASS_FOOTSTEP)
+        # self.footstep_sound.set_volume(0.2)
+        #
+        # self.footstep_delay = 400
+        # self.last_footstep_time = pygame.time.get_ticks()
 
         # Stats
         self.level = 1
         self.exp_to_level = 50
+        self.leveled_up = False
+
         self.exp = 0
         self.hp: int = 20
         self.max_hp: int = 20
@@ -74,11 +73,11 @@ class Player(Entity):
 
         if key_pressed[pygame.K_LSHIFT]:
             self.sprinting = True
-            self.footstep_delay = 200
+            # self.footstep_delay = 200
             self.dust_cooldown = 200
         else:
             self.sprinting = False
-            self.footstep_delay = 400
+            # self.footstep_delay = 400
             self.dust_cooldown = 400
 
         # movement keys with directions and move vectors
@@ -105,14 +104,22 @@ class Player(Entity):
                         self.dust_spawn_time = current_time
 
                     # Play sound effects.
-                    current_time = pygame.time.get_ticks()
-                    if current_time - self.last_footstep_time > self.footstep_delay:
-                        self.footstep_sound.play()
-                        self.last_footstep_time = current_time
+                    # current_time = pygame.time.get_ticks()
+                    # if current_time - self.last_footstep_time > self.footstep_delay:
+                    #     self.footstep_sound.play()
+                    #     self.last_footstep_time = current_time
                 break
         else:
             self.direction_pause = 0
             self.action = "idle"
+
+    def level_up_animation(self, offset, window):
+        if self.leveled_up:
+            Spells(self.projectiles, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
+            pygame.mixer.Sound(LEVEL_UP_SOUND).play()
+        self.projectiles.draw(window)
+        self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 20), offset)
+        self.leveled_up = False
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
@@ -122,11 +129,8 @@ class Player(Entity):
         self.update_pos()
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
-        #
-        # if self.sprinting and not self.in_battle:
-        #     Spells(self.projectiles, "heal", self.hitbox.center - offset, None, None)
-        # self.projectiles.draw(window)
-        # self.projectiles.update(self.hitbox.center - offset, offset)
+
+        self.level_up_animation(offset, window)
 
 
         offset = 32

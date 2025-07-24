@@ -256,7 +256,7 @@ class Entity(pygame.sprite.Sprite):
             self.action = "idle"
 
             # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done:
+            if self.critical_hit and not self.critical_hit_is_done and not target.death:
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.ATTACK
 
