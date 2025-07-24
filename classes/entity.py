@@ -39,7 +39,7 @@ class Entity(pygame.sprite.Sprite):
         self.movement_speed = None
         self.walking_speed = 100
         self.sprint_speed = None
-        self.delta_time = 0.009
+        self.delta_time = FPS / 1000
 
         # Battle related.
         self.in_battle = False
@@ -70,14 +70,23 @@ class Entity(pygame.sprite.Sprite):
         self.projectiles = pygame.sprite.Group()
 
         # Sound
-        self.sound_played = False
 
-        # Stats
+        # === vital stats ===
         self.hp = None
         self.max_hp = None
-        self.dmg = None
 
-        # Animation states
+        # === core stats ===
+        self.core_stats = {
+            "vitality": 10,
+            "defense": 10,
+            "strength": 10,
+            "magic": 10,
+            "speed": 10,
+            "luck": 10,
+        }
+
+
+        # === animation states ===
         self.animation_state = AnimationState.IDLE
 
     def update_pos(self) -> None:
@@ -196,7 +205,7 @@ class Entity(pygame.sprite.Sprite):
         if not self.spawn_projectile and self.current_attack == "fire_ball":
             offset = pygame.Vector2(12, 12)
             Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
-                   pygame.Vector2(target.rect.centerx , target.rect.centery), 1.5)
+                   pygame.Vector2(target.rect.centerx , target.rect.centery), 1)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
@@ -251,19 +260,17 @@ class Entity(pygame.sprite.Sprite):
 
         # ___hit ends____
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
-            self.sound_played = False
             self.hit_landed = False
             self.action = "idle"
 
             # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done and not target.death:
+            if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.ATTACK
 
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
-                target.blocking = False
 
 
             # ___end attack sequence___
@@ -275,8 +282,21 @@ class Entity(pygame.sprite.Sprite):
                 target.blocking = False
                 target.perfect_block = False
 
+    def calculate_damage(self):
+        skill = self.current_attack
+        base = moves[skill]["base_damage"]
+        stat_name = moves[skill]["stat"]
+        multiplier = moves[skill]["multiplier"]
+
+        stat_value = self.core_stats[stat_name]
+        bonus = stat_value * multiplier
+
+        total_damage = base + bonus
+
+        return int(total_damage)
+
     def handle_attack_impact(self, target):
-        base_dmg = moves[self.current_attack]["dmg"]
+        damage = self.calculate_damage()
 
         if self.blocking and not self.critical_hit_is_done:
             if self.type == "player":
@@ -294,7 +314,7 @@ class Entity(pygame.sprite.Sprite):
 
             # for projectile-based / non-repeating attacks:
             if moves[self.current_attack]["type"] == "special":
-                base_dmg *= 2
+                damage *= 2
 
         # player attacks, enemy block chance
         if target.type == "enemy":
@@ -306,7 +326,7 @@ class Entity(pygame.sprite.Sprite):
             target.perfect_block = True
             target.perfect_block_messages.append("")
 
-            base_dmg //= 2
+            damage //= 2
             pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
 
 
@@ -314,19 +334,12 @@ class Entity(pygame.sprite.Sprite):
             pygame.mixer.Sound(moves[self.current_attack]["sound"][0]).play()
         else:
             pygame.mixer.Sound(moves[self.current_attack]["sound"][1]).play()
-        self.sound_played = True
-        #
-        # if not self.sound_played and not self.current_attack in ["fire_ball", "combustion"]:
-        #     pygame.mixer.Sound(self.sprite_dict[self.action]["sound"]).play()
-        #     self.sound_played = True
-        # else:
-        #     pygame.mixer.Sound(fireball_sprites["sound"][1]).play()
-        #     self.sound_played = False
 
 
-        target.hp -= base_dmg
 
-        target.dmg_taken.append(base_dmg)
+        target.hp -= damage
+
+        target.dmg_taken.append(damage)
 
         if not target.hp <= 0:
             target.frame = 0
@@ -338,7 +351,6 @@ class Entity(pygame.sprite.Sprite):
     def death_animation(self) -> None:
         # Only reset once at the start of the death animation
         if self.action != "death":
-            print("reset")
             self.frame = 0
             self.action = "death"
 
@@ -347,8 +359,6 @@ class Entity(pygame.sprite.Sprite):
         death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
         if self.frame >= death_frame:
             self.death = True
-
-            print("check")
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""
@@ -388,3 +398,23 @@ class Entity(pygame.sprite.Sprite):
             self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
 
 
+
+class BlockShield:
+    def __init__(self, direction):
+        self.sprites = block_shield_sprites
+        self.frame = 0
+        self.direction = direction
+        self.image = self.sprites["sprites"][self.direction][int(self.frame)]
+
+    def draw(self, window, pos):
+        self.update()
+        window.blit(self.image, pos)
+        print(self.frame)
+
+    def update(self):
+        self.frame += 0.2
+
+        if self.frame >= len(self.sprites["sprites"][self.direction]) - 1:
+            self.frame = 0
+
+        self.image = self.sprites["sprites"][self.direction][int(self.frame)]

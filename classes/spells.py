@@ -26,7 +26,7 @@ class Spells(pygame.sprite.Sprite):
 
     def get_sprites(self):
         if self.type == "fire_ball":
-            return fireball_sprites, 0.08, None, None
+            return fireball_sprites, 0.05, None, None
         if self.type == "heal":
             return heal_sprites, 0.05, pygame.time.get_ticks() + 3000, pygame.time.get_ticks() + 2000
         if self.type == "lightning_strike":

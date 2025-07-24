@@ -256,3 +256,10 @@ level_up_sprites = {
     }
 
 }
+
+block_shield_sprites = {
+"sprites": {
+        "right": sprite_converter("sprites/particles/shield_block.png", 0, 5, 32, 96, False),
+    "left": sprite_converter("sprites/particles/shield_block.png", 0, 5, 32, 96, True),
+
+}}

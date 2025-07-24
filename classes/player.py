@@ -1,6 +1,10 @@
 import math
-from classes.entity import Entity
+
+import pygame.image
+
+from classes.entity import Entity, BlockShield
 from classes.spells import Spells
+from classes.states import AnimationState
 from other.settings import *
 
 class Player(Entity):
@@ -22,6 +26,8 @@ class Player(Entity):
         self.direction: str = direction
         self.action: str = "idle"
         self.blocking = False
+        self.block_shield = BlockShield("right")
+
         self.sprint_speed = 200
 
         # Image
@@ -44,13 +50,12 @@ class Player(Entity):
         self.leveled_up = False
 
         self.exp = 0
-        self.hp: int = 20
-        self.max_hp: int = 20
+        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.mana: int = 5
         self.dmg: int = 5
         self.speed = 3
 
-        self.movement_speed: int = 2 # dont forget to implement this in entity class move()
 
         # Other
         self.obstacle_sprites = obstacle_sprites
@@ -133,18 +138,23 @@ class Player(Entity):
         self.level_up_animation(offset, window)
 
 
-        offset = 32
-        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
-                                           self.screen_position.y)
+
+        if self.blocking and self.animation_state == AnimationState.IDLE:
+            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (8, -36), offset)
+            self.block_shield.draw(window, pos)
 
 
-        if self.blocking:
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             window.blit(mask, self.screen_position + (1, 1))
+
+        dmg_offset = 32
+        self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
+                                           self.screen_position.y)
 
         self.controls()
 
         self.update_animations()
+
 
 
 

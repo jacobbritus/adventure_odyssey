@@ -2,7 +2,7 @@ import random
 
 import pygame.mixer
 
-from classes.entity import Entity
+from classes.entity import Entity, BlockShield
 from other.settings import *
 import math
 
@@ -21,10 +21,11 @@ class Enemy(Entity):
 
         # Battle related
         self.level = 1
-        self.hp = 15
-        self.max_hp: int = 15
+        self.hp = int(10 + 1.5 * self.core_stats["vitality"])
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5
         self.exp = 50
+        self.block_shield = BlockShield("left")
 
 
         # Location and Movement
@@ -51,7 +52,7 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.25, 2
+            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.5, 2
         elif self.monster_name == "Slime":
             return slime_sprites, ["stomp"], 0.25, 0.25, 3
         elif self.monster_name == "Goblin":
@@ -162,13 +163,16 @@ class Enemy(Entity):
         self.update_pos()
         self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                    self.y - offset.y)
-        offset = 32
-        self.dmg_position = pygame.Vector2(self.screen_position.x + offset + self.hitbox.width // 2,
+        dmg_offset = 32
+        self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
 
         if not self.detected_player: self.random_movement()
 
         if self.blocking:
+            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (-40, -36), offset)
+            self.block_shield.draw(window, pos)
+
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             window.blit(mask, self.screen_position)
 

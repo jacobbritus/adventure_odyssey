@@ -157,15 +157,15 @@ class Level:
             12: {"color": (255, 255, 255), "opacity": 0},
             16: {"color": (255, 238, 131), "opacity": 20},
             18: {"color": (255, 174, 66), "opacity": 50},
-            20: {"color": (34, 0, 51), "opacity": 100},
-            22: {"color": (0, 0, 0), "opacity": 125},
-            0: {"color": (0, 0, 0), "opacity": 150},
+            20: {"color": (34, 0, 51), "opacity": 75},
+            22: {"color": (0, 0, 0), "opacity": 100},
+            0: {"color": (0, 0, 0), "opacity": 125},
 
         }
 
 
 
-        current_phase = day_phases[12]
+        current_phase = day_phases[16]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])

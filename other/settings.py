@@ -1,16 +1,12 @@
-
 from other.png_to_sprite import *
 
-
 SCALE = 2
-
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 
 FPS = 120
 TILE_SIZE = 32
-
 
 # Sprites
 fireball_sprites = fireball_sprites
@@ -19,15 +15,48 @@ level_up_sprites = level_up_sprites
 player_sprites = player_sprites
 sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites
+block_shield_sprites = block_shield_sprites
 
 # moves
-moves = {"fire_ball": {"dmg": 7, "type": "special", "mana": 5, "sound": [get_file_location("sounds/effects/fire_woosh.mp3"), get_file_location("sounds/effects/fire_impact.mp3")]},
-         "sword_slash": {"dmg": 5, "type": "physical", "mana": 1, "sound": [get_file_location("sounds/sword_slash.wav")]},
-         "punch": {"dmg": 10, "type": "physical", "mana": 0, "sound": [get_file_location("sounds/effects/punch.mp3")]},
-         "heal": {"hp": 5, "type": "buff", "mana": 2, "sound": get_file_location("sounds/effects/heal.mp3")},
-        "lightning_strike": {"dmg": 7, "type": "special", "mana": 5, "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
-
-         }
+moves = {
+    "fire_ball": {
+        "base_damage": 5,
+        "multiplier": 0.5,
+        "stat": "magic",
+        "type": "special",
+        "mana": 3,
+        "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")]
+    },
+    "sword_slash": {
+        "base_damage": 3,
+        "multiplier": 0.25,
+        "stat": "strength",
+        "type": "physical",
+        "mana": 1,
+        "sound": [get_file_location("sounds/sword_slash.wav")]
+    },
+    "punch": {
+        "base_damage": 2,
+        "multiplier": 0.25,
+        "stat": "strength",
+        "type": "physical",
+        "mana": 0,
+        "sound": [get_file_location("sounds/effects/punch.mp3")]
+    },
+    "heal": {
+        "hp": 5,
+        "type": "buff",
+        "mana": 2,
+        "sound": get_file_location("sounds/effects/heal.mp3")
+    },
+    "lightning_strike": {
+        "base_damage": 7,
+        "multiplier": 0.25,
+        "stat": "strength",
+        "type": "special",
+        "mana": 5,
+        "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
+}
 
 # maps
 FOREST_MAP = get_file_location("tmx/untitled.tmx")
@@ -38,7 +67,6 @@ BATTLE_MUSIC_1 = get_file_location("sounds/background/10-Fight.mp3")
 BATTLE_MUSIC_2 = get_file_location("sounds/background/11-Fight2.mp3")
 BATTLE_MUSIC_3 = get_file_location("sounds/background/12-Fight3.mp3")
 
-
 HOVER_SOUND = get_file_location("sounds/hover.wav")
 PRESS_SOUND = get_file_location("sounds/click.wav")
 DISABLED_SOUND = get_file_location("sounds/disabled.wav")
@@ -46,7 +74,6 @@ ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
 PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block_2.mp3")
 CRITICAL_HIT = get_file_location("sounds/effects/critical_hit_3.mp3")
 LEVEL_UP_SOUND = get_file_location("sounds/effects/level_up_sound.mp3")
-
 
 GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
 
@@ -66,8 +93,6 @@ INFO_TITLE = get_file_location("sprites/UI/book_stuff/info_title.png")
 INFO_PAGE = get_file_location("sprites/UI/book_stuff/info_page.png")
 BOOK_SKILLS_TITLE = get_file_location("sprites/UI/book_stuff/skills_title.png")
 
-
-
 # ___hp bar___
 BACKGROUND_BOX2 = get_file_location(f"sprites/UI/background_box2.png")
 BACKGROUND_BOX3 = get_file_location(f"sprites/UI/background_box3.png")
@@ -78,15 +103,10 @@ HP_BAR2 = get_file_location(f"sprites/UI/hp_bar2.png")
 HP_BAR3 = get_file_location(f"sprites/UI/hp_bar3.png")
 MANA_BAR = get_file_location(f"sprites/UI/mana_bar.png")
 
-
-
-
-
 TIME_BACKGROUND = get_file_location(f"sprites/UI/time_background.png")
 
 LARGE_BACKGROUND_BOX = get_file_location(f"sprites/UI/large_background_box.png")
 SKILLS_TITLE = get_file_location(f"sprites/UI/skills_title.png")
-
 
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
@@ -106,4 +126,3 @@ LARGE_BUTTON_PRESSED = get_file_location(f"sprites/UI/large_button_pressed.png")
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
 FONT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")
-

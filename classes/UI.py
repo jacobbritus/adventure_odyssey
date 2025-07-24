@@ -455,24 +455,36 @@ class MenuBook:
             "MANA": str(self.player.mana),
             "EXP": f"{str(self.player.exp)}/{str(self.player.exp_to_level)}"
         }
-        x_offset = 90
+
         base_y = 58
+        base_x = 105
+        distance_between = 14
         for index, key in enumerate(list(base_stats.keys())):
-            position = self.base_pos + (105, base_y + 14 * index)
+            position = self.base_pos + (base_x, base_y + distance_between * index)
             text = font.render(key, True, (255, 238, 131))
             window.blit(text, position)
-
-        for index, key in enumerate(list(base_stats.values())):
-            position = self.base_pos + (185, base_y + 14 * index)
-            text = font.render(key, True, (255, 255, 255))
+        base_x = 185
+        for index, value in enumerate(list(base_stats.values())):
+            position = self.base_pos + (base_x, base_y + distance_between * index)
+            text = font.render(value, True, (255, 255, 255))
             window.blit(text, position)
 
 
-        # x_offset = 117
-        # level = font.render(str(self.player.level), True, (255, 255, 255))
-        # level_pos = image_pos + (x_offset, -6)
-        # window.blit(level, level_pos)
-        # hp = font.render(f"{str(self.player.hp)}/{self.player.max_hp}", True, (255, 255, 255))
-        # hp_pos = image_pos + (x_offset, 8)
-        # window.blit(hp, hp_pos)
+        core_stats = self.player.core_stats
+
+        base_y = 125
+        base_x = 70
+        distance_between = 20
+        for index, key in enumerate(list(core_stats.keys())):
+            position = self.base_pos + (base_x, base_y + distance_between * index)
+            text = font.render(key.upper(), True, (255, 238, 131))
+            window.blit(text, position)
+
+        base_x = 185
+        for index, value in enumerate(list(core_stats.values())):
+            position = self.base_pos + (base_x, base_y + distance_between * index)
+            text = font.render(str(value).upper(), True, (255, 255, 255))
+            window.blit(text, position)
+
+
 
