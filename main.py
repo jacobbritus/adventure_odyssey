@@ -25,7 +25,7 @@ class Game:
                     self.level.menu.keybinds(event)
 
                 if self.level.visible_sprites.battle_loop:
-                    self.level.visible_sprites.battle_loop.hotkeys(event)
+                    self.level.visible_sprites.battle_loop.blocking_critical_hotkey(event)
 
 
             delta_time = self.clock.tick(FPS)

@@ -44,6 +44,7 @@ class Entity(pygame.sprite.Sprite):
         # Battle related.
         self.in_battle = False
         self.pre_battle_pos = None
+        self.battle_pos = None
         self.obstacle_sprites = None
         self.critical_hit_chance = None
         self.blocking_chance = None
@@ -63,6 +64,8 @@ class Entity(pygame.sprite.Sprite):
         self.dmg_position = None
 
         self.mana_messages = []
+
+        self.screen_messages = []
 
 
         # projectiles
@@ -189,11 +192,16 @@ class Entity(pygame.sprite.Sprite):
         if not self.spawn_projectile:
             position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery)
 
-            Spells(self.projectiles, self.current_attack, position, None, None)
-            self.spawn_projectile = True
-            self.hp += 5
-            if self.hp > self.max_hp: self.hp = self.max_hp
-            pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
+            if self.current_attack == "heal":
+                Spells(self.projectiles, self.current_attack, position, None, None)
+                self.spawn_projectile = True
+                heal_amount = moves[self.current_attack]["hp"]
+                self.hp += heal_amount
+                self.hp = min(self.hp, self.max_hp)
+
+                self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
+
+                pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
 
         if not self.projectiles:
             self.animation_state = AnimationState.IDLE
@@ -301,14 +309,15 @@ class Entity(pygame.sprite.Sprite):
             if self.type == "player":
                 pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
                 self.critical_hit = True
-                self.critical_hit_messages.append("")
+                self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
+
 
             elif self.type == "enemy":
                 bools = [True, False]
                 weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
-                    self.critical_hit_messages.append("")
+                    self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
                     pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
 
             # for projectile-based / non-repeating attacks:
@@ -323,7 +332,7 @@ class Entity(pygame.sprite.Sprite):
 
         if target.blocking:
             target.perfect_block = True
-            target.perfect_block_messages.append("")
+            target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
 
             damage //= 2
             pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
@@ -338,13 +347,15 @@ class Entity(pygame.sprite.Sprite):
 
         target.hp -= damage
 
-        target.dmg_taken.append(damage)
+        target.screen_messages.append(("hp_dealt", damage, (255, 0, 255)))
+
+        # target.dmg_taken.append(damage)
 
         if not target.hp <= 0 and not target.blocking:
             target.frame = 0
             target.action = "death" # hurt
         elif target.hp <= 0:
-            target.death_animation()
+            target.animation_state = AnimationState.DEATH
 
 
 
@@ -359,6 +370,7 @@ class Entity(pygame.sprite.Sprite):
         death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
         if self.frame >= death_frame:
             self.death = True
+            self.animation_state = None
 
     def return_animation(self, origin) -> None:
         """Walk back to the starting position."""

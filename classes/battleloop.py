@@ -1,6 +1,6 @@
 import random
-from classes.UI import CombatMenu, Hpbar
-from classes.states import AnimationState, BattleState, CombatMenuState
+from classes.UI import CombatMenu, HpBar
+from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
 from other.settings import *
 
@@ -13,23 +13,34 @@ class BattleLoop:
         self.offset = offset
 
         # === idle positions ===
-        self.player_position: pygame.Vector2 = pygame.Vector2(player.x - self.player.width, player.y)
-        self.enemy_position: pygame.Vector2 = pygame.Vector2(enemy.x, enemy.y)
+        self.player.battle_pos = pygame.Vector2(player.x - self.player.width, player.y)
+        self.enemy.battle_pos = pygame.Vector2(enemy.x, enemy.y)
 
         # === end battle toggle ===
         self.return_to_overworld: bool = False
 
-        # ___UI setup___
-        self.combat_menu = CombatMenu(self.player.attacks, [self.player_attack, self.player_run, self.player_run])
-        self.player_hp_bar = Hpbar("left", self.player.level, self.player.hp, self.player.max_hp, self.player.mana,"PLAYER") #enemy.name in the future
-        self.player_hp_bar.set_hp(self.player.hp) # Update player's hp
-        self.enemy_hp_bar = Hpbar("right", self.enemy.level, self.enemy.hp, self.enemy.hp, None, self.enemy.monster_name.upper()) #enemy.name in the future
+        # === UI setup ===
+        self.combat_menu = CombatMenu(player_skills = self.player.attacks, functions = [self.player_turn, self.end_battle])
+        self.player_hp_bar = HpBar(
+            side = "left",
+            level = self.player.level,
+            current_hp = self.player.hp,
+            max_hp = self.player.max_hp,
+            mana = self.player.mana,
+            name = "PLAYER")
+        self.player_hp_bar.set_hp(self.player.hp)
+        self.enemy_hp_bar = HpBar(
+            side = "right",
+            level = self.enemy.level,
+            current_hp = self.enemy.hp,
+            max_hp = self.enemy.hp,
+            mana = None,
+            name = self.enemy.monster_name.upper())
 
-        # ___used as an argument to perform the chosen attack option___
-        self.player_attack_option = None
-        self.enemy_attack_option = None
 
-        # ___state___
+
+        # === battle state ===
+        # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
         if self.player.speed >= self.enemy.speed:
             self.state = BattleState.PLAYER_TURN
         elif self.enemy.speed >= self.player.speed:
@@ -37,31 +48,37 @@ class BattleLoop:
         else:
             self.state = random.choice([BattleState.PLAYER_TURN, BattleState.ENEMY_TURN])
 
-        # ___delays and the clock___
-        self.delay = pygame.time.get_ticks() + 1000 # set if enemy starts first
-        self.clock_time = pygame.time.get_ticks() + 20000
+        # === state / animation phase delay and the player turn clock ===
+        self.current_time: pygame.time = pygame.time.get_ticks()
 
-        # ___screen messages___
-        self.screen_messages_group = pygame.sprite.Group()
+        start_delay = 1000 if self.state == BattleState.PLAYER_TURN else 2000
+        self.delay: pygame.time = self.current_time + start_delay
 
-        # ___block and crit hotkey___
-        self.block_duration = 250 # blocking last time
-        self.block_cooldown_end = 0 # when blocking ends
-        self.block = False # whether blocking is True
-        self.block_delay = 250
+        self.clock_timer: pygame.time = self.current_time + 20000
+        self.clock_font: pygame.font = pygame.font.Font(FONT_TWO, 33)
 
+        # === visual cues ===
+        # damage, critical hit and perfect block
+        self.screen_messages_group: pygame.sprite.Group = pygame.sprite.Group()
 
+        # === block and critical hit hotkey ===
+        self.block_duration: int = 150 # blocking last time
+        self.block_cooldown_end: int = 0 # when blocking ends
+        self.block_delay: int = 500
+        self.enemy_block_duration = None
+
+    def set_delay(self, ms):
+        self.delay = self.current_time + ms
 
     def timer_(self) -> None:
-        if self.state == BattleState.PLAYER_TURN and self.clock_time and not pygame.time.get_ticks() >= self.clock_time:
-
-            current_time = ((self.clock_time - pygame.time.get_ticks()) // 1000)
-
-            font = pygame.font.Font(FONT_TWO, 33)
-            time_text = font.render(str(current_time), True, (255, 255, 255))
+        """The timer set and displayed on the player's turn."""
+        if self.state == BattleState.PLAYER_TURN and self.clock_timer:
+            current_clock_time = ((self.clock_timer - pygame.time.get_ticks()) // 1000)
+            time_text = self.clock_font.render(str(current_clock_time), True, (255, 255, 255))
             time_size = time_text.get_width()
-            self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.box_pos[1] - 2))
+            self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.background_box_pos[1] - 2))
 
+# to be cleaned when the Spells class is improved.
     def handle_projectiles(self) -> None:
         self.player.projectiles.draw(self.window)
         self.enemy.projectiles.draw(self.window)
@@ -75,75 +92,62 @@ class BattleLoop:
             self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset, self.enemy)
 
     def run(self) -> None:
+        """The main loop."""
+        self.current_time = pygame.time.get_ticks()
         self.handle_projectiles()
-        self.handle_input()
-        self.animation()
+        self.blocking_cooldown()
+        self.animations()
 
-        if not self.delay or pygame.time.get_ticks() >= self.delay:
+        if self.current_time >= self.delay:
+
             if self.state == BattleState.PLAYER_TURN:
-                if self.clock_time and pygame.time.get_ticks() >= self.clock_time:
+                if self.clock_timer and self.current_time >= self.clock_timer:
                     self.state = BattleState.ENEMY_TURN
-                    self.clock_time = pygame.time.get_ticks() + 20000
+                    self.clock_timer = self.current_time + 20000
 
             elif self.state == BattleState.ENEMY_TURN:
-                    self.enemy_turn()
-                    self.delay = None
+                self.enemy_turn()
 
             elif self.state == BattleState.END_BATTLE:
-                    if self.enemy.death: self.enemy.respawn_time = pygame.time.get_ticks() + 120000
-                    self.return_to_overworld = True
-
+                if self.enemy.death: self.enemy.respawn_time = self.current_time + 600000
+                self.return_to_overworld = True
 
             elif self.state == self.state.END_MENU:
                 self.combat_menu.state = CombatMenuState.END_MENU
 
-
-    def action_lock(self) -> bool:
-        return (
-                self.player.animation_state == AnimationState.APPROACH or
-                self.enemy.animation_state == AnimationState.APPROACH or
-                self.player.animation_state == AnimationState.WAIT or
-                self.enemy.animation_state == AnimationState.WAIT
-        )
-
-    def screen_messages(self):
+    def screen_messages(self) -> None:
+        """Displays and updates screen messages like damage dealt, recovered, critical hits, etc."""
         self.screen_messages_group.update()
-
         self.screen_messages_group.draw(self.window)
 
-
         for participant in [self.player, self.enemy]:
-            damage_counter = 0
-            for dmg in participant.dmg_taken:
-                ScreenMessages(self.screen_messages_group, dmg, (255, 0, 0), damage_counter, participant)
-                damage_counter += 1 # increments moce the x position
-            participant.dmg_taken.clear()
+            number_offset = 0
+            for message_type, value, color in participant.screen_messages:
+                if message_type in ["hp_dealt", "hp_recovered", "mana_recovered"]:
+                    ScreenMessages(self.screen_messages_group, value, color, number_offset, participant)
+                    number_offset += 1
+                elif message_type == "perfect_block":
+                    offset = -4 if participant == self.player else 0.5
+                    ScreenMessages(self.screen_messages_group, value, color, offset, participant)
+                elif message_type == "critical_hit":
+                    offset = -2 if participant == self.player else 0.5
+                    ScreenMessages(self.screen_messages_group, value, color, offset, participant)
 
-            for mana in participant.mana_messages:
-                ScreenMessages(self.screen_messages_group, mana, (150, 206, 255), 0, participant)
-            participant.mana_messages.clear()
+            participant.screen_messages.clear()
 
-            if participant.critical_hit_messages:
-                offset = -2 if participant == self.player else 0.5
-
-                ScreenMessages(self.screen_messages_group, "CRITICAL HIT", (0, 0, 255), offset, participant)
-                participant.critical_hit_messages.clear()
-
-            if participant.perfect_block_messages:
-                offset = -3.5 if participant == self.player else 1
-                ScreenMessages(self.screen_messages_group, "PERFECT BLOCK", (0, 255, 0), offset, participant)
-                participant.perfect_block_messages.clear()
-
-
-
-    def draw_ui(self):
+    def draw_ui(self) -> None:
+        """Displays and updates the UI components."""
         self.timer_()
 
-        self.player_hp_bar.set_hp(self.player.hp)
-        self.enemy_hp_bar.set_hp(self.enemy.hp)
-        self.player_hp_bar.set_mana(self.player.mana)  
-        self.enemy_hp_bar.update()
-        self.player_hp_bar.update()
+        if self.player.hp != self.player_hp_bar.hp:
+            self.player_hp_bar.set_hp(self.player.hp)
+        if self.enemy.hp != self.enemy_hp_bar.hp:
+            self.enemy_hp_bar.set_hp(self.enemy.hp)
+        if self.player.mana != self.player_hp_bar.mana:
+            self.player_hp_bar.set_mana(self.player.mana)
+
+        self.enemy_hp_bar.update_hp_bar()
+        self.player_hp_bar.update_hp_bar()
 
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
@@ -152,153 +156,118 @@ class BattleLoop:
         self.enemy_hp_bar.draw(self.window)
         self.screen_messages()
 
-
-
-    def handle_input(self):
-        if self.block and pygame.time.get_ticks() >= self.block_cooldown_end:
-            self.block = False
+    def blocking_cooldown(self) -> None:
+        """Handles the player hotkey's and enemy blocking durations."""
+        if self.player.blocking and self.current_time >= self.block_cooldown_end:
             self.player.blocking = False
 
-    def hotkeys(self, event):
-            current_time = pygame.time.get_ticks()
+        if self.enemy.blocking:
+            if self.current_time >= self.enemy_block_duration: self.enemy.blocking = False
+        else:
+            self.enemy_block_duration = self.current_time + 500
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-                if not self.block and current_time >= self.block_cooldown_end + self.block_delay:
-                    self.block = True
-                    self.player.blocking = True
-                    self.block_cooldown_end = current_time + self.block_duration  # Next time we can block again
+    def blocking_critical_hotkey(self, event) -> None:
+        """The player's block | crit hotkey with its delay."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+            if not self.player.blocking and self.current_time >= self.block_cooldown_end + self.block_delay:
+                self.player.blocking = True
+                self.block_cooldown_end = self.current_time + self.block_duration  # Next time we can block again
 
-    def player_run(self):
+    def end_battle(self) -> None:
+        """End battle when the player picks run / this function."""
         self.state = BattleState.END_BATTLE
 
-    def player_attack(self, attack):
-        attack_ = attack.replace(" ", "_").lower()
-
-        self.player_attack_option = attack_.lower()
+    def player_turn(self, attack) -> None:
+        """Takes in the picked attack from the combat menu."""
+        internal_attack = attack.replace(" ", "_").lower()
         self.state = BattleState.PLAYER_ANIMATION
-        self.player.current_attack = self.player_attack_option
-        self.player.mana -= moves[self.player_attack_option]["mana"]
+        self.player.current_attack = internal_attack
+        self.player.mana -= moves[internal_attack]["mana"]
 
-        if moves[self.player_attack_option]["type"] == "physical":
-            self.player.animation_state = AnimationState.APPROACH
-        elif moves[self.player_attack_option]["type"] == "buff":
-            self.player.spawn_projectile = False
-            self.player.animation_state = AnimationState.BUFF
-        elif moves[self.player_attack_option]["type"] == "special":
-            if self.player.current_attack == "combustion":
-                self.player.animation_state = AnimationState.APPROACH
+        self.handle_attack(self.player, self.player.current_attack)
+
+    def handle_attack(self, performer, attack_name) -> None:
+        """Handles the different animation start phases depending on the attack type."""
+        if moves[attack_name]["type"] == AttackType.PHYSICAL.value:
+            performer.animation_state = AnimationState.APPROACH
+        elif moves[attack_name]["type"] == AttackType.BUFF.value:
+            performer.spawn_projectile = False
+            performer.animation_state = AnimationState.BUFF
+        elif moves[attack_name]["type"] == AttackType.SPECIAL.value:
+            performer.spawn_projectile = False
+            self.set_delay(1000)
+            performer.animation_state = AnimationState.WAIT
+
+    def enemy_turn(self) -> None:
+        """Picks a random attack choice for the enemy."""
+        self.state = BattleState.ENEMY_ANIMATION
+        self.enemy.current_attack = random.choice(self.enemy.moves)
+
+        self.handle_attack(self.enemy, self.enemy.current_attack)
+
+    def animation_phases(self, performer, target) -> None:
+        """Handles the different animation phases and their delays."""
+        # === [ APPROACH ] > WAIT > ATTACK ===
+        if performer.animation_state == AnimationState.APPROACH:
+            performer.approach_animation(target)
+            delay_time = 1000 if performer.type == "player" else random.randint(500, 3000)
+            self.set_delay(delay_time)
+
+        # === DEATH ===
+        if target.animation_state == AnimationState.DEATH:
+            target.death_animation()
+
+        # === APPROACH or NONE > [ WAIT ] > ATTACK ===
+        elif performer.animation_state == AnimationState.WAIT:
+            performer.wait()
+            if self.current_time >= self.delay:
+                performer.animation_state = AnimationState.ATTACK
+
+        # === WAIT > [ ATTACK ] > RETURN OR IDLE ===
+        elif performer.animation_state == AnimationState.ATTACK:
+            performer.attack_animation(target, performer.current_attack)
+            self.set_delay(1000)
+
+        # === [ BUFF ] > IDLE ====
+        elif performer.animation_state == AnimationState.BUFF:
+            performer.buff_animation()
+
+        # === ATTACK > [ RETURN ] > IDLE ===
+        elif performer.animation_state == AnimationState.RETURN:
+            if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
+
+            if self.current_time >= self.delay:
+                performer.return_animation(performer.battle_pos)
+
+        # === END MENU ===
+        elif target.hp <= 0:
+            self.state = BattleState.END_MENU
+
+        # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
+        elif performer.animation_state == AnimationState.IDLE:
+            if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
+
+            if performer.type == "enemy":
+                self.state = BattleState.PLAYER_TURN
+                self.combat_menu.state = CombatMenuState.MAIN_MENU
+                self.combat_menu.buttons_group = pygame.sprite.Group()
+                self.player.mana += 1
+                self.player.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
+
+                self.clock_timer = pygame.time.get_ticks() + 20000
             else:
-                self.player.spawn_projectile = False
-                self.delay = pygame.time.get_ticks() + 1000
-                self.player.animation_state = AnimationState.WAIT
+                self.state = BattleState.ENEMY_TURN
+            self.set_delay(1000)
 
-
-
-    def animation(self):
+    def animations(self) -> None:
+        """Runs the player and enemy animation phases."""
         if self.state == BattleState.PLAYER_ANIMATION:
-            if self.player.animation_state == AnimationState.APPROACH:
-                self.player.approach_animation(self.enemy)
-                self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
-
-
-            if self.enemy.hp <= 0 and not self.enemy.death:
-                self.enemy.death_animation()
-
-            elif self.player.animation_state == AnimationState.WAIT:
-
-                self.player.wait()
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.player.animation_state = AnimationState.ATTACK
-                    self.delay = None
-
-            elif self.player.animation_state == AnimationState.ATTACK:
-                self.player.attack_animation(self.enemy, self.player_attack_option) # self.player_attack
-                self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
-
-
-            elif self.player.animation_state == AnimationState.BUFF:
-                self.player.buff_animation()
-                self.delay = pygame.time.get_ticks() + 1000  # wait time before attacking
-
-
-            elif self.player.animation_state == AnimationState.RETURN:
-                if not self.enemy.hp <= 0: self.enemy.action = "idle"
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.enemy.blocking = False
-                    self.player.return_animation(self.player_position)
-
-            elif self.enemy.hp <= 0:
-                self.state = BattleState.END_MENU
-
-            elif self.player.animation_state == AnimationState.IDLE:
-
-                if not self.enemy.hp <= 0: self.enemy.action = "idle"
-
-                if not self.delay: self.delay = pygame.time.get_ticks() + 1000  # wait time enemy attacking
-
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.enemy.blocking = False
-                    self.delay = None
-                    self.state = BattleState.ENEMY_TURN
+            self.animation_phases(self.player, self.enemy)
 
         elif self.state == BattleState.ENEMY_ANIMATION:
-            if self.enemy.animation_state == AnimationState.APPROACH:
-                self.enemy.approach_animation(self.player)
-                self.delay = pygame.time.get_ticks() + random.randint(500, 3000) # random wait time before attacking
-
-            elif self.enemy.animation_state == AnimationState.WAIT:
-                if not self.player.hp <= 0: self.player.action = "idle"
-                self.enemy.wait()
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.enemy.animation_state = AnimationState.ATTACK
-                    self.delay = None  # Reset! = True
-
-            elif self.enemy.animation_state == AnimationState.ATTACK:
-                self.enemy.attack_animation(self.player, self.enemy_attack_option)
-
-                self.delay = pygame.time.get_ticks() + 1000
-
-            elif self.enemy.animation_state == AnimationState.BUFF:
-                self.enemy.buff_animation()
-                self.delay = pygame.time.get_ticks() + 1000  # wait time before player turn
-
-            elif self.enemy.animation_state == AnimationState.RETURN:
-                if not self.player.hp <= 0: self.player.action = "idle"
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.enemy.return_animation(self.enemy_position)
-
-            if self.player.hp <= 0:
-                self.player.death_animation()
-
-            elif self.player.hp <= 0:
-                self.state = BattleState.END_MENU
-
-            elif self.enemy.animation_state == AnimationState.IDLE:
-                # End of enemy's animation
-                if not self.delay:
-                    self.delay = pygame.time.get_ticks() + 1000 # delay before player turn
-
-                if self.delay and pygame.time.get_ticks() >= self.delay:
-                    self.combat_menu.state = CombatMenuState.MAIN_MENU
-                    self.combat_menu.buttons_group = pygame.sprite.Group()
-                    self.state = BattleState.PLAYER_TURN
-                    self.player.mana += 1
-                    self.player.mana_messages.append(1)
-                    self.delay = None
-                    self.clock_time = pygame.time.get_ticks() + 20000
+            self.animation_phases(self.enemy, self.player)
 
 
-
-    def enemy_turn(self):
-        self.state = BattleState.ENEMY_ANIMATION
-        self.enemy_attack_option = random.choice(self.enemy.moves)
-        self.enemy.current_attack = self.enemy_attack_option
-
-        if moves[self.enemy_attack_option]["type"] == "physical":
-            self.enemy.animation_state = AnimationState.APPROACH
-        elif moves[self.enemy_attack_option]["type"] == "buff":
-            self.enemy.spawn_projectile = False
-            self.enemy.animation_state = AnimationState.BUFF
 
 
 

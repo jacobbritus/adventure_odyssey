@@ -2,7 +2,7 @@ from classes.states import BookState, CombatMenuState, ButtonType
 from other.settings import *
 
 class HpBar:
-    def __init__(self, side: str, level: int, current_hp: int, max_hp: int, current_mana: int, name: str):
+    def __init__(self, side: str, level: int, current_hp: int, max_hp: int, mana: int | None, name: str):
         # === dynamic stats ===
         self.max_hp: int = max_hp
         self.hp: int = current_hp
@@ -23,9 +23,9 @@ class HpBar:
         self.level_box: pygame.Surface = pygame.image.load(LEVEL_BOX)
         self.level: pygame.Surface = self.font.render(str(level),True, (255, 255, 255))
 
-        if current_mana:
+        if side == "left":
             self.mana_box = pygame.image.load(MANA_BOX)
-            self.mana = self.font.render(f"{current_mana}", True, (150, 206, 255))
+            self.mana = self.font.render(f"{mana}", True, (150, 206, 255))
         else:
             self.mana = None
 
@@ -112,7 +112,6 @@ class HpBar:
 
         hp_bar_crop = pygame.Rect(0, 0, self.current_width, self.bar_size[1])
         self.hp_bar_cropped = self.hp_bar.subsurface(hp_bar_crop).copy()
-
 
     def draw(self, window) -> None:
         """Draw all the images on the window"""
@@ -329,7 +328,7 @@ class CombatMenu:
         def can_use_skill(name, mana_amount) -> bool:
             """check if the player has enough mana"""
             internal_name = name.replace(" ", "_").lower()
-            return mana_amount > moves[internal_name]["mana"]
+            return mana_amount >= moves[internal_name]["mana"]
 
         if not self.buttons_group:
             for index, skill_name in enumerate(self.formatted_skills):

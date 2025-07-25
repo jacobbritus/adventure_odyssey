@@ -17,6 +17,7 @@ class AnimationState(Enum):
     ATTACK = auto()
     BUFF = auto()
     RETURN = auto()
+    DEATH = auto()
 
 class BattleState(Enum):
     PLAYER_TURN = auto()
@@ -44,3 +45,8 @@ class CombatMenuState(Enum):
 class ButtonType(Enum):
     PARAMETER = auto()
     NO_PARAMETER = auto()
+
+class AttackType(Enum):
+    PHYSICAL = "physical"
+    SPECIAL = "special"
+    BUFF = "buff"

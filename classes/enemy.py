@@ -52,7 +52,7 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash", "heal"], 0.25, 0.5, 2
+            return skeleton_sprites, ["sword_slash"], 0.25, 1, 2
         elif self.monster_name == "Slime":
             return slime_sprites, ["stomp"], 0.25, 0.25, 3
         elif self.monster_name == "Goblin":
