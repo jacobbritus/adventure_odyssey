@@ -66,6 +66,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         """Get all sprites that are visible on the screen."""
         inflated_display_rect = self.display_rect.inflate(200, 300)
         for sprite in self.sprites():
+            if sprite.type == "enemy":
+                sprite.visibility = True
             offset_pos = sprite.rect.topleft - self.offset
             if inflated_display_rect.collidepoint(offset_pos):
                 yield sprite

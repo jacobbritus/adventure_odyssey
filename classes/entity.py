@@ -19,6 +19,7 @@ class Entity(pygame.sprite.Sprite):
         self.x: float = 0
         self.y: float = 0
         self.screen_position = None
+        self.visibility = False
 
         # Image related.
         self.sprite_dict = None
@@ -46,9 +47,11 @@ class Entity(pygame.sprite.Sprite):
         self.pre_battle_pos = None
         self.battle_pos = None
         self.obstacle_sprites = None
+        self.current_attack = None
+
+        # === enemy stuff ===
         self.critical_hit_chance = None
         self.blocking_chance = None
-        self.current_attack = None
 
         self.death = False
         self.hit_landed = False
@@ -88,9 +91,10 @@ class Entity(pygame.sprite.Sprite):
             "luck": 10,
         }
 
-
         # === animation states ===
         self.animation_state = AnimationState.IDLE
+
+        self.footstep_delay = 500
 
     def update_pos(self) -> None:
         self.rect.topleft = (int(self.x), int(self.y))  # update rect
@@ -98,6 +102,23 @@ class Entity(pygame.sprite.Sprite):
 
     def get_dt(self, dt):
         self.delta_time = dt / 1000
+
+    def footstep_sounds(self):
+        if not pygame.time.get_ticks() >= self.footstep_delay:
+            return
+
+        footstep_sound = random.choice(GRASS_FOOTSTEPS)
+        if not self.in_battle:
+            footstep_sound.set_volume(0.25)
+        else:
+            footstep_sound.set_volume(0.75)
+
+        channel = pygame.mixer.find_channel()
+        if channel:
+            channel.play(footstep_sound)
+
+        delay = 400 if not self.sprinting else 200
+        self.footstep_delay = pygame.time.get_ticks() + delay
 
     def move(self, move_vector: tuple[int or float, int or float]) -> bool or None:
         """Move the player based on the move vector."""
@@ -131,6 +152,8 @@ class Entity(pygame.sprite.Sprite):
             self.y -= dy
             self.update_pos()
             return True
+        if self.visibility: self.footstep_sounds()
+
         return False
 
     def animations(self) -> None:
@@ -261,6 +284,7 @@ class Entity(pygame.sprite.Sprite):
             if self.frame > impact_frame and not self.hit_landed and not target.death:
                 self.hit_landed = True
                 self.handle_attack_impact(target)
+                if target.blocking: self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
                 # Mask when hit
                 target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
 
@@ -278,7 +302,6 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = False
                 self.critical_hit_is_done = True
                 target.perfect_block = False
-                target.blocking = False
 
 
             # ___end attack sequence___

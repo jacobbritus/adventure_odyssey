@@ -19,6 +19,7 @@ class Player(Entity):
         self.x: int = spawn_coordinates[0]
         self.y: int = spawn_coordinates[1]
         self.screen_position = pygame.math.Vector2
+        self.visibility = True
 
         # Movement
         self.sprinting: bool = False

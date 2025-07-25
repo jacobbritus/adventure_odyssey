@@ -7,7 +7,6 @@ class Game:
     def __init__(self):
         """General setup"""
         pygame.init()
-        pygame.mixer.init()
         self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock = pygame.time.Clock()
         self.level = Level()

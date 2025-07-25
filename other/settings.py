@@ -1,6 +1,13 @@
+import os
+
+import pygame.mixer
+
+pygame.mixer.init()
+
 from other.png_to_sprite import *
 
 SCALE = 2
+VOLUME = 0.5
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -75,8 +82,16 @@ PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block_2.mp3")
 CRITICAL_HIT = get_file_location("sounds/effects/critical_hit_3.mp3")
 LEVEL_UP_SOUND = get_file_location("sounds/effects/level_up_sound.mp3")
 
-GRASS_FOOTSTEP = get_file_location("sounds/Walk/Grass/GRASS - Walk 7.wav")
 
+GRASS_FOOTSTEPS = []
+grass_footsteps_dir = get_file_location("sounds/footsteps/grass")
+for file in os.listdir(grass_footsteps_dir):
+    full_path = get_file_location(os.path.join(grass_footsteps_dir, file))
+    sound = pygame.mixer.Sound(full_path)
+    sound.set_volume(VOLUME)
+    GRASS_FOOTSTEPS.append(sound)
+
+print(GRASS_FOOTSTEPS)
 # UI
 BACKGROUND_BOX = get_file_location(f"sprites/UI/background_box.png")
 TITLE_BOX = get_file_location(f"sprites/UI/title_box.png")
