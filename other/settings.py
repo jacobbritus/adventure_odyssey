@@ -80,7 +80,7 @@ DISABLED_SOUND = get_file_location("sounds/disabled.wav")
 ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
 PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block_2.mp3")
 CRITICAL_HIT = get_file_location("sounds/effects/critical_hit_3.mp3")
-LEVEL_UP_SOUND = get_file_location("sounds/effects/level_up_sound.mp3")
+LEVEL_UP_SOUND = pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3"))
 
 
 GRASS_FOOTSTEPS = []

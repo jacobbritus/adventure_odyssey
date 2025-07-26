@@ -3,7 +3,7 @@ import math
 import pygame.image
 
 from classes.entity import Entity, BlockShield
-from classes.spells import Spells
+from classes.spells import Spells, StationarySpell
 from classes.states import AnimationState
 from other.settings import *
 
@@ -41,7 +41,7 @@ class Player(Entity):
         # Stats
         self.level = 1
         self.exp_to_level = 50
-        self.leveled_up = False
+        self.leveled_up = True
         self.stat_points = 5
 
         self.exp = 0
@@ -67,6 +67,8 @@ class Player(Entity):
         self.dust_spawn_time = 0
         self.dust_cooldown = 400
         self.dust_particles = dust_particles
+        self.level_up_visual = pygame.sprite.Group()
+
 
 
         self.attacks = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
@@ -127,7 +129,6 @@ class Player(Entity):
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
-
     def handle_exp_gain(self, exp_amount):
         """Handle experience gained from battles."""
         self.exp += exp_amount
@@ -152,15 +153,15 @@ class Player(Entity):
             self.exp_to_level = current_exp_to_level
             self.leveled_up = True
 
-    def level_up_animation(self, offset, window):
+    def level_up_animation(self, offset, window) -> None:
+        """Draws an animating shining light on the player upon leveling up."""
         if self.leveled_up:
-            Spells(self.projectiles, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
-            pygame.mixer.Sound(LEVEL_UP_SOUND).play()
+            Spells(self.level_up_visual, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
+            LEVEL_UP_SOUND.play()
             self.leveled_up = False
 
-        if not self.in_battle:
-            self.projectiles.draw(window)
-            self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 232), offset, self.blocking)
+        self.level_up_visual.draw(window)
+        self.level_up_visual.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 232), offset, self.blocking)
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
@@ -168,16 +169,21 @@ class Player(Entity):
         # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
 
+
+
+
         self.update_pos()
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
 
-        self.level_up_animation(offset, window)
+        if not self.stationary_spells: StationarySpell("heal", self.stationary_spells, (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y))))
 
 
 
         if self.blocking and self.animation_state == AnimationState.IDLE:
-            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (8, -36), offset)
+            self.block_shield.direction = self.direction
+            shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
+            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
             self.block_shield.draw(window, pos)
 
 
@@ -191,6 +197,8 @@ class Player(Entity):
         self.controls()
 
         self.update_animations()
+        self.level_up_animation(offset, window)
+
 
 
 

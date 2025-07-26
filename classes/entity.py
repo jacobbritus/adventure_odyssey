@@ -71,9 +71,10 @@ class Entity(pygame.sprite.Sprite):
         self.screen_messages = []
 
 
-        # projectiles
+        # spells
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
+        self.stationary_spells = pygame.sprite.Group()
 
         # Sound
 

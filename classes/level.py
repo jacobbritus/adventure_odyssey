@@ -150,6 +150,12 @@ class Level:
 
 
 
+
+        self.player.stationary_spells.update((self.player.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x), int(self.visible_sprites.offset.y))))
+        self.player.stationary_spells.draw(self.display_surface)
+
+
+
     def update_day_cycle(self):
         day_phases = {
             5: {"color": (255,223,186), "opacity": 50},

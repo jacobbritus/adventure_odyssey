@@ -1,6 +1,52 @@
 import pygame.sprite
 from other.settings import *
 
+class StationarySpell(pygame.sprite.Sprite):
+    def __init__(self, spell_name, group, pos):
+        super().__init__(group)
+        self.spell_name = spell_name
+        self.sprites, self.life_time, self.fade_time = self.get_sprites()
+        self.frame = 0
+        self.image = self.sprites[self.frame]
+        self.rect = self.image.get_rect(center = pos)
+        self.position = pos
+
+        self.opacity = 255
+
+    def update(self, pos):
+        self.rect.center = pos
+        print(self.position)
+        self.handle_life_time()
+        self.animations()
+
+    def draw(self, window):
+        window.blit(self.image, self.position)
+
+
+    def get_sprites(self):
+        if self.spell_name == "heal":
+            return heal_sprites, pygame.time.get_ticks() + 3000, pygame.time.get_ticks() + 2000
+        return None
+
+    def handle_life_time(self):
+        current_time = pygame.time.get_ticks()
+
+        if current_time >= self.fade_time:
+            self.opacity -= 10
+            if self.opacity >= 0:
+                self.image.set_alpha(max(self.opacity, 0))
+        if current_time >= self.life_time:
+            self.kill()
+
+
+
+    def animations(self):
+        self.frame += 0.06
+        last_frame = len(self.sprites) - 1
+        if self.frame >= last_frame: self.frame = 0
+
+        self.image = self.sprites[int(self.frame)]
+
 class Spells(pygame.sprite.Sprite):
     def __init__(self, group, spell_type, start_pos, end_pos, speed):
         super().__init__(group)

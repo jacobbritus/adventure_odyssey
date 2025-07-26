@@ -170,7 +170,9 @@ class Enemy(Entity):
         if not self.detected_player: self.random_movement()
 
         if self.blocking:
-            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + (-34, -36), offset)
+            self.block_shield.direction = self.direction
+            shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
+            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
             self.block_shield.draw(window, pos)
 
             # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))

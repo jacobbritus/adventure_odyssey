@@ -187,12 +187,14 @@ fireball_sprites = {
 
                     }
 
-heal_sprites = {
-    "sprites": {
-        "right": sprite_converter("sprites/particles/heal.png", 0, 4, 96, 90, False),
+# heal_sprites = {
+#     "sprites": {
+#         "right": sprite_converter("sprites/particles/heal.png", 0, 4, 96, 90, False),
+#
+#     }
+# }
 
-    }
-}
+heal_sprites = sprite_converter("sprites/particles/heal.png", 0, 4, 96, 90, False)
 
 goblin_sprites = {
     "idle": {
@@ -261,3 +263,4 @@ block_shield_sprites = {
     "left": sprite_converter("sprites/particles/shield_block.png", 0, 5, 32, 96, True),
 
 }}
+

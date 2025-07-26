@@ -205,10 +205,10 @@ class YSortCameraGroup(pygame.sprite.Group):
 
             positions = get_positions_in_rect(spots2, 2)
 
-            enemy.x, enemy.y = positions[1]
+            enemy.x, enemy.y = positions[0]
             enemy.rect.topleft = (int(enemy.x), int(enemy.y))
 
-            player.x, player.y = positions[0]
+            player.x, player.y = positions[1]
             player.rect.topleft = (int(player.x), int(player.y))
 
             player.face_target(enemy)
