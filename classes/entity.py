@@ -83,12 +83,12 @@ class Entity(pygame.sprite.Sprite):
 
         # === core stats ===
         self.core_stats = {
-            "vitality": 10,
-            "defense": 10,
-            "strength": 10,
-            "magic": 10,
-            "speed": 10,
-            "luck": 10,
+            "vitality": 7,
+            "defense": 7,
+            "strength": 7,
+            "magic": 7,
+            "speed": 7,
+            "luck": 7,
         }
 
         # === animation states ===
@@ -108,15 +108,16 @@ class Entity(pygame.sprite.Sprite):
             return
 
         footstep_sound = random.choice(GRASS_FOOTSTEPS)
-        if not self.in_battle:
+        if not self.in_battle and self.type != "player":
             footstep_sound.set_volume(0.25)
         else:
-            footstep_sound.set_volume(0.75)
+            footstep_sound.set_volume(0.5)
 
         channel = pygame.mixer.find_channel()
         if channel:
             channel.play(footstep_sound)
-
+        else:
+            footstep_sound.play()
         delay = 400 if not self.sprinting else 200
         self.footstep_delay = pygame.time.get_ticks() + delay
 

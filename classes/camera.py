@@ -228,7 +228,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
-            if player.hitbox.colliderect(enemy.hitbox):
+            if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
                 if enemy.death:
                     pass
                 else:
@@ -263,12 +263,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.state = LevelState.OVERWORLD
         player, enemy = self.battle_participants
         if enemy.hp <= 0:
-            player.exp += enemy.exp
-            if player.exp >= player.exp_to_level:
-                player.level += 1
-                player.exp = 0 # calculate left over (this function has to repeat)
-                player.exp_to_level += 20
-                player.leveled_up = True
+            player.handle_exp_gain(enemy.exp)
+
 
 
         self.battle_loop = None

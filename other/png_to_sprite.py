@@ -133,7 +133,6 @@ skeleton_sprites = {
 
 }
 
-
 slime_sprites = {
     "idle": {
         "sprites": {
@@ -232,7 +231,6 @@ goblin_sprites = {
 
 }}
 
-
 lightning_sprites = {
     "sprites": {
         "right": sprite_converter("sprites/particles/lightning.png", 0, 10, 128, 256, False),
@@ -251,7 +249,7 @@ book_sprites = {
 
 level_up_sprites = {
     "sprites": {
-        "right": sprite_converter("sprites/particles/level_up.png", 0, 16, 96, 96, False),
+        "right": sprite_converter("sprites/particles/level_up.png", 0, 16, 96, 514, False),
 
     }
 

@@ -38,17 +38,11 @@ class Player(Entity):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.hitbox = self.rect.inflate(-64, -48)
 
-        # # Sound
-        # self.footstep_sound = pygame.mixer.Sound(GRASS_FOOTSTEP)
-        # self.footstep_sound.set_volume(0.2)
-        #
-        # self.footstep_delay = 400
-        # self.last_footstep_time = pygame.time.get_ticks()
-
         # Stats
         self.level = 1
         self.exp_to_level = 50
         self.leveled_up = False
+        self.stat_points = 5
 
         self.exp = 0
         self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
@@ -56,6 +50,16 @@ class Player(Entity):
         self.mana: int = 5
         self.dmg: int = 5
         self.speed = 3
+
+        # === core stats ===
+        self.core_stats = {
+            "vitality": 10,
+            "defense": 10,
+            "strength": 10,
+            "magic": 7,
+            "speed": 7,
+            "luck": 7,
+        }
 
 
         # Other
@@ -66,6 +70,7 @@ class Player(Entity):
 
 
         self.attacks = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
+        self.post_battle_iframes = pygame.time.get_ticks() + 0
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -119,6 +124,34 @@ class Player(Entity):
             self.direction_pause = 0
             self.action = "idle"
 
+    def recalculate_stats(self):
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+
+
+    def handle_exp_gain(self, exp_amount):
+        """Handle experience gained from battles."""
+        self.exp += exp_amount
+        self.leveled_up = False
+
+        levels_gained = 0
+        current_exp_to_level = self.exp_to_level
+        remaining_exp = self.exp
+
+        for _ in range(100):
+            if remaining_exp >= current_exp_to_level:
+                remaining_exp -= current_exp_to_level
+                current_exp_to_level *= 2
+                levels_gained += 1
+            else:
+                break
+
+        if levels_gained > 0:
+            self.level += levels_gained
+            self.stat_points += levels_gained
+            self.exp = remaining_exp
+            self.exp_to_level = current_exp_to_level
+            self.leveled_up = True
+
     def level_up_animation(self, offset, window):
         if self.leveled_up:
             Spells(self.projectiles, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
@@ -127,13 +160,14 @@ class Player(Entity):
 
         if not self.in_battle:
             self.projectiles.draw(window)
-            self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 20), offset, self.blocking)
+            self.projectiles.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 232), offset, self.blocking)
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
         # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
+
         self.update_pos()
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)

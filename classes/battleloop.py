@@ -111,6 +111,7 @@ class BattleLoop:
             elif self.state == BattleState.END_BATTLE:
                 if self.enemy.death: self.enemy.respawn_time = self.current_time + 600000
                 self.return_to_overworld = True
+                self.player.post_battle_iframes = pygame.time.get_ticks() + 5000
 
             elif self.state == self.state.END_MENU:
                 self.combat_menu.state = CombatMenuState.END_MENU

@@ -179,7 +179,10 @@ class Button(pygame.sprite.Sprite):
 
 
     def get_images(self):
-        if self.size == "small":
+        if self.size == "extra_small":
+            return BUTTON_SMALL_NORMAL, BUTTON_SMALL_PRESSED, BUTTON_SMALL_SELECTED
+
+        elif self.size == "small":
             return pygame.image.load(BUTTON_NORMAL), pygame.image.load(BUTTON_PRESSED), pygame.image.load(BUTTON_SELECTED)
 
         elif self.size == "medium":
@@ -194,7 +197,7 @@ class Button(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
 
-        if self.rect.collidepoint(mouse_pos) and press or self.clicked:
+        if self.rect.inflate(- 16, - 16).collidepoint(mouse_pos) and press or self.clicked:
             self.image = self.image_pressed
 
             if not self.disabled:
@@ -205,7 +208,7 @@ class Button(pygame.sprite.Sprite):
                 if not self.click_sound_played: pygame.mixer.Sound(DISABLED_SOUND).play()
                 self.click_sound_played = True
 
-        elif self.rect.collidepoint(mouse_pos) or self.hovering:
+        elif self.rect.inflate(-16, -16).collidepoint(mouse_pos) or self.hovering:
             self.image = self.image_selected
             if not self.sound_played: pygame.mixer.Sound(HOVER_SOUND).play()
             self.sound_played = True
@@ -349,6 +352,7 @@ class MenuBook:
     def __init__(self, player):
         self.player = player
         self.image = pygame.image.load(BOOK)
+        self.book_width, self.book_height = self.image.get_size()
         self.frame = 0
         self.state = None
         self.base_pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
@@ -368,6 +372,7 @@ class MenuBook:
 
         self.content = [{"title": pygame.image.load(INFO_TITLE), "content": self.info_page}]
         self.current_page = 0
+        self.buttons_group = pygame.sprite.Group()
 
     def draw(self, window):
         self.update()
@@ -412,7 +417,6 @@ class MenuBook:
 
 
     def contents(self, window):
-
         title = self.content[self.current_page]["title"]
         self.content[self.current_page]["content"](window)
 
@@ -455,17 +459,49 @@ class MenuBook:
 
         base_y = 125
         base_x = 70
-        distance_between = 20
+        distance_between = 18
         for index, key in enumerate(list(core_stats.keys())):
             position = self.base_pos + (base_x, base_y + distance_between * index)
             text = font.render(key.upper(), True, (255, 238, 131))
             window.blit(text, position)
 
         base_x = 185
+        distance_between = 18
         for index, value in enumerate(list(core_stats.values())):
             position = self.base_pos + (base_x, base_y + distance_between * index)
             text = font.render(str(value).upper(), True, (255, 255, 255))
             window.blit(text, position)
+
+
+        if self.player.stat_points:
+            base_x = 70
+            text = font.render(str(f"STAT POINTS: {str(self.player.stat_points)}").upper(), True, (255, 255, 255))
+            position = self.base_pos + (base_x, self.book_height // 1.37)
+            window.blit(text, position)
+
+            base_x = 208
+            distance_between = 18
+
+            if not self.buttons_group:
+                for index in range(len(list(core_stats.values()))):
+                    position = self.base_pos + (base_x, base_y + distance_between * index - 6)
+                    Button(self.buttons_group, ButtonType.NO_PARAMETER, self.level_up, "", "extra_small", position, False)
+
+            for button in self.buttons_group:
+                button.draw(window)
+                button.update()
+
+
+    def level_up(self):
+        for button in self.buttons_group:
+            if button.delete:
+                index = list(self.buttons_group).index(button)
+
+                stat = list(self.player.core_stats.keys())[index]
+                self.player.core_stats[stat] += 1
+                self.player.stat_points -= 1
+                self.player.recalculate_stats()
+                self.buttons_group = pygame.sprite.Group()
 
 
 

@@ -35,7 +35,7 @@ moves = {
         "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")]
     },
     "sword_slash": {
-        "base_damage": 3,
+        "base_damage": 50,
         "multiplier": 0.25,
         "stat": "strength",
         "type": "physical",
@@ -86,12 +86,12 @@ LEVEL_UP_SOUND = get_file_location("sounds/effects/level_up_sound.mp3")
 GRASS_FOOTSTEPS = []
 grass_footsteps_dir = get_file_location("sounds/footsteps/grass")
 for file in os.listdir(grass_footsteps_dir):
-    full_path = get_file_location(os.path.join(grass_footsteps_dir, file))
-    sound = pygame.mixer.Sound(full_path)
-    sound.set_volume(VOLUME)
-    GRASS_FOOTSTEPS.append(sound)
+    if file.endswith(".wav"):
+        full_path = get_file_location(os.path.join(grass_footsteps_dir, file))
+        sound = pygame.mixer.Sound(full_path)
+        sound.set_volume(VOLUME)
+        GRASS_FOOTSTEPS.append(sound)
 
-print(GRASS_FOOTSTEPS)
 # UI
 BACKGROUND_BOX = get_file_location(f"sprites/UI/background_box.png")
 TITLE_BOX = get_file_location(f"sprites/UI/title_box.png")
@@ -126,6 +126,11 @@ SKILLS_TITLE = get_file_location(f"sprites/UI/skills_title.png")
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
 # ___buttons___
+BUTTON_SMALL_NORMAL = pygame.image.load(get_file_location("sprites/UI/button_small.png"))
+BUTTON_SMALL_SELECTED = pygame.image.load(get_file_location("sprites/UI/button_small_selected.png"))
+BUTTON_SMALL_PRESSED = pygame.image.load(get_file_location("sprites/UI/button_small_pressed.png"))
+
+
 BUTTON_NORMAL = get_file_location(f"sprites/UI/button_one_normal.png")
 BUTTON_SELECTED = get_file_location(f"sprites/UI/button_one_selected.png")
 BUTTON_PRESSED = get_file_location(f"sprites/UI/button_one_pressed.png")
