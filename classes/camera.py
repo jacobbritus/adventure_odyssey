@@ -81,8 +81,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         if self.state == LevelState.OVERWORLD:
             camera_speed = 0.1  # or try 0.2 ~ 0.4 for feel
 
-            target_x = player.rect.centerx - self.screen_center_x
-            target_y = player.rect.centery - self.screen_center_y
+            target_x = player.x - self.screen_center_x + 32
+            target_y = player.y - self.screen_center_y + 32
 
             self.offset_float.x += (target_x - self.offset_float.x) * camera_speed
             self.offset_float.y += (target_y - self.offset_float.y) * camera_speed
@@ -146,7 +146,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         ground_sprites = [sprite for sprite in visible_sprites if
                           sprite.type and sprite.type in ["ground", "water"]]
         for sprite in ground_sprites:
-            offset_pos = sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
+            offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
             self.display_surface.blit(sprite.image, offset_pos)
 
         # Draw the other sprites with overlapping.
@@ -166,14 +166,18 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in sorted_sprites:
             if draw_enemy_last and sprite == enemy_sprite:
                 continue  # Skip for now
-            offset_pos = sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
+            offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
             if hasattr(sprite, "image"):
-                self.display_surface.blit(sprite.image, offset_pos)
+                if sprite.type == "player":
+                    pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
+                    self.display_surface.blit(sprite.image, pos)
+                else:
+                    self.display_surface.blit(sprite.image, offset_pos)
                 # else it's invisible
 
         # Now draw the enemy on top
         if draw_enemy_last and enemy_sprite:
-            offset_pos = enemy_sprite.rect.topleft - pygame.math.Vector2(int(self.offset.x), int(self.offset.y))
+            offset_pos = enemy_sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
             self.display_surface.blit(enemy_sprite.image, offset_pos)
 
         self.offset += self.shake_offset
@@ -238,10 +242,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             print(t)
 
             for index, enemy in enumerate(enemies):
+                enemy.pre_battle_pos = (enemy.x, enemy.y)
+
                 enemy.x, enemy.y = t[index]
                 enemy.rect.topleft = (int(enemy.x), int(enemy.y))
                 enemy.face_target(player)
-                enemy.pre_battle_pos = (enemy.x, enemy.y)
                 enemy.sprinting = False
 
             player.face_target(enemies[0])

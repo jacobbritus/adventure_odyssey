@@ -160,7 +160,7 @@ class Entity(pygame.sprite.Sprite):
 
     def animations(self) -> None:
         """Iterate over the sprite list assigned to the action > direction."""
-        iterate_speed: float = 0.1 if self.sprinting else 0.06
+        iterate_speed: float = 0.2 if self.sprinting else 0.12
 
         self.frame += iterate_speed
 

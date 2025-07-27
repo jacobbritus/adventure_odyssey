@@ -220,6 +220,7 @@ class DustParticle(pygame.sprite.Sprite):
 
         self.image = self.images[0]
 
+        self.x, self.y = (player.x + self.offset_x, player.y + self.offset_y)
         self.rect = pygame.Rect(player.x + self.offset_x, player.y + self.offset_y, 24, 24)
 
         self.frame_index = 0
@@ -259,6 +260,7 @@ class DustParticle(pygame.sprite.Sprite):
             self.kill()
 
         # Update hitbox
+        self.y -= 1
         self.rect.y += -1 # makes it go up a little
         self.frame_index += 0.2
 

@@ -9,6 +9,8 @@ class StaticTile(pygame.sprite.Sprite):
         self.type: str = tile_type
         self.hitbox: pygame.Rect = (self.rect.inflate(-32, -32) if tile_type == "tree" else self.rect)
 
+
+
 class ActionTile(pygame.sprite.Sprite):
     """A class to initialize and manage a tile with actions."""
     def __init__(self, pos, group, size, tile_type) -> None:
@@ -22,7 +24,6 @@ class ActionTile(pygame.sprite.Sprite):
         # Debugging
         self.image.fill('black')
         self.image.set_alpha(0)
-
 
 
 class AnimatedTile(pygame.sprite.Sprite):
