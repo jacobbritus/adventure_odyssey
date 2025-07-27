@@ -1,7 +1,7 @@
 import pygame.sprite
 from other.settings import *
 
-class StationarySpell(pygame.sprite.Sprite):
+class BuffSpell(pygame.sprite.Sprite):
     def __init__(self, spell_name, group, pos):
         super().__init__(group)
         self.spell_name = spell_name
@@ -15,7 +15,6 @@ class StationarySpell(pygame.sprite.Sprite):
 
     def update(self, pos):
         self.rect.center = pos
-        print(self.position)
         self.handle_life_time()
         self.animations()
 

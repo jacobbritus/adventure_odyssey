@@ -2,7 +2,7 @@ import pygame.time
 import pytmx
 
 from other.settings import *
-
+from datetime import datetime
 from classes.camera import YSortCameraGroup
 from classes.enemy import Enemy
 from classes.player import Player, DustParticle
@@ -150,12 +150,6 @@ class Level:
 
 
 
-
-        self.player.stationary_spells.update((self.player.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x), int(self.visible_sprites.offset.y))))
-        self.player.stationary_spells.draw(self.display_surface)
-
-
-
     def update_day_cycle(self):
         day_phases = {
             5: {"color": (255,223,186), "opacity": 50},
@@ -169,9 +163,18 @@ class Level:
 
         }
 
+        now = datetime.now().hour
 
 
-        current_phase = day_phases[20]
+        closest_time = 24
+
+        for time in day_phases.keys():
+            if abs(time - now) < abs(closest_time - now):
+                closest_time = time
+
+        print(closest_time)
+
+        current_phase = day_phases[closest_time]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])

@@ -3,7 +3,7 @@ import math
 import pygame.image
 
 from classes.entity import Entity, BlockShield
-from classes.spells import Spells, StationarySpell
+from classes.spells import Spells, BuffSpell
 from classes.states import AnimationState
 from other.settings import *
 
@@ -176,7 +176,6 @@ class Player(Entity):
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
 
-        if not self.stationary_spells: StationarySpell("heal", self.stationary_spells, (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y))))
 
 
 

@@ -8,13 +8,15 @@ class BattleLoop:
     def __init__(self, player, enemy, window: pygame.Surface, offset: pygame.Vector2):
         # === general stuff ===
         self.player = player
-        self.enemy = enemy
+        self.enemy = enemy[0]
+        # self.enemy2 = enemy[1]
         self.window: pygame.Surface = window
         self.offset = offset
 
         # === idle positions ===
         self.player.battle_pos = pygame.Vector2(player.x - self.player.width, player.y)
-        self.enemy.battle_pos = pygame.Vector2(enemy.x, enemy.y)
+        self.enemy.battle_pos = pygame.Vector2(self.enemy.x, self.enemy.y)
+        # self.enemy2.battle_pos = pygame.Vector2(self.enemy2.x ,self.enemy2.y)
 
         # === end battle toggle ===
         self.return_to_overworld: bool = False
@@ -82,9 +84,17 @@ class BattleLoop:
     def handle_projectiles(self) -> None:
         self.player.projectiles.draw(self.window)
         self.enemy.projectiles.draw(self.window)
+
+        self.player.stationary_spells.update((self.player.hitbox.center - pygame.Vector2(
+            int(self.offset.x), int(self.offset.y))))
+        self.player.stationary_spells.draw(self.window)
+
         if self.player.animation_state == AnimationState.ATTACK:
             self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset, self.enemy)
         elif self.player.animation_state == AnimationState.BUFF:
+            self.player.stationary_spells.update(self.player.hitbox.center - self.offset, self.offset, self.player)
+
+
             self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset, self.player)
         elif self.enemy.animation_state == AnimationState.ATTACK:
             self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset, self.player)
@@ -232,6 +242,8 @@ class BattleLoop:
         # === [ BUFF ] > IDLE ====
         elif performer.animation_state == AnimationState.BUFF:
             performer.buff_animation()
+            self.set_delay(1000)
+
 
         # === ATTACK > [ RETURN ] > IDLE ===
         elif performer.animation_state == AnimationState.RETURN:
@@ -247,18 +259,19 @@ class BattleLoop:
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
         elif performer.animation_state == AnimationState.IDLE:
             if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
+            if self.current_time >= self.delay:
 
-            if performer.type == "enemy":
-                self.state = BattleState.PLAYER_TURN
-                self.combat_menu.state = CombatMenuState.MAIN_MENU
-                self.combat_menu.buttons_group = pygame.sprite.Group()
-                self.player.mana += 1
-                self.player.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
+                if performer.type == "enemy":
+                    self.state = BattleState.PLAYER_TURN
+                    self.combat_menu.state = CombatMenuState.MAIN_MENU
+                    self.combat_menu.buttons_group = pygame.sprite.Group()
+                    self.player.mana += 1
+                    self.player.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
 
-                self.clock_timer = pygame.time.get_ticks() + 20000
-            else:
-                self.state = BattleState.ENEMY_TURN
-            self.set_delay(1000)
+                    self.clock_timer = pygame.time.get_ticks() + 20000
+                else:
+                    self.state = BattleState.ENEMY_TURN
+                self.set_delay(1000)
 
     def animations(self) -> None:
         """Runs the player and enemy animation phases."""

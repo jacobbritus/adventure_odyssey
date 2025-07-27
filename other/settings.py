@@ -9,8 +9,8 @@ from other.png_to_sprite import *
 SCALE = 2
 VOLUME = 0.5
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
 
 FPS = 120
 TILE_SIZE = 32
@@ -35,7 +35,7 @@ moves = {
         "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")]
     },
     "sword_slash": {
-        "base_damage": 50,
+        "base_damage": 5,
         "multiplier": 0.25,
         "stat": "strength",
         "type": "physical",

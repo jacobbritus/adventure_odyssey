@@ -4,7 +4,7 @@ import random
 import pygame.mixer
 
 from classes.states import AnimationState
-from classes.spells import Spells
+from classes.spells import Spells, BuffSpell
 from other.settings import *
 
 
@@ -203,7 +203,7 @@ class Entity(pygame.sprite.Sprite):
             self.move((dx / distance, dy / distance))
 
             # inflate to get a bit more distance depending on the move
-            distance = 8 if self.current_attack == "punch" else 24
+            distance = 8 if self.current_attack == "punch" else 10
             if self.hitbox.colliderect(target.hitbox.inflate(+ distance, 0)):
                 self.sprinting = False
                 self.animation_state = AnimationState.WAIT
@@ -218,7 +218,9 @@ class Entity(pygame.sprite.Sprite):
             position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery)
 
             if self.current_attack == "heal":
-                Spells(self.projectiles, self.current_attack, position, None, None)
+                BuffSpell("heal", self.stationary_spells,
+                          position)
+
                 self.spawn_projectile = True
                 heal_amount = moves[self.current_attack]["hp"]
                 self.hp += heal_amount
@@ -286,7 +288,10 @@ class Entity(pygame.sprite.Sprite):
             if self.frame > impact_frame and not self.hit_landed and not target.death:
                 self.hit_landed = True
                 self.handle_attack_impact(target)
-                if target.blocking: self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
+                if target.blocking:
+                    self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
+                    push_back = -16 if self.direction == "right" else 16
+                    self.x += push_back
                 # Mask when hit
                 target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
 

@@ -10,6 +10,7 @@ class Enemy(Entity):
     def __init__(self, monster_name, surf, pos, group, obstacle_sprites):
         super().__init__(group)
         self.monster_name = monster_name
+        self.group = group
 
 
         # General
@@ -52,7 +53,7 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         if self.monster_name == "Skeleton":
-            return skeleton_sprites, ["sword_slash"], 0.25, 1, 2
+            return skeleton_sprites, ["sword_slash"], 0.25, 0.25, 2
         elif self.monster_name == "Slime":
             return slime_sprites, ["stomp"], 0.25, 0.25, 3
         elif self.monster_name == "Goblin":
@@ -158,6 +159,9 @@ class Enemy(Entity):
                 self.moving_randomly = False
                 self.action = "idle"
 
+    def clone(self, pos):
+        return Enemy(self.monster_name, self.image, pos, self.group, self.obstacle_sprites)
+
 
     def update_enemy(self, player, window, offset) -> None:
         self.update_pos()
@@ -167,7 +171,6 @@ class Enemy(Entity):
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
 
-        if not self.detected_player: self.random_movement()
 
         if self.blocking:
             self.block_shield.direction = self.direction
@@ -177,6 +180,8 @@ class Enemy(Entity):
 
             # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             # window.blit(mask, self.screen_position)
+
+        if not self.detected_player and not self.in_battle: self.random_movement()
 
         if not player.in_battle:
             self.chase_player(player)
