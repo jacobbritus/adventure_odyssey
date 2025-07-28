@@ -3,7 +3,7 @@ import math
 import pygame.image
 
 from classes.entity import Entity, BlockShield
-from classes.spells import Spells, BuffSpell
+from classes.spells import ProjectileSpell, StationarySpell
 from classes.states import AnimationState
 from other.settings import *
 
@@ -95,36 +95,31 @@ class Player(Entity):
 
         # movement keys with directions and move vectors
         movement_keys = {
-            pygame.K_w: ("up", (0, -1)),
-            pygame.K_s: ("down", (0, 1)),
-            pygame.K_a: ("left", (-1, 0)),
-            pygame.K_d: ("right", (1, 0))
+            pygame.K_w: ("up", pygame.Vector2(0, -1)),
+            pygame.K_s: ("down", pygame.Vector2(0, 1)),
+            pygame.K_a: ("left", pygame.Vector2(-1, 0)),
+            pygame.K_d: ("right", pygame.Vector2(1, 0))
         }
 
+        move_dir = pygame.Vector2(0, 0)
         # handle movement keys
         for key, (direction, move_vector) in movement_keys.items():
             if key_pressed[key]:
+                move_dir += move_vector
                 self.direction = direction
-                x, y = move_vector
 
-                self.direction_pause += 0.1
-                if self.direction_pause > 1:
-                    self.action = "running"
-                    self.move((x , y))
+            if current_time - self.dust_spawn_time > self.dust_cooldown and self.sprinting:
+                self.dust_particles()
+                self.dust_spawn_time = current_time
 
-                    if current_time - self.dust_spawn_time > self.dust_cooldown and self.sprinting:
-                        self.dust_particles()
-                        self.dust_spawn_time = current_time
-
-                    # Play sound effects.
-                    # current_time = pygame.time.get_ticks()
-                    # if current_time - self.last_footstep_time > self.footstep_delay:
-                    #     self.footstep_sound.play()
-                    #     self.last_footstep_time = current_time
-                break
+        if move_dir.length() > 0:
+            move_dir = move_dir.normalize()
+            self.action = "running"
+            self.move((move_dir.x, move_dir.y))
         else:
-            self.direction_pause = 0
             self.action = "idle"
+
+
 
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
@@ -156,12 +151,11 @@ class Player(Entity):
     def level_up_animation(self, offset, window) -> None:
         """Draws an animating shining light on the player upon leveling up."""
         if self.leveled_up:
-            Spells(self.level_up_visual, "level_up", self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)), None, None)
+            StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
             LEVEL_UP_SOUND.play()
             self.leveled_up = False
 
-        self.level_up_visual.draw(window)
-        self.level_up_visual.update(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) - (0, 232), offset, self.blocking)
+
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""

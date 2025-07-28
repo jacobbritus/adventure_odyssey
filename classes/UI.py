@@ -406,7 +406,7 @@ class MenuBook:
 
             else:
                 self.pos = self.animations[self.state]["offset"]
-                self.frame += 0.06
+                self.frame += 0.17
                 self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
         else:
             self.frame = 0

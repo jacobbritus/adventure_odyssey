@@ -43,6 +43,8 @@ class BattleLoop:
 
         # === battle state ===
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
+        self.performer = self.player
+        self.target = self.enemy
         if self.player.speed >= self.enemy.speed:
             self.state = BattleState.PLAYER_TURN
         elif self.enemy.speed >= self.player.speed:
@@ -80,31 +82,10 @@ class BattleLoop:
             time_size = time_text.get_width()
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.background_box_pos[1] - 2))
 
-# to be cleaned when the Spells class is improved.
-    def handle_projectiles(self) -> None:
-        self.player.projectiles.draw(self.window)
-        self.enemy.projectiles.draw(self.window)
-
-        self.player.stationary_spells.update((self.player.hitbox.center - pygame.Vector2(
-            int(self.offset.x), int(self.offset.y))))
-        self.player.stationary_spells.draw(self.window)
-
-        if self.player.animation_state == AnimationState.ATTACK:
-            self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset, self.enemy)
-        elif self.player.animation_state == AnimationState.BUFF:
-            self.player.stationary_spells.update(self.player.hitbox.center - self.offset, self.offset, self.player)
-
-
-            self.player.projectiles.update(self.player.hitbox.center - self.offset, self.offset, self.player)
-        elif self.enemy.animation_state == AnimationState.ATTACK:
-            self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset, self.player)
-        elif self.enemy.animation_state == AnimationState.BUFF:
-            self.enemy.projectiles.update(self.enemy.hitbox.center - self.offset, self.offset, self.enemy)
 
     def run(self) -> None:
         """The main loop."""
         self.current_time = pygame.time.get_ticks()
-        self.handle_projectiles()
         self.blocking_cooldown()
         self.animations()
 
@@ -163,8 +144,9 @@ class BattleLoop:
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
 
-        self.player_hp_bar.draw(self.window)
-        self.enemy_hp_bar.draw(self.window)
+        if not self.performer.animation_state in [AnimationState.APPROACH, AnimationState.WAIT] or self.performer.hit_landed:
+            self.player_hp_bar.draw(self.window)
+            self.enemy_hp_bar.draw(self.window)
         self.screen_messages()
 
     def blocking_cooldown(self) -> None:
@@ -195,6 +177,9 @@ class BattleLoop:
         self.player.current_attack = internal_attack
         self.player.mana -= moves[internal_attack]["mana"]
 
+        self.performer = self.player
+        self.target = self.enemy # will be an option
+
         self.handle_attack(self.player, self.player.current_attack)
 
     def handle_attack(self, performer, attack_name) -> None:
@@ -213,6 +198,8 @@ class BattleLoop:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
         self.enemy.current_attack = random.choice(self.enemy.moves)
+        self.performer = self.enemy
+        self.target = self.player
 
         self.handle_attack(self.enemy, self.enemy.current_attack)
 
@@ -276,10 +263,14 @@ class BattleLoop:
     def animations(self) -> None:
         """Runs the player and enemy animation phases."""
         if self.state == BattleState.PLAYER_ANIMATION:
+
             self.animation_phases(self.player, self.enemy)
 
         elif self.state == BattleState.ENEMY_ANIMATION:
+
             self.animation_phases(self.enemy, self.player)
+
+
 
 
 

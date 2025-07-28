@@ -142,9 +142,13 @@ class Level:
 
         self.visible_sprites.transition_screen()
 
-
         self.update_day_cycle()
         self.display_surface.blit(self.day_cycle_overlay, (0,0))
+
+        if self.player.level_up_visual:
+            self.player.level_up_visual.draw(self.display_surface)
+            self.player.level_up_visual.update(self.player.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x),
+                                                       int(self.visible_sprites.offset.y)) - (0, 232))
 
         self.menu.draw(self.display_surface)
 
@@ -157,7 +161,7 @@ class Level:
             18: {"color": (255, 174, 66), "opacity": 50},
             20: {"color": (34, 0, 51), "opacity": 75},
             22: {"color": (0, 0, 0), "opacity": 100},
-            0: {"color": (0, 0, 0), "opacity": 125},
+            0: {"color": (0, 0, 0), "opacity": 150},
 
         }
 
@@ -167,7 +171,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[closest_time]
+        current_phase = day_phases[0]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -191,6 +195,7 @@ class Level:
         self.display_surface.blit(self.day_cycle_overlay, (0, 0))
 
         self.visible_sprites.battle_loop.draw_ui()
+        self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
 
         # end battle
         self.overworld_transition()

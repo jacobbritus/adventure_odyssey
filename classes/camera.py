@@ -91,7 +91,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.offset.y = self.offset_float.y
 
         elif self.state == LevelState.BATTLE:
-            camera_speed = 0.1  # adjust for snappiness
+            camera_speed = 0.2  # adjust for snappiness
 
             # Fallback to battle position
             target = self.battle_position
@@ -99,27 +99,26 @@ class YSortCameraGroup(pygame.sprite.Group):
             player = self.battle_participants["heroes"][0]
 
             # CHANGE TO THE ONE IN TURN
+            performer = self.battle_loop.performer
+            attack_target = self.battle_loop.target
 
-            if player.stationary_spells and player.animation_state in [AnimationState.BUFF, AnimationState.IDLE]:
-                target = player.rect.center
-            elif enemy.stationary_spells and enemy.animation_state in [AnimationState.BUFF, AnimationState.IDLE]:
-                target = enemy.rect.center
+            if performer.spells:
+                if performer.animation_state in [AnimationState.BUFF, AnimationState.IDLE]:
+                    performer.stationary_spells.update((performer.hitbox.center - self.offset))
+                    target = performer.rect.center
+                if performer.animation_state == AnimationState.ATTACK:
+                    performer.projectiles.update(performer.hitbox.center - self.offset, self.offset, attack_target)
+                    performer.stationary_spells.update((attack_target.hitbox.center - self.offset))
+                    target = self.battle_position
 
-            # Follow a projectile if active
-            if player.projectiles:
-                if player.animation_state == AnimationState.ATTACK:
-                    target = enemy.rect.center
 
-            elif enemy.projectiles:
-                if enemy.animation_state == AnimationState.ATTACK:
-                    target = player.rect.center
-                elif enemy.animation_state == AnimationState.BUFF:
-                    target = enemy.rect.center
+            elif self.battle_loop.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION] and not performer.animation_state == AnimationState.IDLE:
+                target = performer.rect.center
 
-            elif self.battle_loop.state == BattleState.PLAYER_ANIMATION and not player.animation_state == AnimationState.IDLE :
-                target = player.rect.center
-            elif self.battle_loop.state == BattleState.ENEMY_ANIMATION and not enemy.animation_state == AnimationState.IDLE :
-                target = enemy.rect.center
+            # elif self.battle_loop.state == BattleState.PLAYER_ANIMATION and not player.animation_state == AnimationState.IDLE :
+            #     target = player.rect.center
+            # elif self.battle_loop.state == BattleState.ENEMY_ANIMATION and not enemy.animation_state == AnimationState.IDLE :
+            #     target = enemy.rect.center
 
             # Apply shake
             if self.shake_duration > 0:

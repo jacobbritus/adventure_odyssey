@@ -4,7 +4,7 @@ import random
 import pygame.mixer
 
 from classes.states import AnimationState
-from classes.spells import Spells, BuffSpell
+from classes.spells import ProjectileSpell, StationarySpell
 from other.settings import *
 
 
@@ -75,6 +75,7 @@ class Entity(pygame.sprite.Sprite):
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
         self.stationary_spells = pygame.sprite.Group()
+        self.spells = pygame.sprite.Group()
 
         # Sound
 
@@ -218,8 +219,8 @@ class Entity(pygame.sprite.Sprite):
             position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery)
 
             if self.current_attack == "heal":
-                BuffSpell("heal", self.stationary_spells,
-                          position)
+                StationarySpell("heal", self.stationary_spells,
+                                position)
 
                 self.spawn_projectile = True
                 heal_amount = moves[self.current_attack]["hp"]
@@ -239,22 +240,22 @@ class Entity(pygame.sprite.Sprite):
         """Projectile battle actions."""
         if not self.spawn_projectile and self.current_attack == "fire_ball":
             offset = pygame.Vector2(12, 12)
-            Spells(self.projectiles, "fire_ball",pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
-                   pygame.Vector2(target.rect.centerx , target.rect.centery), 2)
+            ProjectileSpell([self.projectiles, self.spells], "fire_ball", pygame.Vector2(self.hitbox.centerx, self.hitbox.centery) + offset,
+                            pygame.Vector2(target.rect.centerx , target.rect.centery), 4)
             pygame.mixer.Sound(fireball_sprites["sound"][0]).play()
             self.spawn_projectile = True
 
-        elif not self.spawn_projectile and self.current_attack == "lightning_strike":
-            offset = pygame.Vector2(0, -106)
-            Spells(self.projectiles, self.current_attack, pygame.Vector2(target.hitbox.centerx, target.hitbox.centery) + offset, None, None)
+        if not self.spawn_projectile and self.current_attack == "lightning_strike":
+            StationarySpell("lightning_strike", [self.stationary_spells, self.spells], pygame.Vector2(target.hitbox.centerx, target.hitbox.centery))
             self.spawn_projectile = True
 
-        for projectile in self.projectiles:
+
+        for projectile in self.spells:
             if projectile.hit and not self.hit_landed:
                 self.handle_attack_impact(target)
                 self.hit_landed = True
 
-        if not self.projectiles:
+        if not self.projectiles and not self.stationary_spells:
 
             # ___end attack sequence___
             self.action = "idle"
@@ -272,7 +273,6 @@ class Entity(pygame.sprite.Sprite):
             if not self.spawn_projectile:
                 self.frame = 0
                 self.action = "cast"
-
             self.projectile_animation(target)
             self.current_attack = action
             return
@@ -377,7 +377,7 @@ class Entity(pygame.sprite.Sprite):
 
         target.hp -= damage
 
-        target.screen_messages.append(("hp_dealt", damage, (255, 0, 255)))
+        target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
 
         # target.dmg_taken.append(damage)
 
