@@ -103,7 +103,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             attack_target = self.battle_loop.target
 
             if performer.spells:
-                if performer.animation_state in [AnimationState.BUFF, AnimationState.IDLE]:
+                if performer.animation_state in [AnimationState.BUFF, AnimationState.WAIT]:
                     performer.stationary_spells.update((performer.hitbox.center - self.offset))
                     target = performer.rect.center
                 if performer.animation_state == AnimationState.ATTACK:

@@ -219,7 +219,7 @@ class Entity(pygame.sprite.Sprite):
             position = pygame.Vector2(self.hitbox.centerx, self.hitbox.centery)
 
             if self.current_attack == "heal":
-                StationarySpell("heal", self.stationary_spells,
+                StationarySpell("heal", [self.spells, self.stationary_spells],
                                 position)
 
                 self.spawn_projectile = True
@@ -232,7 +232,7 @@ class Entity(pygame.sprite.Sprite):
                 pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
 
         if not self.projectiles:
-            self.animation_state = AnimationState.IDLE
+            self.animation_state = AnimationState.WAIT
 
             self.spawn_projectile = False
 
@@ -283,7 +283,7 @@ class Entity(pygame.sprite.Sprite):
             self.action = self.current_attack
 
         # ___impact frame logic____
-        if self.sprite_dict[self.action]["impact_frame"] is not None:
+        if self.sprite_dict[self.action]["impact_frame"] is not None and not target.hp <= 0:
             impact_frame = self.sprite_dict[self.action]["impact_frame"]
             if self.frame > impact_frame and not self.hit_landed and not target.death:
                 self.hit_landed = True
@@ -297,7 +297,7 @@ class Entity(pygame.sprite.Sprite):
 
 
         # ___hit ends____
-        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
+        if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1 or target.hp <= 0:
             self.hit_landed = False
             self.action = "idle"
 

@@ -90,7 +90,6 @@ class BattleLoop:
         self.animations()
 
         if self.current_time >= self.delay:
-
             if self.state == BattleState.PLAYER_TURN:
                 if self.clock_timer and self.current_time >= self.clock_timer:
                     self.state = BattleState.ENEMY_TURN
@@ -144,7 +143,7 @@ class BattleLoop:
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
 
-        if not self.performer.animation_state in [AnimationState.APPROACH, AnimationState.WAIT] or self.performer.hit_landed:
+        if not self.performer.animation_state in [AnimationState.APPROACH, AnimationState.WAIT, AnimationState.ATTACK] or self.performer.hit_landed or self.performer.critical_hit_is_done:
             self.player_hp_bar.draw(self.window)
             self.enemy_hp_bar.draw(self.window)
         self.screen_messages()
@@ -219,7 +218,10 @@ class BattleLoop:
         elif performer.animation_state == AnimationState.WAIT:
             performer.wait()
             if self.current_time >= self.delay:
-                performer.animation_state = AnimationState.ATTACK
+                if moves[performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
+                    performer.animation_state = AnimationState.ATTACK
+                else:
+                    performer.animation_state = AnimationState.IDLE
 
         # === WAIT > [ ATTACK ] > RETURN OR IDLE ===
         elif performer.animation_state == AnimationState.ATTACK:
@@ -229,7 +231,7 @@ class BattleLoop:
         # === [ BUFF ] > IDLE ====
         elif performer.animation_state == AnimationState.BUFF:
             performer.buff_animation()
-            self.set_delay(1000)
+            self.set_delay(2000)
 
 
         # === ATTACK > [ RETURN ] > IDLE ===
