@@ -44,7 +44,7 @@ class Enemy(Entity):
 
         self.screen_position = None
 
-        self.respawn_time = None
+        self.respawn_time = pygame.time.get_ticks() + 0
         self.moving_randomly = False
 
         self.random_target = None

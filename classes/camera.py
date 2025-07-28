@@ -203,6 +203,13 @@ class YSortCameraGroup(pygame.sprite.Group):
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
         enemies = self.battle_participants["enemies"]
+        enemy = self.battle_participants["enemies"][0]
+        enemies.append(enemy.clone((enemy.x, enemy.y)))
+
+
+        for participant in enemies:
+            participant.in_battle = True
+            participant.action = "idle"
 
         spots2 = self.find_battle_spot(player.rect)
 
@@ -222,7 +229,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
             player.x, player.y = positions[0]
             player.rect.topleft = (int(player.x), int(player.y))
-
+            player.battle_pos = pygame.Vector2(player.x - player.width, player.y)
 
             def enemy_battle_spots(pos, n):
                 spacing = 64
@@ -237,14 +244,15 @@ class YSortCameraGroup(pygame.sprite.Group):
 
                 return positions
 
-            t = enemy_battle_spots(positions[1], len(self.battle_participants["enemies"]))
-            print(t)
+            enemy_positions = enemy_battle_spots(positions[1], len(self.battle_participants["enemies"]))
 
             for index, enemy in enumerate(enemies):
                 enemy.pre_battle_pos = (enemy.x, enemy.y)
 
-                enemy.x, enemy.y = t[index]
+                enemy.x, enemy.y = enemy_positions[index]
                 enemy.rect.topleft = (int(enemy.x), int(enemy.y))
+                enemy.battle_pos = pygame.Vector2(enemy.x - 32, enemy.y)
+
                 enemy.face_target(player)
                 enemy.sprinting = False
 
@@ -302,28 +310,30 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.transition_timer = None
 
     def end_battle(self):
-        self.state = LevelState.OVERWORLD
         player = self.battle_participants["heroes"][0]
-        enemy = self.battle_participants["enemies"][0]
+        original_enemy = self.battle_participants["enemies"][0]
         enemies = self.battle_participants["enemies"]
 
-        if enemy.hp <= 0:
-            player.handle_exp_gain(enemy.exp)
+        exp_gained = 0
+        for index, enemy in enumerate(enemies):
+            exp_gained += enemy.exp
+            if not index == 0: enemy.kill()
+
+        if self.battle_loop.winner == player:
+            original_enemy.respawn_time = pygame.time.get_ticks() + 600000
+            player.handle_exp_gain(exp_gained)
 
 
+        # === go back to initiate pos ====
+        for participant in [player, original_enemy]:
+            participant.in_battle = False
+            participant.rect.topleft = participant.pre_battle_pos
+            participant.x, participant.y = participant.pre_battle_pos
 
         self.battle_loop = None
-
-        for index, enemy in enumerate(enemies):
-            enemy.in_battle = False
-            enemy.rect.topleft = enemy.pre_battle_pos
-            enemy.x, enemy.y = enemy.pre_battle_pos
-
-        player.in_battle = False
-        player.rect.topleft = player.pre_battle_pos
-        player.x, player.y = player.pre_battle_pos
-
         self.battle_participants = None
+        self.state = LevelState.OVERWORLD
+
 
 
     def find_battle_spot(self, player_rect, search_radius = 640, step = 32) -> pygame.Rect or None:

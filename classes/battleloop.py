@@ -8,15 +8,10 @@ class BattleLoop:
     def __init__(self, player, enemy, window: pygame.Surface, offset: pygame.Vector2):
         # === general stuff ===
         self.player = player
+        self.enemies = enemy
         self.enemy = enemy[0]
-        # self.enemy2 = enemy[1]
         self.window: pygame.Surface = window
         self.offset = offset
-
-        # === idle positions ===
-        self.player.battle_pos = pygame.Vector2(player.x - self.player.width, player.y)
-        self.enemy.battle_pos = pygame.Vector2(self.enemy.x, self.enemy.y)
-        # self.enemy2.battle_pos = pygame.Vector2(self.enemy2.x ,self.enemy2.y)
 
         # === end battle toggle ===
         self.return_to_overworld: bool = False
@@ -25,19 +20,36 @@ class BattleLoop:
         self.combat_menu = CombatMenu(player_skills = self.player.attacks, functions = [self.player_turn, self.end_battle])
         self.player_hp_bar = HpBar(
             side = "left",
+            y_offset = 0,
             level = self.player.level,
             current_hp = self.player.hp,
             max_hp = self.player.max_hp,
             mana = self.player.mana,
             name = "PLAYER")
         self.player_hp_bar.set_hp(self.player.hp)
-        self.enemy_hp_bar = HpBar(
-            side = "right",
-            level = self.enemy.level,
-            current_hp = self.enemy.hp,
-            max_hp = self.enemy.hp,
-            mana = None,
-            name = self.enemy.monster_name.upper())
+
+        self.enemy_hp_bars = []
+
+        for index, enemy in enumerate(self.enemies):
+            self.enemy_hp_bars.append( HpBar(
+                side="right",
+                y_offset= index * 64,
+
+                level=self.enemy.level,
+                current_hp=self.enemy.hp,
+                max_hp=self.enemy.hp,
+                mana=None,
+                name=self.enemy.monster_name.upper()) )
+
+        # self.enemy_hp_bar = HpBar(
+        #     side = "right",
+        #     y_offset=0,
+        #
+        #     level = self.enemy.level,
+        #     current_hp = self.enemy.hp,
+        #     max_hp = self.enemy.hp,
+        #     mana = None,
+        #     name = self.enemy.monster_name.upper())
 
 
 
@@ -45,6 +57,7 @@ class BattleLoop:
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
         self.performer = self.player
         self.target = self.enemy
+        self.winner = None
         if self.player.speed >= self.enemy.speed:
             self.state = BattleState.PLAYER_TURN
         elif self.enemy.speed >= self.player.speed:
@@ -90,6 +103,9 @@ class BattleLoop:
         self.animations()
 
         if self.current_time >= self.delay:
+
+
+
             if self.state == BattleState.PLAYER_TURN:
                 if self.clock_timer and self.current_time >= self.clock_timer:
                     self.state = BattleState.ENEMY_TURN
@@ -99,7 +115,6 @@ class BattleLoop:
                 self.enemy_turn()
 
             elif self.state == BattleState.END_BATTLE:
-                if self.enemy.death: self.enemy.respawn_time = self.current_time + 600000
                 self.return_to_overworld = True
                 self.player.post_battle_iframes = pygame.time.get_ticks() + 5000
 
@@ -111,7 +126,9 @@ class BattleLoop:
         self.screen_messages_group.update()
         self.screen_messages_group.draw(self.window)
 
-        for participant in [self.player, self.enemy]:
+        participants = [self.player] + self.enemies
+
+        for participant in participants:
             number_offset = 0
             for message_type, value, color in participant.screen_messages:
                 if message_type in ["hp_dealt", "hp_recovered", "mana_recovered"]:
@@ -130,23 +147,44 @@ class BattleLoop:
         """Displays and updates the UI components."""
         self.timer_()
 
-        if self.player.hp != self.player_hp_bar.hp:
-            self.player_hp_bar.set_hp(self.player.hp)
-        if self.enemy.hp != self.enemy_hp_bar.hp:
-            self.enemy_hp_bar.set_hp(self.enemy.hp)
-        if self.player.mana != self.player_hp_bar.mana:
-            self.player_hp_bar.set_mana(self.player.mana)
-
-        self.enemy_hp_bar.update_hp_bar()
-        self.player_hp_bar.update_hp_bar()
-
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
 
-        if not self.performer.animation_state in [AnimationState.APPROACH, AnimationState.WAIT, AnimationState.ATTACK] or self.performer.hit_landed or self.performer.critical_hit_is_done:
+        if self.player.hp != self.player_hp_bar.hp:
+            self.player_hp_bar.set_hp(self.player.hp)
+
+        if self.player.mana != self.player_hp_bar.mana:
+            self.player_hp_bar.set_mana(self.player.mana)
+
+        for index, enemy_hp_bar in enumerate(self.enemy_hp_bars):
+            if enemy_hp_bar.hp != self.enemies[index].hp:
+                enemy_hp_bar.set_hp(self.enemies[index].hp)
+            enemy_hp_bar.update_hp_bar()
+
+        self.player_hp_bar.update_hp_bar()
+
+        # === draw the target's hp_bar when
+
+        print(self.state)
+
+        if self.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]:
+        # if (self.performer.animation_state in [AnimationState.APPROACH, AnimationState.WAIT, AnimationState.ATTACK, AnimationState.RETURN]
+        #         or self.performer.hit_landed or self.performer.critical_hit_is_done):
+        #
+           if self.performer == self.player:
+                hp_index = self.enemies.index(self.target)
+                for index, enemy_hp_bar in enumerate(self.enemy_hp_bars):
+                    if index == hp_index:
+                        enemy_hp_bar.draw(self.window)
+           if self.performer in self.enemies:
+              self.player_hp_bar.draw(self.window)
+
+        if self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_TURN]:
             self.player_hp_bar.draw(self.window)
-            self.enemy_hp_bar.draw(self.window)
+            for enemy_hp_bar in self.enemy_hp_bars:
+                enemy_hp_bar.draw(self.window)
         self.screen_messages()
+
 
     def blocking_cooldown(self) -> None:
         """Handles the player hotkey's and enemy blocking durations."""
@@ -177,7 +215,10 @@ class BattleLoop:
         self.player.mana -= moves[internal_attack]["mana"]
 
         self.performer = self.player
-        self.target = self.enemy # will be an option
+        # self.target = self.enemy # will be an option\
+        self.target = random.choice(self.enemies)
+        if self.target.death: self.target = [enemy for enemy in self.enemies if not enemy.death][0]
+
 
         self.handle_attack(self.player, self.player.current_attack)
 
@@ -196,11 +237,12 @@ class BattleLoop:
     def enemy_turn(self) -> None:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
-        self.enemy.current_attack = random.choice(self.enemy.moves)
-        self.performer = self.enemy
+        self.performer = random.choice(self.enemies)
+        if self.performer.death: self.performer = [enemy for enemy in self.enemies if not enemy.death][0]
+        self.performer.current_attack = random.choice(self.enemy.moves)
         self.target = self.player
 
-        self.handle_attack(self.enemy, self.enemy.current_attack)
+        self.handle_attack(self.performer, self.performer.current_attack)
 
     def animation_phases(self, performer, target) -> None:
         """Handles the different animation phases and their delays."""
@@ -242,7 +284,8 @@ class BattleLoop:
                 performer.return_animation(performer.battle_pos)
 
         # === END MENU ===
-        elif target.hp <= 0:
+        elif all(enemy.hp <= 0 for enemy in self.enemies):
+            self.winner = self.player
             self.state = BattleState.END_MENU
 
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
@@ -266,11 +309,11 @@ class BattleLoop:
         """Runs the player and enemy animation phases."""
         if self.state == BattleState.PLAYER_ANIMATION:
 
-            self.animation_phases(self.player, self.enemy)
+            self.animation_phases(self.player, self.target)
 
         elif self.state == BattleState.ENEMY_ANIMATION:
 
-            self.animation_phases(self.enemy, self.player)
+            self.animation_phases(self.performer, self.target)
 
 
 

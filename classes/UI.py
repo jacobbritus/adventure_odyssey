@@ -2,7 +2,7 @@ from classes.states import BookState, CombatMenuState, ButtonType
 from other.settings import *
 
 class HpBar:
-    def __init__(self, side: str, level: int, current_hp: int, max_hp: int, mana: int | None, name: str):
+    def __init__(self, side: str, y_offset, level: int, current_hp: int, max_hp: int, mana: int | None, name: str):
         # === dynamic stats ===
         self.max_hp: int = max_hp
         self.hp: int = current_hp
@@ -31,6 +31,7 @@ class HpBar:
 
         # === positions ====
         y_padding, x_padding, image_position_offsets = self.initialize_position(side)
+        y_padding += y_offset
 
         self.background_box_pos = pygame.Vector2(x_padding, y_padding)
         self.title_box_pos = self.background_box_pos + image_position_offsets["title"]

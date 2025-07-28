@@ -197,8 +197,6 @@ class Level:
         self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
         self.visible_sprites.battle_loop.draw_ui()
 
-
-
         # end battle
         self.overworld_transition()
         self.visible_sprites.transition_screen()
