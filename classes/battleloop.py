@@ -73,12 +73,6 @@ class BattleLoop:
         # damage, critical hit and perfect block
         self.screen_messages_group: pygame.sprite.Group = pygame.sprite.Group()
 
-        # === block and critical hit hotkey ===
-        self.block_duration: int = 150 # blocking last time
-        self.block_cooldown_end: int = 0 # when blocking ends
-        self.block_delay: int = 500
-        self.enemy_block_duration = None
-
     def set_delay(self, ms):
         self.delay = self.current_time + ms
 
@@ -93,24 +87,22 @@ class BattleLoop:
     def run(self) -> None:
         """The main loop."""
         self.current_time = pygame.time.get_ticks()
-        self.blocking_cooldown()
         self.animations()
 
         if self.current_time >= self.delay:
-
-
-
             if self.state == BattleState.PLAYER_TURN:
                 if self.clock_timer and self.current_time >= self.clock_timer:
                     self.state = BattleState.ENEMY_TURN
-                    self.clock_timer = self.current_time + 20000
+                    time = 20000
+                    self.clock_timer = self.current_time + time
 
             elif self.state == BattleState.ENEMY_TURN:
                 self.enemy_turn()
 
             elif self.state == BattleState.END_BATTLE:
                 self.return_to_overworld = True
-                self.player.post_battle_iframes = pygame.time.get_ticks() + 5000
+                time = 5000
+                self.player.post_battle_iframes = pygame.time.get_ticks() + time
 
             elif self.state == self.state.END_MENU:
                 self.combat_menu.state = CombatMenuState.END_MENU
@@ -183,23 +175,6 @@ class BattleLoop:
             for enemy_hp_bar in self.enemy_hp_bars:
                 enemy_hp_bar.draw(self.window)
         self.screen_messages()
-
-    def blocking_cooldown(self) -> None:
-        """Handles the player hotkey's and enemy blocking durations."""
-        if self.player.blocking and self.current_time >= self.block_cooldown_end:
-            self.player.blocking = False
-
-        if self.original_enemy.blocking:
-            if self.current_time >= self.enemy_block_duration: self.original_enemy.blocking = False
-        else:
-            self.enemy_block_duration = self.current_time + 500
-
-    def blocking_critical_hotkey(self, event) -> None:
-        """The player's block | crit hotkey with its delay."""
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-            if not self.player.blocking and self.current_time >= self.block_cooldown_end + self.block_delay:
-                self.player.blocking = True
-                self.block_cooldown_end = self.current_time + self.block_duration  # Next time we can block again
 
     def end_battle(self) -> None:
         """End battle when the player picks run / this function."""
@@ -281,7 +256,7 @@ class BattleLoop:
                 performer.return_animation(performer.battle_pos)
 
         # === END MENU ===
-        elif all(enemy.hp <= 0 for enemy in self.enemies):
+        elif all(enemy.hp <= 0 for enemy in self.enemies) or self.player.death:
             self.winner = self.player
             self.state = BattleState.END_MENU
 

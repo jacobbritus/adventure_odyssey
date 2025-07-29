@@ -26,7 +26,6 @@ class Enemy(Entity):
         self.hp = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5
-        self.block_shield = BlockShield("left")
 
 
         # Location and Movement
@@ -163,6 +162,7 @@ class Enemy(Entity):
 
 
     def update_enemy(self, player, window, offset) -> None:
+        self.blocking_mechanics(window, offset)
         self.update_pos()
         self.screen_position = pygame.math.Vector2(self.x - offset.x,
                                                    self.y - offset.y)
@@ -171,11 +171,7 @@ class Enemy(Entity):
                                            self.screen_position.y)
 
 
-        if self.blocking:
-            self.block_shield.direction = self.direction
-            shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
-            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
-            self.block_shield.draw(window, pos)
+
 
             # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             # window.blit(mask, self.screen_position)

@@ -70,10 +70,16 @@ class Player(Entity):
         self.dust_particles = dust_particles
         self.level_up_visual = pygame.sprite.Group()
 
-
-
         self.attacks = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
         self.post_battle_iframes = pygame.time.get_ticks() + 0
+        self.block_cooldown_end = pygame.time.get_ticks() + 0
+
+    def blocking_critical_hotkey(self, event) -> None:
+        """The player's block | crit hotkey with its delay."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+            if not self.blocking and pygame.time.get_ticks() >= self.block_cooldown_end:
+                self.blocking = True
+                self.block_cooldown_end = pygame.time.get_ticks() + 1000
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
@@ -172,17 +178,9 @@ class Player(Entity):
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
 
+        self.blocking_mechanics(window, offset)
 
-
-
-        if self.blocking and self.animation_state == AnimationState.IDLE:
-            self.block_shield.direction = self.direction
-            shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
-            pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
-            self.block_shield.draw(window, pos)
-
-
-            # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+        # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
             # window.blit(mask, self.screen_position + (1, 1))
 
         dmg_offset = 32

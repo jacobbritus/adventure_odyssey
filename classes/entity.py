@@ -43,42 +43,40 @@ class Entity(pygame.sprite.Sprite):
         self.sprint_speed = None
         self.delta_time = FPS / 1000
 
-        # Battle related.
+        # === battle stuff ===
         self.in_battle = False
         self.pre_battle_pos = None
         self.battle_pos = None
         self.obstacle_sprites = None
         self.current_attack = None
 
-        # === enemy stuff ===
         self.critical_hit_chance = None
         self.blocking_chance = None
 
         self.death = False
         self.hit_landed = False
-        self.blocking = False
         self.current_attack = None
 
+        # === blocking ===
+        self.block_shield = BlockShield("left")
+        self.blocking = False
         self.perfect_block = False
-        self.perfect_block_messages = []
+        self.block_duration = pygame.time.get_ticks() + 0
+
+        # === critical hit
         self.critical_hit = False
         self.critical_hit_is_done = False
-        self.critical_hit_messages = []
-        self.dmg_taken = []
+
+        # === screen messages ===
         self.dmg_position = None
-
-        self.mana_messages = []
-
         self.screen_messages = []
 
 
-        # spells
+        # === spells ===
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
         self.stationary_spells = pygame.sprite.Group()
         self.spells = pygame.sprite.Group()
-
-        # Sound
 
         # === vital stats ===
         self.hp = None
@@ -98,6 +96,20 @@ class Entity(pygame.sprite.Sprite):
         self.animation_state = AnimationState.IDLE
 
         self.footstep_delay = 500
+
+    def blocking_mechanics(self, window, offset) -> None:
+        if self.blocking:
+            if self.animation_state == AnimationState.IDLE:
+                self.block_shield.direction = self.direction
+                shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
+                pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+                self.block_shield.draw(window, pos)
+
+            if pygame.time.get_ticks() >= self.block_duration:
+                self.blocking = False
+        else:
+            self.block_duration = pygame.time.get_ticks() + 300
+
 
     def update_pos(self) -> None:
         self.rect.topleft = (int(self.x), int(self.y))  # update rect
