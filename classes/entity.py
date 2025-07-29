@@ -60,7 +60,6 @@ class Entity(pygame.sprite.Sprite):
         # === blocking ===
         self.block_shield = BlockShield("left")
         self.blocking = False
-        self.perfect_block = False
         self.block_duration = pygame.time.get_ticks() + 0
         self.block_cooldown_end = pygame.time.get_ticks() + 0
 
@@ -269,7 +268,6 @@ class Entity(pygame.sprite.Sprite):
             # ___end attack sequence___
             self.action = "idle"
             self.critical_hit = False
-            target.perfect_block = False
             self.hit_landed = False
 
             self.animation_state = AnimationState.IDLE
@@ -316,12 +314,9 @@ class Entity(pygame.sprite.Sprite):
                 if target.blocking:
                     pull_close = 16 if self.direction == "right" else -16
                     self.x += pull_close
-                self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
+                self.action = "idle"
                 self.animation_state = AnimationState.ATTACK
-
-                self.critical_hit = False
                 self.critical_hit_is_done = True
-                target.perfect_block = False
 
 
             # ___end attack sequence___
@@ -330,7 +325,6 @@ class Entity(pygame.sprite.Sprite):
                 self.animation_state = AnimationState.RETURN
                 self.critical_hit_is_done = False
                 self.critical_hit = False
-                target.perfect_block = False
 
     def calculate_damage(self):
         skill = self.current_attack
@@ -348,27 +342,29 @@ class Entity(pygame.sprite.Sprite):
     def handle_attack_impact(self, target):
         damage = self.calculate_damage()
 
-        if self.blocking:
-            if self.type == "player":
+        if not self.critical_hit_is_done:
+
+            if self.type == "player" and self.blocking:
                 play_sound("gameplay", "critical_hit", None)
                 self.critical_hit = True
                 self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
 
+                # for projectile-based / non-repeating attacks:
+                if moves[self.current_attack]["type"] == "special":
+                    damage *= 2
 
-        if self.type == "enemy":
-            print("enemy")
-            bools = [True, False]
-            weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
-            self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
-            print(self.critical_hit)
-            if self.critical_hit:
-                print("check")
-                self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
-                play_sound("gameplay", "critical_hit", None)
 
-            # for projectile-based / non-repeating attacks:
-            if moves[self.current_attack]["type"] == "special":
-                damage *= 2
+            if self.type == "enemy" and not self.critical_hit_is_done:
+                bools = [True, False]
+                weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
+                self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
+                if self.critical_hit:
+                    self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
+                    play_sound("gameplay", "critical_hit", None)
+
+                # for projectile-based / non-repeating attacks:
+                if moves[self.current_attack]["type"] == "special":
+                    damage *= 2
 
         # player attacks, enemy block chance
         if target.type == "enemy":
@@ -378,7 +374,6 @@ class Entity(pygame.sprite.Sprite):
 
         if target.blocking:
             target.block_cooldown_end = pygame.time.get_ticks() + 0
-            target.perfect_block = True
             target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
 
             damage //= 2
@@ -388,27 +383,23 @@ class Entity(pygame.sprite.Sprite):
         target.hp -= damage
         target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
 
-        # target.dmg_taken.append(damage)
-
         if not target.hp <= 0 and not target.blocking:
             target.frame = 0
-            target.action = "death" # hurt
+            target.action = "death" # will be changed to AnimationState.HURT
         elif target.hp <= 0:
             target.animation_state = AnimationState.DEATH
 
 
-
     def death_animation(self) -> None:
-        # Only reset once at the start of the death animation
+        # === reset action to death once when called ===
         if self.action != "death":
             self.frame = 0
             self.action = "death"
 
-
-        # Play the animation frame by frame
         death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
         if self.frame >= death_frame:
             self.death = True
+            # = set to None to make the animation phases continue after a death (AnimationState.DEATH).
             self.animation_state = None
 
     def return_animation(self, origin) -> None:
