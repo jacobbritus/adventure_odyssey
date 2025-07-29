@@ -56,8 +56,10 @@ class Entity(pygame.sprite.Sprite):
         self.death = False
         self.hit_landed = False
         self.current_attack = None
+        self.hurt_time = pygame.time.get_ticks() + 200
 
         # === blocking ===
+        self.blocked = False
         self.block_shield = BlockShield("left")
         self.blocking = False
         self.block_duration = pygame.time.get_ticks() + 0
@@ -93,9 +95,14 @@ class Entity(pygame.sprite.Sprite):
 
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
-            if self.animation_state in [AnimationState.IDLE, AnimationState.DEATH]:
+            if self.animation_state in [AnimationState.IDLE, AnimationState.DEATH, AnimationState.HURT]:
                 self.block_shield.direction = self.direction
-                shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
+                if self.direction == "right":
+                    shield_offset = (8, -36)
+                else:
+                   shield_offset = (-34, -36)
+
+
                 pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
                 self.block_shield.draw(window, pos)
 
@@ -285,46 +292,58 @@ class Entity(pygame.sprite.Sprite):
             return
 
         # ___sprite frame reset___
-        if not self.action == self.current_attack:
+        if not self.action == self.current_attack and not self.hit_landed:
             self.frame = 0
             self.action = self.current_attack
 
         # ___impact frame logic____
-        if self.sprite_dict[self.action]["impact_frame"] is not None and not target.hp <= 0:
+        if self.sprite_dict[self.action]["impact_frame"] and not self.hit_landed:
             impact_frame = self.sprite_dict[self.action]["impact_frame"]
             if self.frame > impact_frame and not self.hit_landed and not target.death:
                 self.hit_landed = True
                 play_sound("moves", self.current_attack, None)
+
                 self.handle_attack_impact(target)
+
                 if target.blocking:
                     self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
+                    target.blocked = True
                     push_back = -16 if self.direction == "right" else 16
                     self.x += push_back
-                # Mask when hit
-                target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
+
 
 
         # ___hit ends____
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1 or target.hp <= 0:
-            self.hit_landed = False
-            self.action = "idle"
-
-            # ___if critical hit___
-            if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
-                if target.blocking:
-                    pull_close = 16 if self.direction == "right" else -16
-                    self.x += pull_close
+            if self.action != "idle":
                 self.action = "idle"
-                self.animation_state = AnimationState.ATTACK
-                self.critical_hit_is_done = True
+                self.frame = 0
+
+            if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
+                self.hit_landed = False
+
+                # ___if critical hit___
+                if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
+                    if target.blocked:
+                        pull_close = 16 if self.direction == "right" else -16
+                        self.x += pull_close
+                    self.critical_hit_is_done = True
 
 
-            # ___end attack sequence___
-            else:
-                self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
-                self.animation_state = AnimationState.RETURN
-                self.critical_hit_is_done = False
-                self.critical_hit = False
+                # ___end attack sequence___
+                else:
+                    self.animation_state = AnimationState.RETURN
+                    self.critical_hit_is_done = False
+                    self.critical_hit = False
+                    target.blocked = False
+
+    def hurt_animation(self):
+        if self.action != "death":
+            self.frame = 0
+            self.action = "death"  # will be changed to AnimationState.HURT
+
+
+
 
     def calculate_damage(self):
         skill = self.current_attack
@@ -359,6 +378,7 @@ class Entity(pygame.sprite.Sprite):
                 weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
+                    target.block_cooldown_end = pygame.time.get_ticks() + 0
                     self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
                     play_sound("gameplay", "critical_hit", None)
 
@@ -373,7 +393,6 @@ class Entity(pygame.sprite.Sprite):
             target.blocking = random.choices(bools, k=1, weights=weights)[0]
 
         if target.blocking:
-            target.block_cooldown_end = pygame.time.get_ticks() + 0
             target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
 
             damage //= 2
@@ -384,8 +403,9 @@ class Entity(pygame.sprite.Sprite):
         target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
 
         if not target.hp <= 0 and not target.blocking:
-            target.frame = 0
-            target.action = "death" # will be changed to AnimationState.HURT
+            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255),
+                                                                         unsetcolor=(0, 0, 0, 0))
+            target.animation_state = AnimationState.HURT
         elif target.hp <= 0:
             target.animation_state = AnimationState.DEATH
 

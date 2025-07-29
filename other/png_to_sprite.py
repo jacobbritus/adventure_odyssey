@@ -44,7 +44,9 @@ player_sprites = {
             "left": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, True),
             "up": sprite_converter("sprites/characters/me2.png", 2, 6, 96, 80, False),
         },
-        "sound": get_file_location("sounds/sword_slash")
+        "sound": get_file_location("sounds/sword_slash"),
+        "impact_frame": None
+
     },
     "running": {
         "sprites": {
@@ -204,7 +206,9 @@ goblin_sprites = {
             "left": sprite_converter("sprites/characters/goblin.png", 1, 6, 96, 80, True),
             "up": sprite_converter("sprites/characters/goblin.png", 2, 6, 96, 80, False),
         },
-        "sound": get_file_location("sounds/sword_slash")
+        "sound": get_file_location("sounds/sword_slash"),
+        "impact_frame": None
+
     },
     "running": {
         "sprites": {

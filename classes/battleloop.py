@@ -92,6 +92,8 @@ class BattleLoop:
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
                 if self.clock_timer and self.current_time >= self.clock_timer:
+                    self.battle_queue.rotate(-1)
+                    self.performer = self.battle_queue[0]
                     self.state = BattleState.ENEMY_TURN
                     time = 20000
                     self.clock_timer = self.current_time + time
@@ -187,7 +189,6 @@ class BattleLoop:
         self.player.current_attack = internal_attack
         self.player.mana -= moves[internal_attack]["mana"]
 
-        self.performer = self.player
         self.target = random.choice(self.enemies)
         if self.target.death: self.target = [enemy for enemy in self.enemies if not enemy.death][0]
 
@@ -239,8 +240,16 @@ class BattleLoop:
 
         # === WAIT > [ ATTACK ] > RETURN OR IDLE ===
         elif performer.animation_state == AnimationState.ATTACK:
+            if target.animation_state == AnimationState.HURT:
+                target.hurt_animation()
+                if pygame.time.get_ticks() >= target.hurt_time:
+                    target.action = "idle"
+                    target.animation_state = AnimationState.IDLE
+            else:
+                target.hurt_time = pygame.time.get_ticks() + 500
+
             performer.attack_animation(target, performer.current_attack)
-            self.set_delay(1000)
+            # self.set_delay(500)
 
         # === [ BUFF ] > IDLE ====
         elif performer.animation_state == AnimationState.BUFF:
