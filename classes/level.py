@@ -1,3 +1,5 @@
+import random
+
 import pygame.time
 import pytmx
 
@@ -26,6 +28,8 @@ class Level:
         self.player_hp_bar = None
         self.open_menu = False
         self.menu = None
+        self.current_music = None
+
         self.day_cycle_overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.create_map()
 
@@ -108,12 +112,11 @@ class Level:
 
     def run(self) -> None:
         if self.visible_sprites.state == LevelState.OVERWORLD:
-            self.visible_sprites.update_soundtrack()
+            self.update_soundtrack()
             self.overworld()
         else:
-            self.visible_sprites.update_soundtrack()
+            self.update_soundtrack()
             self.battle()
-
 
     def battle_transition(self):
         if not self.visible_sprites.battle_participants:
@@ -176,8 +179,6 @@ class Level:
 
         self.day_cycle_overlay.fill(current_phase["color"])
 
-
-
     def battle(self):
         # Make camera follow the animation
         self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
@@ -200,6 +201,24 @@ class Level:
         # end battle
         self.overworld_transition()
         self.visible_sprites.transition_screen()
+
+    def update_soundtrack(self):
+        if not hasattr(self, 'current_music'):
+            self.current_music = None
+
+        if self.visible_sprites.state == LevelState.OVERWORLD and self.current_music != "forest":
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(FOREST_MUSIC)
+            pygame.mixer.music.set_volume(MUSIC_VOLUME)
+            pygame.mixer.music.play(-1)
+            self.current_music = "forest"
+
+        elif self.visible_sprites.state == LevelState.BATTLE and self.current_music != "battle":
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(random.choice([BATTLE_MUSIC_1, BATTLE_MUSIC_2, BATTLE_MUSIC_3]))
+            pygame.mixer.music.set_volume(MUSIC_VOLUME)
+            pygame.mixer.music.play(-1)
+            self.current_music = "battle"
 
 
 

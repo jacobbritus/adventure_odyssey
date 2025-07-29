@@ -7,7 +7,8 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-VOLUME = 0.5
+MUSIC_VOLUME = 0
+EFFECT_VOLUME = 0.5
 
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480
@@ -74,13 +75,38 @@ BATTLE_MUSIC_1 = get_file_location("sounds/background/10-Fight.mp3")
 BATTLE_MUSIC_2 = get_file_location("sounds/background/11-Fight2.mp3")
 BATTLE_MUSIC_3 = get_file_location("sounds/background/12-Fight3.mp3")
 
-HOVER_SOUND = get_file_location("sounds/hover.wav")
-PRESS_SOUND = get_file_location("sounds/click.wav")
-DISABLED_SOUND = get_file_location("sounds/disabled.wav")
-ENEMY_ALERT = get_file_location("sounds/effects/enemy_alert.mp3")
-PERFECT_BLOCK = get_file_location("sounds/effects/perfect_block_2.mp3")
-CRITICAL_HIT = get_file_location("sounds/effects/critical_hit_3.mp3")
-LEVEL_UP_SOUND = pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3"))
+
+# === Load and Categorize ===
+sound_effects = {
+    "moves": {
+        "fire_ball": [pygame.mixer.Sound(get_file_location("sounds/effects/fire_woosh.mp3")), pygame.mixer.Sound(get_file_location("sounds/effects/fire_impact.mp3"))],
+        "sword_slash": pygame.mixer.Sound(get_file_location("sounds/sword_slash.wav")),
+        "punch": pygame.mixer.Sound(get_file_location("sounds/effects/punch.mp3")),
+        "heal": pygame.mixer.Sound(get_file_location("sounds/effects/heal.mp3")),
+        "lightning_strike": pygame.mixer.Sound(get_file_location("sounds/effects/lightning_strike.mp3"))
+
+    },
+
+    "ui": {
+        "hover": pygame.mixer.Sound(get_file_location("sounds/hover.wav")),
+        "press": pygame.mixer.Sound(get_file_location("sounds/click.wav")),
+        "disabled": pygame.mixer.Sound(get_file_location("sounds/disabled.wav")),
+    },
+    "gameplay": {
+        "enemy_alert": pygame.mixer.Sound(get_file_location("sounds/effects/enemy_alert.mp3")),
+        "perfect_block": pygame.mixer.Sound(get_file_location("sounds/effects/perfect_block_2.mp3")),
+        "critical_hit": pygame.mixer.Sound(get_file_location("sounds/effects/critical_hit_3.mp3")),
+        "level_up": pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3")),
+    }
+}
+
+# === Set volume for all effects ===
+for category in sound_effects.values():
+    for effect in category.values():
+        sounds = effect if isinstance(effect, list) else [effect]
+        for sound in sounds:
+            sound.set_volume(EFFECT_VOLUME)
+
 
 
 GRASS_FOOTSTEPS = []
@@ -89,7 +115,7 @@ for file in os.listdir(grass_footsteps_dir):
     if file.endswith(".wav"):
         full_path = get_file_location(os.path.join(grass_footsteps_dir, file))
         sound = pygame.mixer.Sound(full_path)
-        sound.set_volume(VOLUME)
+        sound.set_volume(EFFECT_VOLUME)
         GRASS_FOOTSTEPS.append(sound)
 
 # UI

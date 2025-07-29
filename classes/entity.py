@@ -5,6 +5,7 @@ import pygame.mixer
 
 from classes.states import AnimationState
 from classes.spells import ProjectileSpell, StationarySpell
+from other.play_sound import play_sound
 from other.settings import *
 
 
@@ -111,9 +112,9 @@ class Entity(pygame.sprite.Sprite):
 
         footstep_sound = random.choice(GRASS_FOOTSTEPS)
         if not self.in_battle and self.type != "player":
-            footstep_sound.set_volume(0.25)
+            footstep_sound.set_volume(EFFECT_VOLUME // 2)
         else:
-            footstep_sound.set_volume(0.5)
+            footstep_sound.set_volume(EFFECT_VOLUME)
 
         channel = pygame.mixer.find_channel()
         if channel:
@@ -252,6 +253,7 @@ class Entity(pygame.sprite.Sprite):
 
         for projectile in self.spells:
             if projectile.hit and not self.hit_landed:
+                play_sound("moves", self.current_attack, 1)
                 self.handle_attack_impact(target)
                 self.hit_landed = True
 
@@ -287,6 +289,7 @@ class Entity(pygame.sprite.Sprite):
             impact_frame = self.sprite_dict[self.action]["impact_frame"]
             if self.frame > impact_frame and not self.hit_landed and not target.death:
                 self.hit_landed = True
+                play_sound("moves", self.current_attack, None)
                 self.handle_attack_impact(target)
                 if target.blocking:
                     self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
@@ -337,7 +340,7 @@ class Entity(pygame.sprite.Sprite):
 
         if self.blocking and not self.critical_hit_is_done:
             if self.type == "player":
-                pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+                play_sound("gameplay", "critical_hit", None)
                 self.critical_hit = True
                 self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
 
@@ -348,7 +351,7 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
                     self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
-                    pygame.mixer.Channel(3).play(pygame.mixer.Sound(CRITICAL_HIT))
+                    play_sound("gameplay", "critical_hit", None)
 
             # for projectile-based / non-repeating attacks:
             if moves[self.current_attack]["type"] == "special":
@@ -365,18 +368,10 @@ class Entity(pygame.sprite.Sprite):
             target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
 
             damage //= 2
-            pygame.mixer.Channel(1).play(pygame.mixer.Sound(PERFECT_BLOCK))
-
-
-        if len(moves[self.current_attack]["sound"]) == 1:
-            pygame.mixer.Sound(moves[self.current_attack]["sound"][0]).play()
-        else:
-            pygame.mixer.Sound(moves[self.current_attack]["sound"][1]).play()
-
+            play_sound("gameplay", "perfect_block", None)
 
 
         target.hp -= damage
-
         target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
 
         # target.dmg_taken.append(damage)

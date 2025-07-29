@@ -30,7 +30,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         # Game state
         self.state = LevelState.OVERWORLD
         self.battle_participants = None
-        self.current_music = None
         self.player_pre_battle_pos = None
         self.enemy_pre_battle_pos = None
         self.battle_loop = None
@@ -47,23 +46,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.shake_offset = pygame.Vector2(0, 0)
 
 
-    def update_soundtrack(self):
-        if not hasattr(self, 'current_music'):
-            self.current_music = None
-
-        if self.state == LevelState.OVERWORLD and self.current_music != "forest":
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load(FOREST_MUSIC)
-            pygame.mixer.music.set_volume(0.1)
-            pygame.mixer.music.play(-1)
-            self.current_music = "forest"
-
-        elif self.state == LevelState.BATTLE and self.current_music != "battle":
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load(random.choice([BATTLE_MUSIC_1, BATTLE_MUSIC_2, BATTLE_MUSIC_3]))
-            pygame.mixer.music.set_volume(0.1)
-            pygame.mixer.music.play(-1)
-            self.current_music = "battle"
 
     def get_visible_sprites(self):
         """Get all sprites that are visible on the screen."""

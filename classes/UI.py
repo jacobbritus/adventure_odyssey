@@ -1,4 +1,5 @@
 from classes.states import BookState, CombatMenuState, ButtonType
+from other.play_sound import play_sound
 from other.settings import *
 
 class HpBar:
@@ -202,16 +203,17 @@ class Button(pygame.sprite.Sprite):
             self.image = self.image_pressed
 
             if not self.disabled:
-                if not self.click_sound_played: pygame.mixer.Sound(PRESS_SOUND).play()
+                if not self.click_sound_played: play_sound("ui", "press", None)
+
                 self.click_sound_played = True
                 self.clicked = True
             else:
-                if not self.click_sound_played: pygame.mixer.Sound(DISABLED_SOUND).play()
+                if not self.click_sound_played: play_sound("ui", "disabled", None)
                 self.click_sound_played = True
 
         elif self.rect.inflate(-16, -16).collidepoint(mouse_pos) or self.hovering:
             self.image = self.image_selected
-            if not self.sound_played: pygame.mixer.Sound(HOVER_SOUND).play()
+            if not self.sound_played: play_sound("ui", "hover", None)
             self.sound_played = True
             self.click_sound_played = False
 

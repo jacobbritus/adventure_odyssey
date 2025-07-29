@@ -5,6 +5,7 @@ import pygame.image
 from classes.entity import Entity, BlockShield
 from classes.spells import ProjectileSpell, StationarySpell
 from classes.states import AnimationState
+from other.play_sound import play_sound
 from other.settings import *
 
 class Player(Entity):
@@ -57,7 +58,7 @@ class Player(Entity):
             "defense": 10,
             "strength": 10,
             "magic": 7,
-            "speed": 7,
+            "speed": 9,
             "luck": 7,
         }
 
@@ -152,7 +153,8 @@ class Player(Entity):
         """Draws an animating shining light on the player upon leveling up."""
         if self.leveled_up:
             StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
-            LEVEL_UP_SOUND.play()
+            play_sound("gameplay", "level_up", None)
+
             self.leveled_up = False
 
 
