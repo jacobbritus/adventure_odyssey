@@ -62,6 +62,8 @@ class Entity(pygame.sprite.Sprite):
         self.blocking = False
         self.perfect_block = False
         self.block_duration = pygame.time.get_ticks() + 0
+        self.block_cooldown_end = pygame.time.get_ticks() + 0
+
 
         # === critical hit
         self.critical_hit = False
@@ -83,14 +85,7 @@ class Entity(pygame.sprite.Sprite):
         self.max_hp = None
 
         # === core stats ===
-        self.core_stats = {
-            "vitality": 7,
-            "defense": 7,
-            "strength": 7,
-            "magic": 7,
-            "speed": 7,
-            "luck": 7,
-        }
+        self.core_stats = None
 
         # === animation states ===
         self.animation_state = AnimationState.IDLE
@@ -99,7 +94,7 @@ class Entity(pygame.sprite.Sprite):
 
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
-            if self.animation_state == AnimationState.IDLE:
+            if self.animation_state in [AnimationState.IDLE, AnimationState.DEATH]:
                 self.block_shield.direction = self.direction
                 shield_offset = (8, -36) if self.direction == "right" else (-34, -36)
                 pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
@@ -318,6 +313,9 @@ class Entity(pygame.sprite.Sprite):
 
             # ___if critical hit___
             if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
+                if target.blocking:
+                    pull_close = 16 if self.direction == "right" else -16
+                    self.x += pull_close
                 self.action = "idle" # done to reset for the second hit, not necessary for crits that dont repeat
                 self.animation_state = AnimationState.ATTACK
 
@@ -350,20 +348,23 @@ class Entity(pygame.sprite.Sprite):
     def handle_attack_impact(self, target):
         damage = self.calculate_damage()
 
-        if self.blocking and not self.critical_hit_is_done:
+        if self.blocking:
             if self.type == "player":
                 play_sound("gameplay", "critical_hit", None)
                 self.critical_hit = True
                 self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
 
 
-            elif self.type == "enemy":
-                bools = [True, False]
-                weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
-                self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
-                if self.critical_hit:
-                    self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
-                    play_sound("gameplay", "critical_hit", None)
+        if self.type == "enemy":
+            print("enemy")
+            bools = [True, False]
+            weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
+            self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
+            print(self.critical_hit)
+            if self.critical_hit:
+                print("check")
+                self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
+                play_sound("gameplay", "critical_hit", None)
 
             # for projectile-based / non-repeating attacks:
             if moves[self.current_attack]["type"] == "special":
@@ -376,6 +377,7 @@ class Entity(pygame.sprite.Sprite):
             target.blocking = random.choices(bools, k=1, weights=weights)[0]
 
         if target.blocking:
+            target.block_cooldown_end = pygame.time.get_ticks() + 0
             target.perfect_block = True
             target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
 

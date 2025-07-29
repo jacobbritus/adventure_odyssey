@@ -46,11 +46,6 @@ class Player(Entity):
         self.stat_points = 5
 
         self.exp = 0
-        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 5
-        self.dmg: int = 5
-        self.speed = 3
 
         # === core stats ===
         self.core_stats = {
@@ -61,6 +56,10 @@ class Player(Entity):
             "speed": 9,
             "luck": 7,
         }
+
+        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.mana: int = 5
 
 
         # Other
@@ -79,7 +78,7 @@ class Player(Entity):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
             if not self.blocking and pygame.time.get_ticks() >= self.block_cooldown_end:
                 self.blocking = True
-                self.block_cooldown_end = pygame.time.get_ticks() + 1000
+                self.block_cooldown_end = pygame.time.get_ticks() + 2000
 
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
