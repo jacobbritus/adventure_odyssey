@@ -7,9 +7,9 @@ from other.settings import *
 import math
 
 class Enemy(Entity):
-    def __init__(self, monster_name, surf, pos, group, obstacle_sprites):
+    def __init__(self, name, surf, pos, group, obstacle_sprites):
         super().__init__(group)
-        self.monster_name = monster_name
+        self.name = name
         self.group = group
 
 
@@ -52,7 +52,7 @@ class Enemy(Entity):
 
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
-        if self.monster_name == "Skeleton":
+        if self.name == "Skeleton":
             core_stats = {
             "vitality": 7,
             "defense": 7,
@@ -66,7 +66,7 @@ class Enemy(Entity):
             blocking_chance = 1
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
-        elif self.monster_name == "Goblin":
+        elif self.name == "Goblin":
             core_stats = {
                 "vitality": 7,
                 "defense": 7,
@@ -181,7 +181,7 @@ class Enemy(Entity):
                 self.action = "idle"
 
     def clone(self, pos):
-        return Enemy(self.monster_name, self.image, pos, self.group, self.obstacle_sprites)
+        return Enemy(self.name, self.image, pos, self.group, self.obstacle_sprites)
 
 
     def update_enemy(self, player, window, offset) -> None:
@@ -192,6 +192,12 @@ class Enemy(Entity):
         dmg_offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
+
+
+        mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 120),
+                                                               unsetcolor=(0, 0, 0, 0))
+        window.blit(mask, self.rect.topleft - offset)
+
 
 
 

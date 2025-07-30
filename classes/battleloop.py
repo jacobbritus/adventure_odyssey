@@ -24,36 +24,25 @@ class BattleLoop:
         # === UI setup ===
         self.combat_menu = CombatMenu(player_skills = self.player.attacks, functions = [self.player_turn, self.end_battle])
         self.player_hp_bar = HpBar(
+            owner=self.player,
             side = "left",
-            y_offset = 0,
-            level = self.player.level,
-            current_hp = self.player.hp,
-            max_hp = self.player.max_hp,
-            mana = self.player.mana,
-            name = "PLAYER")
-        self.player_hp_bar.set_hp(self.player.hp)
+            y_offset = 0)
 
-        self.enemy_hp_bars = []
 
-        for index, enemies in enumerate(self.enemies):
-            self.enemy_hp_bars.append( HpBar(
+        self.enemy_hp_bars_test = {}
+
+        for index, enemy in enumerate(self.enemies):
+            self.enemy_hp_bars_test.update({enemy: HpBar(
+                owner = enemy,
                 side="right",
-                y_offset= index * 64,
-
-                level=self.original_enemy.level,
-                current_hp=self.original_enemy.hp,
-                max_hp=self.original_enemy.hp,
-                mana=None,
-                name=self.original_enemy.monster_name.upper()) )
+                y_offset=index * 64)})
 
         # === battle state ===
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
         participants = self.enemies + [self.player]
         participants.sort(key = lambda x: x.core_stats["speed"], reverse = True)
-        print(participants)
 
         self.battle_queue = deque(participants)
-
 
         self.performer = self.battle_queue[0]
         self.target = self.original_enemy
@@ -100,7 +89,7 @@ class BattleLoop:
             for enemy in self.enemies:
                 pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
                 rect = pygame.Rect(pos.x, pos.y, 32, 32)
-                if rect.collidepoint(mouse_pos) and press:
+                if rect.collidepoint(mouse_pos) and press and not enemy.death:
                     self.target = enemy
                     enemy.image = pygame.mask.from_surface(enemy.image).to_surface(setcolor=(255, 0, 0, 120),
                                                                                      unsetcolor=(0, 0, 0, 0))
@@ -160,44 +149,24 @@ class BattleLoop:
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
 
-        if self.player.hp != self.player_hp_bar.hp:
-            self.player_hp_bar.set_hp(self.player.hp)
-
-        if self.player.mana != self.player_hp_bar.mana:
-            self.player_hp_bar.set_mana(self.player.mana)
-
-        for index, enemy_hp_bar in enumerate(self.enemy_hp_bars):
-            if enemy_hp_bar.hp != self.enemies[index].hp:
-                enemy_hp_bar.set_hp(self.enemies[index].hp)
-            enemy_hp_bar.update_hp_bar()
-
-        self.player_hp_bar.update_hp_bar()
-
         # === draw the target's hp_bar when
-
         if self.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]:
             if moves[self.performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
-
                if self.performer == self.player:
-                    hp_index = self.enemies.index(self.target)
-                    self.enemy_hp_bars[hp_index].draw(self.window)
+                   self.enemy_hp_bars_test[self.target].draw(self.window)
 
-               if self.performer in self.enemies:
+               elif self.performer in self.enemies:
                   self.player_hp_bar.draw(self.window)
             else:
                 if self.performer in self.enemies:
-
-                    hp_index = self.enemies.index(self.performer)
-                    for index, enemy_hp_bar in enumerate(self.enemy_hp_bars):
-                        if index == hp_index:
-                            enemy_hp_bar.draw(self.window)
-                if self.performer == self.player:
+                    self.enemy_hp_bars_test[self.performer].draw(self.window)
+                elif self.performer == self.player:
                     self.player_hp_bar.draw(self.window)
 
         elif self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_TURN]:
             self.player_hp_bar.draw(self.window)
-            for enemy_hp_bar in self.enemy_hp_bars:
-                enemy_hp_bar.draw(self.window)
+            for hp_bar in self.enemy_hp_bars_test.values():
+                hp_bar.draw(self.window)
         self.screen_messages()
 
     def end_battle(self) -> None:
@@ -210,9 +179,6 @@ class BattleLoop:
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = internal_attack
         self.player.mana -= moves[internal_attack]["mana"]
-
-        if self.target.death: self.target = [enemy for enemy in self.enemies if not enemy.death][0]
-
 
         self.handle_attack(self.player, self.player.current_attack)
 
@@ -300,6 +266,9 @@ class BattleLoop:
                 self.performer = self.battle_queue[0]
 
                 if self.performer.type == "player":
+                    # === set an enemy target ===
+                    self.target = [enemy for enemy in self.enemies if not enemy.death][0]
+
                     self.state = BattleState.PLAYER_TURN
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()

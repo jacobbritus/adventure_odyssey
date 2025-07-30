@@ -167,20 +167,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
-        if self.state == LevelState.OVERWORLD:
-            for enemy in self.enemy_sprites:
-                if not enemy.death: enemy.update_enemy(player, self.display_surface, self.offset)
-        elif self.state == LevelState.BATTLE:
-            for enemy in self.enemy_sprites:
-                enemy.update_enemy(player, self.display_surface, self.offset)
-
-
-    def respawn_enemies(self):
         for enemy in self.enemy_sprites:
-            if enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
-                enemy.hp = enemy.max_hp
-                enemy.action = "idle"
-                enemy.death = False
+            if not enemy.death:
+                enemy.update_enemy(player, self.display_surface, self.offset)
+            else:
+                if not enemy.in_battle and pygame.time.get_ticks() >= enemy.respawn_time:
+                    enemy.hp = enemy.max_hp
+                    enemy.action = "idle"
+                    enemy.death = False
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]

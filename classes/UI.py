@@ -3,10 +3,12 @@ from other.play_sound import play_sound
 from other.settings import *
 
 class HpBar:
-    def __init__(self, side: str, y_offset, level: int, current_hp: int, max_hp: int, mana: int | None, name: str):
+    def __init__(self, owner, side: str, y_offset):
+        self.owner = owner
+
         # === dynamic stats ===
-        self.max_hp: int = max_hp
-        self.hp: int = current_hp
+        self.max_hp = self.owner.max_hp
+        self.hp = self.owner.hp
 
         # === images ===
         self.background_box: pygame.Surface = pygame.image.load(BACKGROUND_BOX)
@@ -18,15 +20,15 @@ class HpBar:
         self.font: pygame.font = pygame.font.Font(FONT_ONE, 16)
         self.title_box: pygame.Surface = pygame.image.load(TITLE_BOX)
 
-        self.hp_text: pygame.Surface = self.font.render(f"{current_hp}/{max_hp}", True, (99, 61, 76))
-        self.name: pygame.Surface = self.font.render(name,True, (255, 194, 161))
+        self.hp_text: pygame.Surface = self.font.render(f"{self.hp}/{self.max_hp}", True, (99, 61, 76))
+        self.name: pygame.Surface = self.font.render(self.owner.name.upper(),True, (255, 194, 161))
 
         self.level_box: pygame.Surface = pygame.image.load(LEVEL_BOX)
-        self.level: pygame.Surface = self.font.render(str(level),True, (255, 255, 255))
+        self.level: pygame.Surface = self.font.render(str(self.owner.level),True, (255, 255, 255))
 
         if side == "left":
             self.mana_box = pygame.image.load(MANA_BOX)
-            self.mana = self.font.render(f"{mana}", True, (150, 206, 255))
+            self.mana = self.font.render(f"{self.owner.mana}", True, (150, 206, 255))
         else:
             self.mana = None
 
@@ -83,16 +85,16 @@ class HpBar:
                 "hp_status": pygame.Vector2(-36, 24),
             }
 
-    def set_hp(self, new_hp: int) -> None:
+    def set_hp(self) -> None:
         """Update the hp bar target length making it relative to the current-hp to max-hp ratio."""
-        new_hp = max(0, min(new_hp, self.max_hp)) # clamp
+        new_hp = max(0, min(self.owner.hp, self.max_hp)) # clamp
         self.hp = new_hp
         hp_ratio = self.hp / self.max_hp
         self.target_width = int(self.bar_size[0] * hp_ratio)
 
-    def set_mana(self, new_mana) -> None:
+    def set_mana(self) -> None:
         """Update the mana text."""
-        self.mana = self.font.render(f"{new_mana}", True, (150, 206, 255))
+        self.mana = self.font.render(f"{self.owner.mana}", True, (150, 206, 255))
 
     def update_hp_bar(self) -> None:
         """Slowly increase or decrease the current bar width until equal to the target width."""
@@ -117,6 +119,9 @@ class HpBar:
 
     def draw(self, window) -> None:
         """Draw all the images on the window"""
+        self.set_hp()
+        self.update_hp_bar()
+
         elements: list[tuple[pygame.Surface, pygame.Vector2]] = [
             (self.background_box, self.background_box_pos),
             (self.hp_box, self.hp_bar_pos),
@@ -129,6 +134,7 @@ class HpBar:
             (self.level, self.level_pos)
         ]
         if self.mana:
+            self.set_mana()
             elements.append((self.mana_box, self.mana_box_pos))
             elements.append((self.mana, self.mana_pos))
 

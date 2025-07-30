@@ -25,7 +25,7 @@ class Level:
         self.action_sprites: pygame.sprite.Group = pygame.sprite.Group()
 
         self.player = None
-        self.player_hp_bar = None
+        self.enemy_sprites = None
         self.open_menu = False
         self.menu = None
         self.current_music = None
@@ -64,15 +64,15 @@ class Level:
             for obj in enemy_sprites:
                 pos = (obj.x, obj.y)
                 if obj.name == "Skeleton":
-                    Enemy(surf=obj.image, pos=pos, monster_name=obj.name, group=(self.enemies, self.visible_sprites),
+                    Enemy(surf=obj.image, pos=pos, name=obj.name, group=(self.enemies, self.visible_sprites),
                           obstacle_sprites=self.obstacle_sprites)
 
                 if obj.name == "Slime":
-                    Enemy(surf=obj.image, pos=pos, monster_name=obj.name, group=(self.enemies, self.visible_sprites),
+                    Enemy(surf=obj.image, pos=pos, name=obj.name, group=(self.enemies, self.visible_sprites),
                           obstacle_sprites=self.obstacle_sprites)
 
                 if obj.name == "Goblin":
-                    Enemy(surf=obj.image, pos=pos, monster_name=obj.name, group=(self.enemies, self.visible_sprites),
+                    Enemy(surf=obj.image, pos=pos, name=obj.name, group=(self.enemies, self.visible_sprites),
                           obstacle_sprites=self.obstacle_sprites)
 
         obstacle_sprites = self.tmx_data.get_layer_by_name("Obstacles")
@@ -133,14 +133,16 @@ class Level:
         if self.visible_sprites.delay and pygame.time.get_ticks() >= self.visible_sprites.delay:
             self.visible_sprites.end_battle()
 
+
     def overworld(self) -> None:
         self.battle_transition()
 
         # if not self.menu.running:
-        self.visible_sprites.respawn_enemies()
-        self.visible_sprites.update_enemies(self.player)
+
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
+
+        self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
 
         self.visible_sprites.transition_screen()
@@ -174,10 +176,11 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[12]
+        current_phase = day_phases[18]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
+        self.display_surface.blit(self.day_cycle_overlay, (0, 0))
 
     def battle(self):
         # Make camera follow the animation
@@ -186,15 +189,16 @@ class Level:
         # self.visible_sprites.custom_draw(self.player)
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
+
+        self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
 
 
-        self.visible_sprites.update_enemies(self.player)
-        self.visible_sprites.battle_loop.run()
-
         self.update_day_cycle()
-        self.display_surface.blit(self.day_cycle_overlay, (0, 0))
 
+        # use this smart ass
+        self.visible_sprites.battle_loop.run()
+        # here to be drawn on top of the overlay
         self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
         self.visible_sprites.battle_loop.draw_ui()
 
