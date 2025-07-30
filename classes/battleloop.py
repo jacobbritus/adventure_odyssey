@@ -49,8 +49,16 @@ class BattleLoop:
 
         if self.performer.type == "player":
             self.state = BattleState.PLAYER_TURN
+
         else:
             self.state = BattleState.ENEMY_TURN
+
+        for participant in participants:
+            participant.animation_state = AnimationState.IDLE
+
+        # === selecting enemies setup ===
+        for other in self.enemies:
+            other.selected = True
 
         # === state / animation phase delay and the player turn clock ===
         self.current_time: pygame.time = pygame.time.get_ticks()
@@ -77,22 +85,22 @@ class BattleLoop:
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.background_box_pos[1] - 2))
 
     def get_mouse_input(self) -> None:
-        if BattleState.PLAYER_TURN:
+        if self.state == BattleState.PLAYER_TURN:
             mouse_pos = pygame.mouse.get_pos()
             press = pygame.mouse.get_pressed()[0]
-
-            # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
-            # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
-            # window.blit(debug_surface, (self.hitbox.topleft - offset))
-
 
             for enemy in self.enemies:
                 pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
                 rect = pygame.Rect(pos.x, pos.y, 32, 32)
                 if rect.collidepoint(mouse_pos) and press and not enemy.death:
+                    for other in self.enemies:
+                        other.selected = False
+
                     self.target = enemy
-                    enemy.image = pygame.mask.from_surface(enemy.image).to_surface(setcolor=(255, 0, 0, 120),
-                                                                                     unsetcolor=(0, 0, 0, 0))
+                    enemy.selected = True
+        else:
+            for other in self.enemies:
+                other.selected = True
 
     def run(self) -> None:
         """The main loop."""
@@ -179,7 +187,7 @@ class BattleLoop:
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = internal_attack
         self.player.mana -= moves[internal_attack]["mana"]
-
+        self.target.selected = False
         self.handle_attack(self.player, self.player.current_attack)
 
     def handle_attack(self, performer, attack_name) -> None:
@@ -210,6 +218,16 @@ class BattleLoop:
             delay_time = 1000 if performer.type == "player" else random.randint(500, 3000)
             self.set_delay(delay_time)
 
+        # === HURT ===
+        if target.animation_state == AnimationState.HURT:
+            target.hurt_animation()
+
+            if pygame.time.get_ticks() >= target.hurt_time:
+                target.action = "idle"
+                target.animation_state = AnimationState.IDLE
+        else:
+            target.hurt_time = pygame.time.get_ticks() + 500
+
         # === DEATH ===
         if target.animation_state == AnimationState.DEATH:
             target.death_animation()
@@ -227,13 +245,6 @@ class BattleLoop:
 
         # === WAIT > [ ATTACK ] > RETURN OR IDLE ===
         elif performer.animation_state == AnimationState.ATTACK:
-            if target.animation_state == AnimationState.HURT:
-                target.hurt_animation()
-                if pygame.time.get_ticks() >= target.hurt_time:
-                    target.action = "idle"
-                    target.animation_state = AnimationState.IDLE
-            else:
-                target.hurt_time = pygame.time.get_ticks() + 500
 
             performer.attack_animation(target, performer.current_attack)
             # self.set_delay(500)
@@ -268,7 +279,6 @@ class BattleLoop:
                 if self.performer.type == "player":
                     # === set an enemy target ===
                     self.target = [enemy for enemy in self.enemies if not enemy.death][0]
-
                     self.state = BattleState.PLAYER_TURN
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()

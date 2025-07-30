@@ -58,8 +58,8 @@ class Player(Entity):
             "luck": 7,
         }
 
-        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.hp: int = int(500 + 1.5 * self.core_stats["vitality"])
+        self.max_hp: int = int(500 + 1.5 * self.core_stats["vitality"])
         self.mana: int = 5
 
 
@@ -170,27 +170,18 @@ class Player(Entity):
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
         # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
-
-
-
-
         self.update_pos()
         self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
                                                    int(self.y) - offset.y)
 
-
-        mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 120),
-                                                               unsetcolor=(0, 0, 0, 0))
-        window.blit(mask, (self.hitbox.topleft - offset) - (31, 23))
-
-        self.blocking_mechanics(window, offset)
-
-        # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            # window.blit(mask, self.screen_position + (1, 1))
-
         dmg_offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
+
+        self.mask(window, offset)
+
+        self.blocking_mechanics(window, offset)
+
 
         self.controls()
 

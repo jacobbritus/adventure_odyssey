@@ -188,6 +188,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
 
+
         for participant in enemies:
             participant.in_battle = True
             participant.action = "idle"

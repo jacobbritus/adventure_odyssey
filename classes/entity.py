@@ -21,6 +21,8 @@ class Entity(pygame.sprite.Sprite):
         self.y: float = 0
         self.screen_position = None
         self.visibility = False
+        self.obstacle_sprites = None
+
 
         # Image related.
         self.sprite_dict = None
@@ -47,8 +49,8 @@ class Entity(pygame.sprite.Sprite):
         self.in_battle = False
         self.pre_battle_pos = None
         self.battle_pos = None
-        self.obstacle_sprites = None
         self.current_attack = None
+        self.selected = False
 
         self.critical_hit_chance = None
         self.blocking_chance = None
@@ -89,7 +91,7 @@ class Entity(pygame.sprite.Sprite):
         self.core_stats = None
 
         # === animation states ===
-        self.animation_state = AnimationState.IDLE
+        self.animation_state = None
 
         self.footstep_delay = 500
 
@@ -113,7 +115,7 @@ class Entity(pygame.sprite.Sprite):
 
 
     def update_pos(self) -> None:
-        self.rect.topleft = (int(self.x), int(self.y))  # update rect
+        self.rect.topleft = (round(self.x), round(self.y))  # update rect
         self.hitbox.center = self.rect.center
 
     def get_dt(self, dt):
@@ -220,6 +222,7 @@ class Entity(pygame.sprite.Sprite):
             # inflate to get a bit more distance depending on the move
             distance = 8 if self.current_attack == "punch" else 10
             if self.hitbox.colliderect(target.hitbox.inflate(+ distance, 0)):
+                self.y = target.y
                 self.sprinting = False
                 self.animation_state = AnimationState.WAIT
 
@@ -458,6 +461,17 @@ class Entity(pygame.sprite.Sprite):
             self.animations()
         else:
             self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
+
+    def mask(self, window, offset):
+        if self.in_battle:
+            if self.animation_state == AnimationState.HURT and not pygame.time.get_ticks() >= self.hurt_time // 1.25:
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 120),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            elif self.type == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 120),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
 
 
 

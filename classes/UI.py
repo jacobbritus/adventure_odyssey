@@ -85,6 +85,14 @@ class HpBar:
                 "hp_status": pygame.Vector2(-36, 24),
             }
 
+    def mask(self, window, elements):
+        if self.owner.type == "enemy" and not self.owner.selected:
+            for item, pos in elements:
+                if item in [self.background_box, self.title_box, self.level_box]:
+                    mask = pygame.mask.from_surface(item).to_surface(setcolor=(0, 0, 0, 120),
+                                                                           unsetcolor=(0, 0, 0, 0))
+                    window.blit(mask, pos)
+
     def set_hp(self) -> None:
         """Update the hp bar target length making it relative to the current-hp to max-hp ratio."""
         new_hp = max(0, min(self.owner.hp, self.max_hp)) # clamp
@@ -140,6 +148,8 @@ class HpBar:
 
         for surface, pos in elements:
             window.blit(surface, pos)
+
+        self.mask(window, elements)
 
 
 

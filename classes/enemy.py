@@ -49,6 +49,7 @@ class Enemy(Entity):
         self.random_target = None
         self.random_target_reached = True
         self.move_delay = pygame.time.get_ticks() + 0
+        self.reached_bounds = False
 
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
@@ -63,7 +64,7 @@ class Enemy(Entity):
         }
             combat_moves = ["sword_slash"]
             critical_hit_chance = 0.5
-            blocking_chance = 1
+            blocking_chance = 0.25
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -93,8 +94,9 @@ class Enemy(Entity):
 
         # Define detection radius (how far the enemy can see)
         detection_radius = 200  # Adjust this value as needed
+
         
-        if distance <= detection_radius:
+        if distance <= detection_radius and not self.reached_bounds:
             # Enemy sees player - start chasing
             self.action = "running"
             self.sprinting = True
@@ -120,18 +122,21 @@ class Enemy(Entity):
                     self.direction = "up"     # Player is above
         
             # Normalize movement vector for consistent speed
-
-
             if distance > 0 and not abs(self.spawn.y - self.y) > 300 and not abs(self.spawn.x - self.x) > 300: # Prevent division by zero
                 dx = x_distance / distance  # Creates value between -1 and 1
                 dy = y_distance / distance  # Creates value between -1 and 1
                 self.move((dx, dy))
             else:
-                self.action = "idle"
+                self.reached_bounds = True
+                self.return_animation(self.spawn)
         else:
             # Player is too far - enemy stops
             self.detected_player = False
             self.sprinting = False
+
+
+            if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
+                self.reached_bounds = False
 
     def random_movement(self):
         current_time = pygame.time.get_ticks()
@@ -194,10 +199,8 @@ class Enemy(Entity):
                                            self.screen_position.y)
 
 
-        mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 120),
-                                                               unsetcolor=(0, 0, 0, 0))
-        window.blit(mask, self.rect.topleft - offset)
 
+        self.mask(window, offset)
 
 
 
