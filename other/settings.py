@@ -7,8 +7,8 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.2
-EFFECT_VOLUME = 0.2
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0.0
 
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480

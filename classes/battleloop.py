@@ -1,4 +1,7 @@
 import random
+
+import pygame
+
 from classes.UI import CombatMenu, HpBar
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
@@ -84,10 +87,29 @@ class BattleLoop:
             time_size = time_text.get_width()
             self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.background_box_pos[1] - 2))
 
+    def get_mouse_input(self) -> None:
+        if BattleState.PLAYER_TURN:
+            mouse_pos = pygame.mouse.get_pos()
+            press = pygame.mouse.get_pressed()[0]
+
+            # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
+            # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
+            # window.blit(debug_surface, (self.hitbox.topleft - offset))
+
+
+            for enemy in self.enemies:
+                pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
+                rect = pygame.Rect(pos.x, pos.y, 32, 32)
+                if rect.collidepoint(mouse_pos) and press:
+                    self.target = enemy
+                    enemy.image = pygame.mask.from_surface(enemy.image).to_surface(setcolor=(255, 0, 0, 120),
+                                                                                     unsetcolor=(0, 0, 0, 0))
+
     def run(self) -> None:
         """The main loop."""
         self.current_time = pygame.time.get_ticks()
         self.animations()
+        self.get_mouse_input()
 
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -189,7 +211,6 @@ class BattleLoop:
         self.player.current_attack = internal_attack
         self.player.mana -= moves[internal_attack]["mana"]
 
-        self.target = random.choice(self.enemies)
         if self.target.death: self.target = [enemy for enemy in self.enemies if not enemy.death][0]
 
 
