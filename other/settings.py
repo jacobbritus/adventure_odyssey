@@ -7,11 +7,11 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.0
-EFFECT_VOLUME = 0.0
+MUSIC_VOLUME = 0.5
+EFFECT_VOLUME = 0.5
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 480
+WINDOW_WIDTH = 480
+WINDOW_HEIGHT = 360
 
 FPS = 60
 TILE_SIZE = 32
@@ -151,6 +151,11 @@ SKILLS_TITLE = get_file_location(f"sprites/UI/skills_title.png")
 
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
+# === combat menu
+COMBAT_MENU_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
+
+
+
 # ___buttons___
 BUTTON_SMALL_NORMAL = pygame.image.load(get_file_location("sprites/UI/button_small.png"))
 BUTTON_SMALL_SELECTED = pygame.image.load(get_file_location("sprites/UI/button_small_selected.png"))
@@ -168,6 +173,11 @@ BUTTON_TWO_PRESSED = get_file_location(f"sprites/UI/button_two_pressed.png")
 LARGE_BUTTON_NORMAL = get_file_location(f"sprites/UI/large_button_normal.png")
 LARGE_BUTTON_SELECTED = get_file_location(f"sprites/UI/large_button_selected.png")
 LARGE_BUTTON_PRESSED = get_file_location(f"sprites/UI/large_button_pressed.png")
+
+BUTTON_SIMPLE_NORMAL = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
+BUTTON_SIMPLE_SELECTED = pygame.image.load(get_file_location("sprites/UI/simple_button_selected.png"))
+BUTTON_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
+
 
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")

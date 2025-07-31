@@ -185,10 +185,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         if second_enemy: enemies.append(enemy.clone((enemy.x, enemy.y)))
 
 
-
-
-
-
         for participant in enemies:
             participant.in_battle = True
             participant.action = "idle"
@@ -214,7 +210,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             player.battle_pos = pygame.Vector2(player.x - player.width, player.y)
 
             def enemy_battle_spots(pos, n):
-                spacing = 64
+                spacing = 96
                 positions = []
 
                 total_height = spacing * (n - 1)  # total space between all enemies

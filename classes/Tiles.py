@@ -7,7 +7,7 @@ class StaticTile(pygame.sprite.Sprite):
         self.image = surf
         self.rect: pygame.Rect = self.image.get_rect(topleft = pos)  # pos must be a tuple of (x, y)
         self.type: str = tile_type
-        self.hitbox: pygame.Rect = (self.rect.inflate(-32, -32) if tile_type == "tree" else self.rect)
+        self.hitbox: pygame.Rect = (self.rect.inflate(-96, -96) if tile_type == "tree" else self.rect)
 
 
 
@@ -36,7 +36,7 @@ class AnimatedTile(pygame.sprite.Sprite):
         self.image = self.frames[self.frame_index]
         self.rect: pygame.Rect = self.image.get_rect(topleft = pos)
         self.type = tile_type
-        self.hitbox: pygame.Rect = (self.rect.inflate(-32, -16) if tile_type == "tree" else self.rect)
+        self.hitbox: pygame.Rect = (self.rect.inflate(-48, -48) if tile_type == "tree" else self.rect)
 
 
     def update(self):

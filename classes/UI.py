@@ -1,3 +1,5 @@
+import pygame
+
 from classes.states import BookState, CombatMenuState, ButtonType
 from other.play_sound import play_sound
 from other.settings import *
@@ -125,26 +127,36 @@ class HpBar:
         hp_bar_crop = pygame.Rect(0, 0, self.current_width, self.bar_size[1])
         self.hp_bar_cropped = self.hp_bar.subsurface(hp_bar_crop).copy()
 
-    def draw(self, window) -> None:
+    def draw(self, window, pos: None) -> None:
         """Draw all the images on the window"""
+        if self.owner.type == "enemy":
+            self.hp_bar_pos = pos
+
         self.set_hp()
         self.update_hp_bar()
 
-        elements: list[tuple[pygame.Surface, pygame.Vector2]] = [
-            (self.background_box, self.background_box_pos),
-            (self.hp_box, self.hp_bar_pos),
-            (self.hp_bar_cropped, self.hp_bar_pos),
-            (self.hp_icon, self.hp_icon_pos),
-            (self.hp_text, self.hp_text_pos),
-            (self.title_box, self.title_box_pos),
-            (self.name, self.name_pos),
-            (self.level_box, self.level_box_pos),
-            (self.level, self.level_pos)
-        ]
-        if self.mana:
+        if self.owner.type == "player":
+            elements: list[tuple[pygame.Surface, pygame.Vector2]] = [
+                (self.background_box, self.background_box_pos),
+                (self.hp_box, self.hp_bar_pos),
+                (self.hp_bar_cropped, self.hp_bar_pos),
+                (self.hp_icon, self.hp_icon_pos),
+                (self.hp_text, self.hp_text_pos),
+                (self.title_box, self.title_box_pos),
+                (self.name, self.name_pos),
+                (self.level_box, self.level_box_pos),
+                (self.level, self.level_pos),
+                (self.mana_box, self.mana_box_pos),
+                (self.mana, self.mana_pos)
+
+            ]
             self.set_mana()
-            elements.append((self.mana_box, self.mana_box_pos))
-            elements.append((self.mana, self.mana_pos))
+
+        else:
+            elements: list[tuple[pygame.Surface, pygame.Vector2]] = [
+                (self.hp_box, self.hp_bar_pos),
+                (self.hp_bar_cropped, self.hp_bar_pos)]
+
 
         for surface, pos in elements:
             window.blit(surface, pos)
@@ -175,7 +187,7 @@ class Button(pygame.sprite.Sprite):
 
         if text:
             self.font = pygame.font.Font(FONT_ONE, 16)
-            self.text = self.font.render(text,True, (99, 61, 76)
+            self.text = self.font.render(self.text_string, True, (99, 61, 76)
 )
             self.size = self.text.get_size()
             self.text_position = (self.rect.centerx - self.size[0] // 2, self.rect.centery - self.size[1] // 2)
@@ -197,6 +209,9 @@ class Button(pygame.sprite.Sprite):
 
 
     def get_images(self):
+        if self.size == "simple":
+            return BUTTON_SIMPLE_NORMAL, BUTTON_SIMPLE_PRESSED, BUTTON_SIMPLE_SELECTED
+
         if self.size == "extra_small":
             return BUTTON_SMALL_NORMAL, BUTTON_SMALL_PRESSED, BUTTON_SMALL_SELECTED
 
@@ -228,6 +243,8 @@ class Button(pygame.sprite.Sprite):
                 self.click_sound_played = True
 
         elif self.rect.inflate(-16, -16).collidepoint(mouse_pos) or self.hovering:
+            if self.text_string: self.text = self.font.render(self.text_string, True, (236, 226, 196))
+
             self.image = self.image_selected
             if not self.sound_played: play_sound("ui", "hover", None)
             self.sound_played = True
@@ -235,6 +252,7 @@ class Button(pygame.sprite.Sprite):
 
         else:
             self.image = self.image_normal
+            if self.text_string: self.text = self.font.render(self.text_string, True, (99, 61, 76))
             self.hovering = False
             self.sound_played = False
             self.click_sound_played = False
@@ -273,6 +291,9 @@ class CombatMenu:
         self.normal_button_size = pygame.image.load(BUTTON_NORMAL).get_size()
         self.normal_button_two_width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
 
+        # === main menu ===
+        self.main_menu_bg_pos = pygame.Vector2(32 , WINDOW_HEIGHT - COMBAT_MENU_BG.get_height() - 32)
+
         # === skills menu state images and their positions ===
         self.background_image: pygame.Surface = pygame.image.load(LARGE_BACKGROUND_BOX)
         self.background_image_position: pygame.Vector2 = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
@@ -292,6 +313,7 @@ class CombatMenu:
         self.update()
         self.player_mana = current_mana
         if self.state == CombatMenuState.MAIN_MENU:
+            window.blit(COMBAT_MENU_BG, self.main_menu_bg_pos)
             self.draw_main_menu()
 
         # === buttons are drawn through the main menu skills button's function ===
@@ -330,11 +352,19 @@ class CombatMenu:
     def draw_main_menu(self) -> None:
         """Draw the buttons for the main menu."""
         if not self.buttons_group:
-            Button(self.buttons_group, "no parameter", self.draw_skills_menu, "SKILLS", "medium",
-                   ((WINDOW_WIDTH // 2) - self.normal_button_two_width, WINDOW_HEIGHT // 1.25), False)
-            Button(self.buttons_group, "no parameter", self.run_function, "RUN", "medium",
-                   ((WINDOW_WIDTH // 2) + self.normal_button_two_width // 5,
-                                 WINDOW_HEIGHT // 1.25), False)
+            button_offset = (6, 7)
+            pos = self.main_menu_bg_pos + button_offset
+
+            Button(self.buttons_group, "no parameter", self.draw_skills_menu, "SKILLS", "simple",
+                   pos, False)
+
+            y_offset = (0, 34)
+            Button(self.buttons_group, "no parameter", self.run_function, "ITEMS", "simple",
+                   pos + y_offset, False)
+
+            y_offset = (0, 68)
+            Button(self.buttons_group, "no parameter", self.run_function, "RUN", "simple",
+                   pos + y_offset, False)
 
     def draw_end_menu(self) -> None:
         """Draw the buttons for the end menu."""

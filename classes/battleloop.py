@@ -66,7 +66,7 @@ class BattleLoop:
         start_delay = 1000 if self.state == BattleState.PLAYER_TURN else 2000
         self.delay: pygame.time = self.current_time + start_delay
 
-        self.clock_timer: pygame.time = self.current_time + 20000
+        self.clock_timer: pygame.time = self.current_time + 200000000
         self.clock_font: pygame.font = pygame.font.Font(FONT_TWO, 33)
 
         # === visual cues ===
@@ -160,21 +160,22 @@ class BattleLoop:
         # === draw the target's hp_bar when
         if self.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]:
             if moves[self.performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
-               if self.performer == self.player:
-                   self.enemy_hp_bars_test[self.target].draw(self.window)
+               if self.performer == self.player and not self.target.death:
+                   self.enemy_hp_bars_test[self.target].draw(self.window, self.target.screen_position + (0, 64))
 
                elif self.performer in self.enemies:
-                  self.player_hp_bar.draw(self.window)
+                  self.player_hp_bar.draw(self.window, None)
             else:
                 if self.performer in self.enemies:
-                    self.enemy_hp_bars_test[self.performer].draw(self.window)
+                    self.enemy_hp_bars_test[self.performer].draw(self.window, self.performer.screen_position)
                 elif self.performer == self.player:
-                    self.player_hp_bar.draw(self.window)
+                    self.player_hp_bar.draw(self.window, None)
 
         elif self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_TURN]:
-            self.player_hp_bar.draw(self.window)
-            for hp_bar in self.enemy_hp_bars_test.values():
-                hp_bar.draw(self.window)
+            self.player_hp_bar.draw(self.window, None)
+            for enemy, hp_bar in self.enemy_hp_bars_test.items():
+                if not enemy.death:
+                    hp_bar.draw(self.window, enemy.screen_position + (0, 64))
         self.screen_messages()
 
     def end_battle(self) -> None:

@@ -178,6 +178,7 @@ class Player(Entity):
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
 
+
         self.mask(window, offset)
 
         self.blocking_mechanics(window, offset)
