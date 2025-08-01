@@ -151,7 +151,7 @@ SKILLS_TITLE = get_file_location(f"sprites/UI/skills_title.png")
 
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
-NEW_HP_BG = pygame.image.load(get_file_location("sprites/UI/new_hpbar.png"))
+NEW_HP_BG = pygame.image.load(get_file_location("sprites/UI/new_hp_bar.png"))
 NEW_HP_BOX = pygame.image.load(get_file_location("sprites/UI/new_hp_box.png"))
 NEW_HP_BAR = pygame.image.load(get_file_location("sprites/UI/new_hp.png"))
 NEW_MANA_BAR = pygame.image.load(get_file_location("sprites/UI/new_mana.png"))

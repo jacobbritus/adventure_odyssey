@@ -15,17 +15,20 @@ class HpBar:
         # === images ===
         self.background_box: pygame.Surface = NEW_HP_BG
 
-        self.hp_box: pygame.Surface = NEW_HP_BOX
+        if self.owner.type == "enemy": self.hp_box: pygame.Surface = NEW_HP_BOX
 
         font = pygame.font.Font(FONT_ONE, 16)
-        self.level = font.render(str(owner.level), True, (255, 255, 255))
+        self.name = font.render(str(owner.name).upper(), True, (236, 226, 196))
+        self.name_bg = font.render(str(owner.name).upper(), True, (81, 57, 44))
+
 
 
         # === positions ====
-        self.background_box_pos = pygame.Vector2(16, WINDOW_HEIGHT // 10)
-        self.level_pos = self.background_box_pos + (10, -2)
-        self.hp_bar_pos = self.background_box_pos + (66, 4)
-        self.mana_bar_pos = self.background_box_pos + (62, 14)
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - NEW_HP_BG.get_width() - 16, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 16)
+        self.name_pos = self.background_box_pos + (10, 2)
+        self.name_bg_pos = self.name_pos + (2, 0)
+        self.hp_bar_pos = self.background_box_pos + (118, 4)
+        self.mana_bar_pos = self.background_box_pos + (114, 14)
 
         # === updating the hp bar ===
         self.bar_size = pygame.Vector2(NEW_HP_BAR.get_size())
@@ -44,15 +47,14 @@ class HpBar:
                 "current_width": self.current_width,
                 "target_width": self.target_width}
         }
-        self.opacity = 200
+        self.opacity = 150
 
     def mask(self, window, elements):
         if self.owner.type == "enemy" and not self.owner.selected:
             for item, pos in elements:
-                if item in [self.background_box]:
-                    mask = pygame.mask.from_surface(item).to_surface(setcolor=(0, 0, 0, 120),
-                                                                           unsetcolor=(0, 0, 0, 0))
-                    window.blit(mask, pos)
+                mask = pygame.mask.from_surface(item).to_surface(setcolor=(0, 0, 0, 100),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pos)
 
     def set_hp(self) -> None:
         """Update the hp bar target length making it relative to the current-hp to max-hp ratio."""
@@ -102,20 +104,20 @@ class HpBar:
             elements = [
                 (self.hp_box, self.hp_bar_pos),
                 (self.hp_bar_cropped, self.hp_bar_pos)]
-            for element in elements:
-                element[0].set_alpha(self.opacity)
+
 
         else:
             elements = [
                 (self.background_box, self.background_box_pos),
-                (self.level, self.level_pos),
-
-                (self.hp_box, self.hp_bar_pos),
+                (self.name_bg, self.name_bg_pos),
+                (self.name, self.name_pos),
                 (self.hp_bar_cropped, self.hp_bar_pos),
                 (self.mana_bar_cropped, self.mana_bar_pos),
 
             ]
             self.set_mana()
+        for element in elements:
+            element[0].set_alpha(self.opacity)
 
         for surface, pos in elements:
             if self.owner.death:
@@ -292,7 +294,7 @@ class CombatMenu:
         self.normal_button_two_width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
 
         # === main menu ===
-        self.main_menu_bg_pos = pygame.Vector2(32, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 32)
+        self.main_menu_bg_pos = pygame.Vector2(16, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 16)
         self.main_menu_buttons = ["SKILLS", "ITEMS", "RUN"]
 
         # === skills menu state images and their positions ===

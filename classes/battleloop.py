@@ -141,7 +141,9 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        self.player_hp_bar.draw(self.window, None)
+        if self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_ANIMATION, BattleState.ENEMY_TURN]:
+            self.player_hp_bar.draw(self.window, None)
+
         for enemy, hp_bar in self.enemy_hp_bars_test.items():
             hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
