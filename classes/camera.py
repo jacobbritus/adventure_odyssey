@@ -182,7 +182,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         enemy = self.battle_participants["enemies"][0]
 
         second_enemy = random.choices([True, False], k=1, weights = [1, 0])[0]
-        if second_enemy: enemies.append(enemy.clone((enemy.x, enemy.y)))
+        if second_enemy: enemies.append(enemy.clone("Skeleton", (enemy.x, enemy.y)))
+
+
+
 
 
         for participant in enemies:
@@ -203,14 +206,12 @@ class YSortCameraGroup(pygame.sprite.Group):
             player.pre_battle_pos = (player.x, player.y)
 
 
-
-
             player.x, player.y = positions[0]
             player.rect.topleft = (int(player.x), int(player.y))
             player.battle_pos = pygame.Vector2(player.x - player.width, player.y)
 
             def enemy_battle_spots(pos, n):
-                spacing = 96
+                spacing = 80
                 positions = []
 
                 total_height = spacing * (n - 1)  # total space between all enemies
@@ -240,7 +241,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
             battle_center_x = (player.rect.centerx + enemies[0].rect.centerx) // 2
-            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2
+            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + 32
             self.battle_position.update(battle_center_x, battle_center_y)
 
             self.battle_loop = BattleLoop(player, enemies, self.display_surface, self.offset)

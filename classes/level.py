@@ -206,6 +206,9 @@ class Level:
         self.overworld_transition()
         self.visible_sprites.transition_screen()
 
+
+
+
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):
             self.current_music = None

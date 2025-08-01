@@ -59,6 +59,7 @@ class Entity(pygame.sprite.Sprite):
         self.hit_landed = False
         self.current_attack = None
         self.hurt_time = pygame.time.get_ticks() + 200
+        self.hurt_mask_opacity = 50
 
         # === blocking ===
         self.blocked = False
@@ -464,14 +465,17 @@ class Entity(pygame.sprite.Sprite):
 
     def mask(self, window, offset):
         if self.in_battle:
-            if self.animation_state == AnimationState.HURT and not pygame.time.get_ticks() >= self.hurt_time // 1.25:
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 120),
+            if self.animation_state == AnimationState.HURT and not pygame.time.get_ticks() >= self.hurt_time - 200:
+                self.hurt_mask_opacity += 25
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, min(self.hurt_mask_opacity, 225)),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
             elif self.type == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
                 mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 120),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            else:
+                self.hurt_mask_opacity = 0
 
 
 

@@ -7,11 +7,11 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.5
-EFFECT_VOLUME = 0.5
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0.0
 
-WINDOW_WIDTH = 480
-WINDOW_HEIGHT = 360
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
 
 FPS = 60
 TILE_SIZE = 32
@@ -151,8 +151,15 @@ SKILLS_TITLE = get_file_location(f"sprites/UI/skills_title.png")
 
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
+NEW_HP_BG = pygame.image.load(get_file_location("sprites/UI/new_hpbar.png"))
+NEW_HP_BOX = pygame.image.load(get_file_location("sprites/UI/new_hp_box.png"))
+NEW_HP_BAR = pygame.image.load(get_file_location("sprites/UI/new_hp.png"))
+NEW_MANA_BAR = pygame.image.load(get_file_location("sprites/UI/new_mana.png"))
+
+
 # === combat menu
-COMBAT_MENU_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
+MAIN_MENU_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
+SKILLS_MENU_BG = pygame.image.load(get_file_location("sprites/UI/skills_bg.png"))
 
 
 

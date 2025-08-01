@@ -64,7 +64,7 @@ class Enemy(Entity):
         }
             combat_moves = ["sword_slash"]
             critical_hit_chance = 0.5
-            blocking_chance = 0.25
+            blocking_chance = 0.1
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -185,8 +185,8 @@ class Enemy(Entity):
                 self.moving_randomly = False
                 self.action = "idle"
 
-    def clone(self, pos):
-        return Enemy(self.name, self.image, pos, self.group, self.obstacle_sprites)
+    def clone(self, name, pos):
+        return Enemy(name, self.image, pos, self.group, self.obstacle_sprites)
 
 
     def update_enemy(self, player, window, offset) -> None:

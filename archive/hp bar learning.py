@@ -1,6 +1,7 @@
 import pygame
 
-from classes.UI import MenuBook
+from classes.UI import MenuBook, HpBar
+from classes.player import Player
 from other.settings import *
 
 
@@ -15,15 +16,23 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = pygame.time.Clock()
 
 buttons_group = pygame.sprite.Group()
-#
-# player_hp_bar = Hpbar("left", 67, 20, 20, 5,
-#                            "PLAYER")  # enemy.name in the future
-#
-# enemy = Hpbar("right", 5, 20, 20, 5,
-#                            "SKELETON")  # enemy.name in the future
 
-# button = Button(buttons_group, "no parameter", one, "ATTACK", "small", ((WINDOW_WIDTH // 2) - pygame.image.load(BUTTON_TWO_NORMAL).get_width() , WINDOW_HEIGHT // 1.25))
-# button_two = Button(buttons_group, "no parameter", one, "RUN", "small", ((WINDOW_WIDTH // 2) + pygame.image.load(BUTTON_TWO_NORMAL).get_width() // 5 , WINDOW_HEIGHT // 1.25))
+group = pygame.sprite.Group()
+
+
+player = Player(
+                        group= group,
+                        spawn_coordinates= (0, 0),
+                        direction="down",
+                        obstacle_sprites = group,
+                        dust_particles = group,
+                    )
+
+player_hp_bar = HpBar(
+            owner = player,
+            side = "left",
+            y_offset = 0)
+
 
 skills = pygame.image.load(LARGE_BACKGROUND_BOX)
 
@@ -38,7 +47,7 @@ mana = 5
 
 # combat_menu.state = "main_menu"
 
-menu_book = MenuBook()
+# menu_book = MenuBook()
 while True:
     window.fill((255, 255, 255))
     for event in pygame.event.get():
@@ -48,25 +57,29 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
-                hp -= 5
+                player.hp -= 5
+                player.mana += 5
+                player.hp = max(player.hp, 0)
+
                 # combat_menu.state = "end_screen"
                 # combat_menu.buttons_group = pygame.sprite.Group()
 
             if event.key == pygame.K_a:
-                mana -= 1
+                player.mana -= 1
 
             if event.key == pygame.K_r:
-                hp += 5
+                player.hp += 5
+                player.hp = min(player.hp, player.max_hp)
 
-        menu_book.keybinds(event)
-
-
-    menu_book.draw(window)
+    #     menu_book.keybinds(event)
+    #
+    #
+    # menu_book.draw(window)
 
 
     # player_hp_bar.set_hp(hp)
     # player_hp_bar.update()
-    # player_hp_bar.draw(window)
+    player_hp_bar.draw(window, None)
     #
     # enemy.draw(window)
 

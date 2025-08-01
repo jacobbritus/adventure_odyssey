@@ -58,9 +58,10 @@ class Player(Entity):
             "luck": 7,
         }
 
-        self.hp: int = int(500 + 1.5 * self.core_stats["vitality"])
-        self.max_hp: int = int(500 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 5
+        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.mana: int = 2
+        self.max_mana = 5
 
 
         # Other
