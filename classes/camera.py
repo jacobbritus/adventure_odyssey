@@ -168,13 +168,12 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
         for enemy in self.enemy_sprites:
-            if not enemy.death:
-                enemy.update_enemy(player, self.display_surface, self.offset)
-            else:
-                if not enemy.in_battle and pygame.time.get_ticks() >= enemy.respawn_time:
-                    enemy.hp = enemy.max_hp
-                    enemy.action = "idle"
-                    enemy.death = False
+            enemy.update_enemy(player, self.display_surface, self.offset)
+            if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
+                enemy.hp = enemy.max_hp
+                enemy.action = "idle"
+                enemy.death = False
+                # enemy.opacity = 255
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
@@ -241,7 +240,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
             battle_center_x = (player.rect.centerx + enemies[0].rect.centerx) // 2
-            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + 32
+            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + 16 * len(list(enemies))
             self.battle_position.update(battle_center_x, battle_center_y)
 
             self.battle_loop = BattleLoop(player, enemies, self.display_surface, self.offset)

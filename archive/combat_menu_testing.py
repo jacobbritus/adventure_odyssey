@@ -1,6 +1,7 @@
 import pygame
 
 from classes.UI import CombatMenu
+from classes.states import CombatMenuState
 from other.settings import *
 
 
@@ -15,8 +16,8 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = pygame.time.Clock()
 
 def attack(name):
-    print(name)
-#
+    ...
+        #
 attacks = ["sword_slash", "fire_ball", "punch"]
 
 combat_menu = CombatMenu(attacks, [attack, two, one])
@@ -47,11 +48,6 @@ while True:
 
 
     window.blit(NEW_HP_BG, (10, 30))
-    window.blit(NEW_HP_BG, (10, 60))
-    window.blit(NEW_HP_BG, (10, 90))
-    window.blit(NEW_HP_BG, (10, 120))
-
-
 
     # window.blit(SKILLS_MENU_BG, pos)
     # window.blit(mask, pos + rect.topleft)

@@ -149,11 +149,13 @@ class Enemy(Entity):
                 self.spawn.y + random.randint(-target_range, target_range)
             )
             self.random_target_reached = False  # Start moving again
-            self.action = "running"
             self.moving_randomly = True
+
 
         # 2. If target not reached → move toward it
         if not self.random_target_reached:
+            self.action = "running"
+
             x_distance = self.random_target.x - self.x
             y_distance = self.random_target.y - self.y
             distance = math.hypot(x_distance, y_distance)
@@ -179,6 +181,7 @@ class Enemy(Entity):
                     self.action = "idle"
 
             else:
+                print("check")
                 # Target reached
                 self.random_target_reached = True
                 self.move_delay = current_time + 3000  # wait half a second before next target
@@ -190,30 +193,23 @@ class Enemy(Entity):
 
 
     def update_enemy(self, player, window, offset) -> None:
+        self.screen_position = pygame.Vector2(self.x - offset.x,
+                                              self.y - offset.y)
         self.blocking_mechanics(window, offset)
         self.update_pos()
-        self.screen_position = pygame.math.Vector2(self.x - offset.x,
-                                                   self.y - offset.y)
         dmg_offset = 32
         self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
                                            self.screen_position.y)
-
-
-
         self.mask(window, offset)
 
+        if not self.death:
+            if not self.detected_player and not self.in_battle: self.random_movement()
 
+            if not player.in_battle:
+                self.chase_player(player)
 
+            self.update_animations()
 
-            # mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
-            # window.blit(mask, self.screen_position)
-
-        if not self.detected_player and not self.in_battle: self.random_movement()
-
-        if not player.in_battle:
-            self.chase_player(player)
-
-        self.update_animations()
 
 
 

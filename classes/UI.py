@@ -43,8 +43,8 @@ class HpBar:
             "mana": {
                 "current_width": self.current_width,
                 "target_width": self.target_width}
-
         }
+        self.opacity = 200
 
     def mask(self, window, elements):
         if self.owner.type == "enemy" and not self.owner.selected:
@@ -103,7 +103,7 @@ class HpBar:
                 (self.hp_box, self.hp_bar_pos),
                 (self.hp_bar_cropped, self.hp_bar_pos)]
             for element in elements:
-                element[0].set_alpha(175)
+                element[0].set_alpha(self.opacity)
 
         else:
             elements = [
@@ -118,6 +118,9 @@ class HpBar:
             self.set_mana()
 
         for surface, pos in elements:
+            if self.owner.death:
+                self.opacity -= 5
+                surface.set_alpha(max(0, self.opacity))
             window.blit(surface, pos)
 
         self.mask(window, elements)
@@ -130,7 +133,7 @@ class HpBar:
 class Button(pygame.sprite.Sprite):
     def __init__(self, group, action_type, action, text, size, pos, disabled:bool):
         super().__init__(group)
-        self.size = size
+        self.text_size = size
         self.image_normal, self.image_pressed, self.image_selected = self.get_images()
         self.image = self.image_normal
 
@@ -144,16 +147,35 @@ class Button(pygame.sprite.Sprite):
         self.button_type = action_type
         self.disabled = disabled
 
+        self.font = pygame.font.Font(FONT_ONE, 16)
+        self.color = (236, 226, 196)
+
         if text:
-            self.font = pygame.font.Font(FONT_ONE, 16)
-            self.text = self.font.render(self.text_string, True, (99, 61, 76)
-)
-            self.size = self.text.get_size()
-            self.text_position = (self.rect.centerx - self.size[0] // 2, self.rect.centery - self.size[1] // 2)
+            if text in MOVES.keys():
+                self.text_string = text.replace("_", " ").upper()
+                self.text = self.font.render(self.text_string, True, self.color)
+                self.text_size = self.text.get_size()
+                self.text_position = pygame.Vector2(self.rect.left + 5 , self.rect.centery - self.text_size[1] // 2)
+
+                self.mana_cost = str(MOVES[text]["mana"])
+                self.mana_text = self.font.render(self.mana_cost, True, self.color)
+                self.mana_cost_position = (self.rect.right - 12, self.rect.centery - self.mana_text.get_height() // 2)
+
+
+            else:
+                self.mana_text = None
+                self.text_string = text
+
+                self.text = self.font.render(self.text_string, True, self.color)
+
+
+                self.text_size = self.text.get_size()
+                self.text_position = (self.rect.centerx - self.text_size[0] // 2, self.rect.centery - self.text_size[1] // 2)
+
 
         else:
             self.text = None
-
+            self.mana_text = None
 
 
 
@@ -168,18 +190,22 @@ class Button(pygame.sprite.Sprite):
 
 
     def get_images(self):
-        if self.size == "simple":
+        if self.text_size == "simple":
             return BUTTON_SIMPLE_NORMAL, BUTTON_SIMPLE_PRESSED, BUTTON_SIMPLE_SELECTED
 
-        if self.size == "extra_small":
+        if self.text_size == "simple_large":
+            return BUTTON_LARGE_SIMPLE_NORMAL, BUTTON_LARGE_SIMPLE_PRESSED, BUTTON_LARGE_SIMPLE_SELECTED
+
+
+        if self.text_size == "extra_small":
             return BUTTON_SMALL_NORMAL, BUTTON_SMALL_PRESSED, BUTTON_SMALL_SELECTED
 
-        elif self.size == "small":
+        elif self.text_size == "small":
             return pygame.image.load(BUTTON_NORMAL), pygame.image.load(BUTTON_PRESSED), pygame.image.load(BUTTON_SELECTED)
 
-        elif self.size == "medium":
+        elif self.text_size == "medium":
             return pygame.image.load(BUTTON_TWO_NORMAL), pygame.image.load(BUTTON_TWO_PRESSED), pygame.image.load(BUTTON_TWO_SELECTED)
-        elif self.size == "large":
+        elif self.text_size == "large":
             return pygame.image.load(LARGE_BUTTON_NORMAL), pygame.image.load(LARGE_BUTTON_PRESSED), pygame.image.load(LARGE_BUTTON_SELECTED)
         return None
 
@@ -189,7 +215,7 @@ class Button(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
 
-        if self.rect.inflate(- 16, - 16).collidepoint(mouse_pos) and press or self.clicked:
+        if self.rect.collidepoint(mouse_pos) and press or self.clicked:
             self.image = self.image_pressed
 
             if not self.disabled:
@@ -201,8 +227,8 @@ class Button(pygame.sprite.Sprite):
                 if not self.click_sound_played: play_sound("ui", "disabled", None)
                 self.click_sound_played = True
 
-        elif self.rect.inflate(-16, -16).collidepoint(mouse_pos) or self.hovering:
-            if self.text_string: self.text = self.font.render(self.text_string, True, (236, 226, 196))
+        elif self.rect.collidepoint(mouse_pos) or self.hovering:
+            self.color = (236, 226, 196)
 
             self.image = self.image_selected
             if not self.sound_played: play_sound("ui", "hover", None)
@@ -211,7 +237,7 @@ class Button(pygame.sprite.Sprite):
 
         else:
             self.image = self.image_normal
-            if self.text_string: self.text = self.font.render(self.text_string, True, (99, 61, 76))
+            self.color = (99, 61, 76)
             self.hovering = False
             self.sound_played = False
             self.click_sound_played = False
@@ -227,31 +253,47 @@ class Button(pygame.sprite.Sprite):
 
                 if self.button_type == ButtonType.PARAMETER:
                     self.action(self.text_string)
+                elif not self.action:
+                    pass
                 else:
                     self.action()
         return None
 
     def draw(self, window):
+        if self.text: self.text = self.font.render(self.text_string, True, self.color)
+        if self.mana_text: self.mana_text = self.font.render(self.mana_cost, True, self.color)
+
+
         window.blit(self.image, self.pos)
         if self.text: window.blit(self.text, self.text_position)
+        if self.mana_text: window.blit(self.mana_text, self.mana_cost_position)
+
+        if self.disabled:
+            mask = pygame.mask.from_surface(self.image).to_surface(
+                setcolor=(255, 0, 0, 100),
+                unsetcolor=(0, 0, 0, 0))
+            window.blit(mask, self.pos)
 
 
 class CombatMenu:
     def __init__(self, player_skills: list[str], functions):
         # === player's attacks and functions ===
         # e.g., attack(name of button clicked) and player_run(no parameter)
+        self.player_skills = player_skills
         self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in player_skills]
         self.attack_function = functions[0]
         self.run_function = functions[1]
 
         # === sprite group for the buttons ===
         self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
+        self.skills_buttons: pygame.sprite.Group = pygame.sprite.Group()
         self.large_button_size = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
         self.normal_button_size = pygame.image.load(BUTTON_NORMAL).get_size()
         self.normal_button_two_width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
 
         # === main menu ===
         self.main_menu_bg_pos = pygame.Vector2(32, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 32)
+        self.main_menu_buttons = ["SKILLS", "ITEMS", "RUN"]
 
         # === skills menu state images and their positions ===
         self.background_image: pygame.Surface = pygame.image.load(LARGE_BACKGROUND_BOX)
@@ -260,6 +302,8 @@ class CombatMenu:
         self.skills_title_image: pygame.Surface = pygame.image.load(SKILLS_TITLE)
         size = self.skills_title_image.get_size()
         self.skills_title_position: pygame.Vector2 = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
+        self.skills_bg_pos = self.main_menu_bg_pos + (112, 0)
+        self.skill_mana_cost = None
 
         # === enum states ===
         self.state = CombatMenuState.MAIN_MENU
@@ -271,17 +315,16 @@ class CombatMenu:
         """Draw the buttons and images associated with the current state."""
         self.update()
         self.player_mana = current_mana
-        if self.state == CombatMenuState.MAIN_MENU:
 
-
+        if not self.state == CombatMenuState.END_MENU and self.state:
             window.blit(MAIN_MENU_BG, self.main_menu_bg_pos)
             self.draw_main_menu()
 
         # === buttons are drawn through the main menu skills button's function ===
-        elif self.state == CombatMenuState.SKILLS_MENU:
-            window.blit(SKILLS_MENU_BG, self.main_menu_bg_pos)
-            window.blit(self.background_image, self.background_image_position)
-            window.blit(self.skills_title_image, self.skills_title_position)
+        if self.state == CombatMenuState.SKILLS_MENU:
+
+            window.blit(SKILLS_MENU_BG, self.skills_bg_pos)
+
 
         elif self.state == CombatMenuState.END_MENU:
             self.draw_end_menu()
@@ -294,22 +337,30 @@ class CombatMenu:
         """Update the state based on the button clicked."""
         for button in self.buttons_group:
             if button.delete:
-                # === skills menu -> main menu ===
-                if button.text_string == "BACK":
-                    self.state = CombatMenuState.MAIN_MENU
-                    self.buttons_group = pygame.sprite.Group()
+                if button.text_string == "SKILLS":
+                    if self.state == CombatMenuState.SKILLS_MENU:
+                        self.state = CombatMenuState.MAIN_MENU
+                        for other_button in self.skills_buttons:
+                            other_button.kill()
+                        # self.buttons_group = pygame.sprite.Group()
+                        # self.draw_main_menu()
+                    else:
+                        self.state = CombatMenuState.SKILLS_MENU
+                        self.draw_skills_menu()  # re-populate skill buttons
+                    button.clicked = False
+                    button.delete = False
+                    button.delete_delay = 0
 
                 # === skills menu -> player animation ===
                 elif button.text_string in self.formatted_skills:
                     self.state = None
-                    for buttons in self.buttons_group:
-                        buttons.kill()
+                    self.buttons_group = pygame.sprite.Group()
+
 
                 # === end screen -> overworld ===
                 elif button.text_string == "END":
                     self.state = None
-                    for buttons in self.buttons_group:
-                        buttons.kill()
+                    self.buttons_group = pygame.sprite.Group()
 
     def draw_main_menu(self) -> None:
         """Draw the buttons for the main menu."""
@@ -317,7 +368,7 @@ class CombatMenu:
             button_offset = (6, 7)
             pos = self.main_menu_bg_pos + button_offset
 
-            Button(self.buttons_group, "no parameter", self.draw_skills_menu, "SKILLS", "simple",
+            Button(self.buttons_group, "no parameter", None, "SKILLS", "simple",
                    pos, False)
 
             y_offset = (0, 34)
@@ -336,27 +387,23 @@ class CombatMenu:
 
     def draw_skills_menu(self) -> None:
         """Draw the buttons for the skills menu."""
-        self.buttons_group = pygame.sprite.Group()
-        self.state = CombatMenuState.SKILLS_MENU
 
         def can_use_skill(name, mana_amount) -> bool:
             """check if the player has enough mana"""
-            internal_name = name.replace(" ", "_").lower()
-            return mana_amount >= moves[internal_name]["mana"]
+            cost = MOVES[name]["mana"]
+            return mana_amount >= cost
 
-        if not self.buttons_group:
-            for index, skill_name in enumerate(self.formatted_skills):
-                y_offset = 48
-                pos = (self.background_image_position.x + self.large_button_size[0] // 8, self.background_image_position.y + y_offset + self.large_button_size[1] * index)
+        if len(list(self.buttons_group)) == 3:
+            for index, skill_name in enumerate(self.player_skills):
 
+                y_offset = 20
+                pos = self.skills_bg_pos + (6, 6 + index * y_offset)
                 if can_use_skill(skill_name, self.player_mana):
-                    Button(self.buttons_group, ButtonType.PARAMETER, self.attack_function, skill_name, "large", pos, False)
+                    Button([self.buttons_group, self.skills_buttons], ButtonType.PARAMETER, self.attack_function, skill_name, "simple_large", pos, False)
                 else:
-                    Button(self.buttons_group, ButtonType.PARAMETER, self.attack_function, skill_name, "large", pos, True)
+                    Button([self.buttons_group, self.skills_buttons], ButtonType.PARAMETER, self.attack_function, skill_name, "simple_large", pos, True)
 
-            # === skills menu > main menu button ===
-            pos = (self.background_image_position.x + self.normal_button_size[0] // 3, self.background_image_position.y + self.background_image.get_height() - self.normal_button_size[1] * 1.25)
-            Button(self.buttons_group, ButtonType.NO_PARAMETER, self.draw_main_menu, "BACK", "small", pos, False)
+
 
 
 class MenuBook:

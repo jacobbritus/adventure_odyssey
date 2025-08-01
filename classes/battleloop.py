@@ -66,8 +66,7 @@ class BattleLoop:
         start_delay = 1000 if self.state == BattleState.PLAYER_TURN else 2000
         self.delay: pygame.time = self.current_time + start_delay
 
-        self.clock_timer: pygame.time = self.current_time + 200000000
-        self.clock_font: pygame.font = pygame.font.Font(FONT_TWO, 33)
+
 
         # === visual cues ===
         # damage, critical hit and perfect block
@@ -76,13 +75,6 @@ class BattleLoop:
     def set_delay(self, ms):
         self.delay = self.current_time + ms
 
-    def timer_(self) -> None:
-        """The timer set and displayed on the player's turn."""
-        if self.state == BattleState.PLAYER_TURN and self.clock_timer:
-            current_clock_time = ((self.clock_timer - pygame.time.get_ticks()) // 1000)
-            time_text = self.clock_font.render(str(current_clock_time), True, (255, 255, 255))
-            time_size = time_text.get_width()
-            self.window.blit(time_text, (WINDOW_WIDTH // 2 - time_size // 2 + 1, self.player_hp_bar.background_box_pos[1] - 2))
 
     def get_mouse_input(self) -> None:
         if self.state == BattleState.PLAYER_TURN:
@@ -108,14 +100,10 @@ class BattleLoop:
         self.animations()
         self.get_mouse_input()
 
+
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
-                if self.clock_timer and self.current_time >= self.clock_timer:
-                    self.battle_queue.rotate(-1)
-                    self.performer = self.battle_queue[0]
-                    self.state = BattleState.ENEMY_TURN
-                    time = 20000
-                    self.clock_timer = self.current_time + time
+              pass
 
             elif self.state == BattleState.ENEMY_TURN:
                 self.enemy_turn()
@@ -152,12 +140,10 @@ class BattleLoop:
 
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
-        self.timer_()
 
         self.player_hp_bar.draw(self.window, None)
         for enemy, hp_bar in self.enemy_hp_bars_test.items():
-            if not enemy.death:
-                hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+            hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
@@ -174,18 +160,18 @@ class BattleLoop:
         internal_attack = attack.replace(" ", "_").lower()
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = internal_attack
-        self.player.mana -= moves[internal_attack]["mana"]
+        self.player.mana -= MOVES[internal_attack]["mana"]
         self.target.selected = False
         self.handle_attack(self.player, self.player.current_attack)
 
     def handle_attack(self, performer, attack_name) -> None:
         """Handles the different animation start phases depending on the attack type."""
-        if moves[attack_name]["type"] == AttackType.PHYSICAL.value:
+        if MOVES[attack_name]["type"] == AttackType.PHYSICAL.value:
             performer.animation_state = AnimationState.APPROACH
-        elif moves[attack_name]["type"] == AttackType.BUFF.value:
+        elif MOVES[attack_name]["type"] == AttackType.BUFF.value:
             performer.spawn_projectile = False
             performer.animation_state = AnimationState.BUFF
-        elif moves[attack_name]["type"] == AttackType.SPECIAL.value:
+        elif MOVES[attack_name]["type"] == AttackType.SPECIAL.value:
             performer.spawn_projectile = False
             self.set_delay(1000)
             performer.animation_state = AnimationState.WAIT
@@ -226,7 +212,7 @@ class BattleLoop:
         elif performer.animation_state == AnimationState.WAIT:
             performer.wait()
             if self.current_time >= self.delay:
-                if moves[performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
+                if MOVES[performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
                     performer.animation_state = AnimationState.ATTACK
                 else:
                     performer.animation_state = AnimationState.IDLE

@@ -166,17 +166,17 @@ class Level:
             18: {"color": (255, 174, 66), "opacity": 50},
             20: {"color": (34, 0, 51), "opacity": 75},
             22: {"color": (0, 0, 0), "opacity": 100},
-            0: {"color": (0, 0, 0), "opacity": 150},
+            0: {"color": (0, 0, 0), "opacity": 125},
 
         }
 
         now = datetime.now().hour
-        closest_time = 24
+        closest_time = 5
         for time in day_phases.keys():
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[18]
+        current_phase = day_phases[20]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -195,6 +195,8 @@ class Level:
 
 
         self.update_day_cycle()
+        self.display_surface.blit(self.day_cycle_overlay, (0,0))
+
 
         # use this smart ass
         self.visible_sprites.battle_loop.run()

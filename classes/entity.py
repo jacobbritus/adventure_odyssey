@@ -241,13 +241,13 @@ class Entity(pygame.sprite.Sprite):
                                 position)
 
                 self.spawn_projectile = True
-                heal_amount = moves[self.current_attack]["hp"]
+                heal_amount = MOVES[self.current_attack]["hp"]
                 self.hp += heal_amount
                 self.hp = min(self.hp, self.max_hp)
 
                 self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
 
-                pygame.mixer.Sound(moves[self.current_attack]["sound"]).play()
+                pygame.mixer.Sound(MOVES[self.current_attack]["sound"]).play()
 
         if not self.projectiles:
             self.animation_state = AnimationState.WAIT
@@ -287,7 +287,7 @@ class Entity(pygame.sprite.Sprite):
     def attack_animation(self, target, action) -> None:
         """Perform the action argument."""
 
-        if moves[action]["type"] == "special":
+        if MOVES[action]["type"] == "special":
             if not self.spawn_projectile:
                 self.frame = 0
                 self.action = "cast"
@@ -351,9 +351,9 @@ class Entity(pygame.sprite.Sprite):
 
     def calculate_damage(self):
         skill = self.current_attack
-        base = moves[skill]["base_damage"]
-        stat_name = moves[skill]["stat"]
-        multiplier = moves[skill]["multiplier"]
+        base = MOVES[skill]["base_damage"]
+        stat_name = MOVES[skill]["stat"]
+        multiplier = MOVES[skill]["multiplier"]
 
         stat_value = self.core_stats[stat_name]
         bonus = stat_value * multiplier
@@ -373,7 +373,7 @@ class Entity(pygame.sprite.Sprite):
                 self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
 
                 # for projectile-based / non-repeating attacks:
-                if moves[self.current_attack]["type"] == "special":
+                if MOVES[self.current_attack]["type"] == "special":
                     damage *= 2
 
 
@@ -387,7 +387,7 @@ class Entity(pygame.sprite.Sprite):
                     play_sound("gameplay", "critical_hit", None)
 
                 # for projectile-based / non-repeating attacks:
-                if moves[self.current_attack]["type"] == "special":
+                if MOVES[self.current_attack]["type"] == "special":
                     damage *= 2
 
         # player attacks, enemy block chance
@@ -419,6 +419,8 @@ class Entity(pygame.sprite.Sprite):
         if self.action != "death":
             self.frame = 0
             self.action = "death"
+            self.hurt_time = pygame.time.get_ticks() + 500
+
 
         death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
         if self.frame >= death_frame:
@@ -465,11 +467,21 @@ class Entity(pygame.sprite.Sprite):
 
     def mask(self, window, offset):
         if self.in_battle:
-            if self.animation_state == AnimationState.HURT and not pygame.time.get_ticks() >= self.hurt_time - 200:
-                self.hurt_mask_opacity += 25
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, min(self.hurt_mask_opacity, 225)),
-                                                                       unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            if self.animation_state in (AnimationState.HURT, AnimationState.DEATH):
+                if not pygame.time.get_ticks() >= self.hurt_time - 250:
+                    self.hurt_mask_opacity += 25
+                    self.hurt_mask_opacity = min(200, self.hurt_mask_opacity)
+                    mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, self.hurt_mask_opacity),
+                                                                           unsetcolor=(0, 0, 0, 0))
+                    window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+                elif pygame.time.get_ticks() >= self.hurt_time - 250:
+                    self.hurt_mask_opacity -= 25
+                    self.hurt_mask_opacity = max(0, self.hurt_mask_opacity)
+
+                    mask = pygame.mask.from_surface(self.image).to_surface(
+                        setcolor=(255, 0, 0, self.hurt_mask_opacity),
+                        unsetcolor=(0, 0, 0, 0))
+                    window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
             elif self.type == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
                 mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 120),
                                                                        unsetcolor=(0, 0, 0, 0))

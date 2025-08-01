@@ -26,7 +26,7 @@ skeleton_sprites = skeleton_sprites
 block_shield_sprites = block_shield_sprites
 
 # moves
-moves = {
+MOVES = {
     "fire_ball": {
         "base_damage": 10,
         "multiplier": 0.5,
@@ -184,6 +184,10 @@ LARGE_BUTTON_PRESSED = get_file_location(f"sprites/UI/large_button_pressed.png")
 BUTTON_SIMPLE_NORMAL = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
 BUTTON_SIMPLE_SELECTED = pygame.image.load(get_file_location("sprites/UI/simple_button_selected.png"))
 BUTTON_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
+
+BUTTON_LARGE_SIMPLE_NORMAL = pygame.image.load(get_file_location("sprites/UI/simple_large_button_normal.png"))
+BUTTON_LARGE_SIMPLE_SELECTED = pygame.image.load(get_file_location("sprites/UI/simple_large_button_selected.png"))
+BUTTON_LARGE_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/simple_large_button_normal.png"))
 
 
 # ___fonts___
