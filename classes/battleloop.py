@@ -136,7 +136,7 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        if not self.state == BattleState.END_MENU:
+        if not self.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
             self.player_hp_bar.draw(self.window, None)
 
             for enemy, hp_bar in self.enemy_hp_bars_test.items():
@@ -269,7 +269,6 @@ class BattleLoop:
                     self.player.mana += 1
                     self.player.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
 
-                    self.clock_timer = pygame.time.get_ticks() + 20000
                 else:
                     self.state = BattleState.ENEMY_TURN
 
@@ -284,11 +283,3 @@ class BattleLoop:
         elif self.state == BattleState.ENEMY_ANIMATION:
 
             self.animation_phases(self.performer, self.target)
-
-
-
-
-
-
-
-

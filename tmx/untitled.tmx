@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="2519">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="2525">
  <tileset firstgid="1" source="../tsx/plains.tsx"/>
  <tileset firstgid="241" source="../tsx/Objects.tsx"/>
  <tileset firstgid="250" source="../tsx/decor_32x32.tsx"/>
@@ -69,11 +69,13 @@
 </data>
  </layer>
  <objectgroup id="3" name="Enemies">
-  <object id="2514" gid="242" x="971" y="934" width="96" height="128"/>
   <object id="2515" name="Skeleton" gid="249" x="1542" y="967" width="96" height="80"/>
   <object id="2516" name="Goblin" gid="248" x="854" y="852" width="96" height="80"/>
   <object id="2517" name="Skeleton" gid="249" x="1226" y="1413" width="96" height="80"/>
   <object id="2518" name="Goblin" gid="248" x="765" y="1801" width="96" height="80"/>
+  <object id="2519" gid="246" x="784" y="952"/>
+  <object id="2522" gid="246" x="1022.67" y="856"/>
+  <object id="2523" gid="246" x="1025.33" y="858.667"/>
  </objectgroup>
  <objectgroup id="2" name="Obstacles">
   <object id="1" name="Spawn" x="1140.88" y="855.364" width="193.182" height="159.091"/>
@@ -1449,5 +1451,6 @@
   <object id="2497" gid="241" x="1348.97" y="1500.36" width="96" height="128"/>
   <object id="2506" name="battle_spot" x="1040" y="728" width="77.3333" height="79.3367"/>
   <object id="2509" name="battle_spot" x="1325.33" y="726.998" width="77.3333" height="79.3367"/>
+  <object id="2524" gid="241" x="977.333" y="1073.33" width="96" height="128"/>
  </objectgroup>
 </map>

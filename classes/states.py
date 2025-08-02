@@ -43,9 +43,11 @@ class CombatMenuState(Enum):
     SKILLS_MENU = auto()
     END_MENU = auto()
 
-class ButtonType(Enum):
-    PARAMETER = auto()
-    NO_PARAMETER = auto()
+
+class ButtonVariant(Enum):
+    SMALL = auto()
+    DEFAULT = auto()
+    WIDE = auto()
 
 class AttackType(Enum):
     PHYSICAL = "physical"
