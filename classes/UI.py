@@ -5,122 +5,128 @@ from other.play_sound import play_sound
 from other.settings import *
 
 class HpBar:
-    def __init__(self, owner, side: str, y_offset):
+    def __init__(self, owner, y_offset):
         self.owner = owner
-
-        # === dynamic stats ===
-        self.max_hp = self.owner.max_hp
-        self.hp = self.owner.hp
+        self.mana = hasattr(self.owner, "mana")
 
         # === images ===
-        self.background_box: pygame.Surface = NEW_HP_BG
-
-        if self.owner.type == "enemy": self.hp_box: pygame.Surface = NEW_HP_BOX
-
         font = pygame.font.Font(FONT_ONE, 16)
         self.name = font.render(str(owner.name).upper(), True, (236, 226, 196))
         self.name_bg = font.render(str(owner.name).upper(), True, (81, 57, 44))
 
+        # === positions ===
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - NEW_HP_BG.get_width() - 16, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() - 16 + y_offset)
+        name_pos_offset = (10, 2)
+        self.name_pos = self.background_box_pos + name_pos_offset
+        name_bg_offset = (2, 0)
+        self.name_bg_pos = self.name_pos + name_bg_offset
+        hp_bar_offset = (118, 4)
+        self.hp_bar_pos = self.background_box_pos + hp_bar_offset
+        mana_bar_offset = (114, 14)
+        self.mana_bar_pos = self.background_box_pos + mana_bar_offset
 
+        # === stat bars ===
+        self.normal_speed = 2
+        self.delayed_speed = 0.25
 
-        # === positions ====
-        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - NEW_HP_BG.get_width() - 16, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 16)
-        self.name_pos = self.background_box_pos + (10, 2)
-        self.name_bg_pos = self.name_pos + (2, 0)
-        self.hp_bar_pos = self.background_box_pos + (118, 4)
-        self.mana_bar_pos = self.background_box_pos + (114, 14)
+        self.bg_bar = BG_BAR
 
-        # === updating the hp bar ===
-        self.bar_size = pygame.Vector2(NEW_HP_BAR.get_size())
-        self.hp_bar_cropped = NEW_HP_BAR
-        self.current_width = int(self.bar_size.x * self.hp / self.max_hp)
-        self.target_width = self.bar_size.x
-        self.smooth_speed = 2
-
-        self.mana_bar_cropped = NEW_MANA_BAR
 
         self.bars = {
             "hp":{
-                "current_width": self.current_width,
-                "target_width": self.target_width},
-            "mana": {
-                "current_width": self.current_width,
-                "target_width": self.target_width}
+                "image": NEW_HP_BAR,
+
+                "current_width": int(NEW_HP_BAR.get_width() * self.owner.hp / self.owner.max_hp),
+                "target_width": NEW_HP_BAR.get_width(),
+                "bar": None,
+                "bg_bar": None,
+                "bg_width": int(NEW_HP_BAR.get_width() * self.owner.hp / self.owner.max_hp),
+            }
         }
+        if self.mana:
+            self.bars.update({"mana": {
+                "image": NEW_MANA_BAR,
+                "current_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
+                "target_width": NEW_MANA_BAR.get_width(),
+                "bar": None,
+                "bg_bar": None,
+                "bg_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
+            }
+            })
+
         self.opacity = 150
 
     def mask(self, window, elements):
-        if self.owner.type == "enemy" and not self.owner.selected:
+        if self.owner.type == "enemy" and not self.owner.selected and not self.owner.death:
             for item, pos in elements:
                 mask = pygame.mask.from_surface(item).to_surface(setcolor=(0, 0, 0, 100),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pos)
 
-    def set_hp(self) -> None:
+    def set_bars(self) -> None:
         """Update the hp bar target length making it relative to the current-hp to max-hp ratio."""
-
-        hp_ratio = max(0, min(self.owner.hp / self.owner.max_hp, 1))
-        target = int(self.bar_size.x * hp_ratio)
+        ratio = max(0, min(self.owner.hp / self.owner.max_hp, 1))
+        target = int(NEW_HP_BAR.get_width() * ratio)
         self.bars["hp"]["target_width"] = target
 
-    def set_mana(self) -> None:
-        """Update the mana text."""
-        ratio = max(0, min(self.owner.mana / self.owner.max_mana, 1))
-        target = int(self.bar_size.x * ratio)
-        self.bars["mana"]["target_width"] = target
+        if self.mana:
+            ratio = max(0, min(self.owner.mana / self.owner.max_mana, 1))
+            target = int(NEW_MANA_BAR.get_width() * ratio)
+            self.bars["mana"]["target_width"] = target
 
-    def update_hp_bar(self) -> None:
+    def update_bars(self) -> None:
         """Slowly increase or decrease the current bar width until equal to the target width."""
-        # === decrease the current width ===
-        for key in ["hp", "mana"]:
+        stats = ["hp", "mana"] if self.mana else ["hp"]
+        for key in stats:
             bar = self.bars[key]
 
+            # === modify the foreground bar ===
             if bar["current_width"] < bar["target_width"]:
-                bar["current_width"] += self.smooth_speed
-                if bar["current_width"] > bar["target_width"]:
-                    bar["current_width"] = bar["target_width"]
+                bar["current_width"] = min(bar["current_width"] + self.normal_speed, bar["target_width"])
+            else:
+                bar["current_width"] = max(bar["current_width"] - self.normal_speed, bar["target_width"])
 
-            elif bar["current_width"] > bar["target_width"]:
-                bar["current_width"] -= self.smooth_speed
-                if bar["current_width"] < bar["target_width"]:
-                    bar["current_width"] = bar["target_width"]
+            # === modify the background bar ===
+            if bar["bg_width"] < bar["target_width"]:
+                bar["bg_width"] = min(bar["bg_width"] + self.delayed_speed, bar["target_width"])
+            else:
+                bar["bg_width"] = max(bar["bg_width"] - self.delayed_speed, bar["target_width"])
 
-            # === update the hp text ===
+            crop = pygame.Rect(0, 0, bar["current_width"], bar["image"].get_height())
+            bar["bar"] = bar["image"].subsurface(crop).copy()
 
-            hp_bar_crop = pygame.Rect(0, 0, self.bars["hp"]["current_width"], self.bar_size.y)
-            self.hp_bar_cropped = NEW_HP_BAR.subsurface(hp_bar_crop).copy()
+            bg_crop = pygame.Rect(0, 0, int(bar["bg_width"]), bar["image"].get_height())
+            bar["bg_bar"] = self.bg_bar.subsurface(bg_crop).copy()
 
-            self.mana_bar_cropped = NEW_MANA_BAR.subsurface(
-                pygame.Rect(0, 0, self.bars["mana"]["current_width"], self.bar_size.y)
-            ).copy()
-
-    def draw(self, window, pos: None) -> None:
-        """Draw all the images on the window"""
-        self.set_hp()
-        self.update_hp_bar()
-
+    def draw_components(self, dynamic_pos):
         if self.owner.type == "enemy":
-            self.hp_bar_pos = pos
-            elements = [
-                (self.hp_box, self.hp_bar_pos),
-                (self.hp_bar_cropped, self.hp_bar_pos)]
+            return [
+                (NEW_HP_BOX, self.hp_bar_pos),
+                (self.bars["hp"]["bg_bar"], self.hp_bar_pos),
 
-
+                (self.bars["hp"]["bar"], self.hp_bar_pos)]
         else:
-            elements = [
-                (self.background_box, self.background_box_pos),
+            return [
+                (NEW_HP_BG, self.background_box_pos),
                 (self.name_bg, self.name_bg_pos),
                 (self.name, self.name_pos),
-                (self.hp_bar_cropped, self.hp_bar_pos),
-                (self.mana_bar_cropped, self.mana_bar_pos),
+                (self.bars["mana"]["bg_bar"], self.mana_bar_pos),
+                (self.bars["hp"]["bg_bar"], self.hp_bar_pos),
 
-            ]
-            self.set_mana()
-        for element in elements:
-            element[0].set_alpha(self.opacity)
+                (self.bars["hp"]["bar"], self.hp_bar_pos),
+                (self.bars["mana"]["bar"], self.mana_bar_pos)]
 
+
+    def draw(self, window, dynamic_pos: None or pygame.Vector2) -> None:
+        """Draw all the images on the window"""
+        self.set_bars()
+        self.update_bars()
+
+        elements = self.draw_components(dynamic_pos)
+        if dynamic_pos: self.hp_bar_pos = dynamic_pos
         for surface, pos in elements:
-            if self.owner.death:
+            surface.set_alpha(self.opacity)
+            if self.owner.death and self.bars["hp"]["bg_width"] == 0:
                 self.opacity -= 5
                 surface.set_alpha(max(0, self.opacity))
             window.blit(surface, pos)
@@ -202,13 +208,6 @@ class Button(pygame.sprite.Sprite):
         if self.text_size == "extra_small":
             return BUTTON_SMALL_NORMAL, BUTTON_SMALL_PRESSED, BUTTON_SMALL_SELECTED
 
-        elif self.text_size == "small":
-            return pygame.image.load(BUTTON_NORMAL), pygame.image.load(BUTTON_PRESSED), pygame.image.load(BUTTON_SELECTED)
-
-        elif self.text_size == "medium":
-            return pygame.image.load(BUTTON_TWO_NORMAL), pygame.image.load(BUTTON_TWO_PRESSED), pygame.image.load(BUTTON_TWO_SELECTED)
-        elif self.text_size == "large":
-            return pygame.image.load(LARGE_BUTTON_NORMAL), pygame.image.load(LARGE_BUTTON_PRESSED), pygame.image.load(LARGE_BUTTON_SELECTED)
         return None
 
     def update(self):
@@ -289,21 +288,13 @@ class CombatMenu:
         # === sprite group for the buttons ===
         self.buttons_group: pygame.sprite.Group = pygame.sprite.Group()
         self.skills_buttons: pygame.sprite.Group = pygame.sprite.Group()
-        self.large_button_size = pygame.image.load(LARGE_BUTTON_NORMAL).get_size()
-        self.normal_button_size = pygame.image.load(BUTTON_NORMAL).get_size()
-        self.normal_button_two_width = pygame.image.load(BUTTON_TWO_NORMAL).get_width()
 
         # === main menu ===
-        self.main_menu_bg_pos = pygame.Vector2(16, WINDOW_HEIGHT - MAIN_MENU_BG.get_height() - 16)
+        self.main_menu_bg_pos = pygame.Vector2(16, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() - 16)
         self.main_menu_buttons = ["SKILLS", "ITEMS", "RUN"]
 
         # === skills menu state images and their positions ===
-        self.background_image: pygame.Surface = pygame.image.load(LARGE_BACKGROUND_BOX)
-        self.background_image_position: pygame.Vector2 = pygame.Vector2(WINDOW_WIDTH // 2 - self.background_image.get_width() // 2,
-                                                        WINDOW_HEIGHT // 2 - self.background_image.get_height() // 2)
-        self.skills_title_image: pygame.Surface = pygame.image.load(SKILLS_TITLE)
-        size = self.skills_title_image.get_size()
-        self.skills_title_position: pygame.Vector2 = pygame.Vector2(self.background_image_position.x + size[0] // 8, self.background_image_position.y + 12 )
+
         self.skills_bg_pos = self.main_menu_bg_pos + (112, 0)
         self.skill_mana_cost = None
 
@@ -319,7 +310,7 @@ class CombatMenu:
         self.player_mana = current_mana
 
         if not self.state == CombatMenuState.END_MENU and self.state:
-            window.blit(MAIN_MENU_BG, self.main_menu_bg_pos)
+            window.blit(COMBAT_MENU_MAIN_BG, self.main_menu_bg_pos)
             self.draw_main_menu()
 
         # === buttons are drawn through the main menu skills button's function ===
@@ -384,8 +375,8 @@ class CombatMenu:
     def draw_end_menu(self) -> None:
         """Draw the buttons for the end menu."""
         if not self.buttons_group:
-            pos = (self.background_image_position.x + self.normal_button_size[0] // 3, WINDOW_HEIGHT // 1.25)
-            Button(self.buttons_group, "no parameter", self.run_function, "END", "small", pos, False)
+            pos = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+            Button(self.buttons_group, "no parameter", self.run_function, "END", "simple", pos, False)
 
     def draw_skills_menu(self) -> None:
         """Draw the buttons for the skills menu."""
@@ -411,7 +402,7 @@ class CombatMenu:
 class MenuBook:
     def __init__(self, player):
         self.player = player
-        self.image = pygame.image.load(BOOK)
+        self.image = BOOK_IMAGE
         self.book_width, self.book_height = self.image.get_size()
         self.frame = 0
         self.state = None
@@ -430,7 +421,7 @@ class MenuBook:
             BookState.CLOSE_BOOK: {"sprites": "close_book", "offset": self.pos + pygame.Vector2(0, -160)}
         }
 
-        self.content = [{"title": pygame.image.load(INFO_TITLE), "content": self.info_page}]
+        self.content = [{"title": INFO_TITLE, "content": self.info_page}]
         self.current_page = 0
         self.buttons_group = pygame.sprite.Group()
 
@@ -470,7 +461,7 @@ class MenuBook:
                 self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
         else:
             self.frame = 0
-            self.image = pygame.image.load(BOOK)
+            self.image = BOOK_IMAGE
             self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
                                       WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
@@ -482,13 +473,13 @@ class MenuBook:
 
         container_width = 100
         title_pos = self.base_pos + (container_width - title.get_width() // 2, 28)
-        divider = pygame.image.load(DIVIDER)
+        divider = DIVIDER
         divider_pos = title_pos + (title.get_width() // 2 - divider.get_width() // 2 + 16, 8)
         window.blit(divider, divider_pos)
         window.blit(title, title_pos)
 
     def info_page(self, window):
-        image = pygame.image.load(INFO_PAGE)
+        image = INFO_PAGE
         image_pos = self.base_pos + (68, 64)
         window.blit(image, image_pos)
 

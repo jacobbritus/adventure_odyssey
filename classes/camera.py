@@ -42,7 +42,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.delay_time = 3000
 
         self.shake_duration = 0
-        self.shake_intensity = 5
+        self.shake_intensity = 2
         self.shake_offset = pygame.Vector2(0, 0)
 
 
@@ -73,44 +73,40 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.offset.y = self.offset_float.y
 
         elif self.state == LevelState.BATTLE:
-            camera_speed = 0.2  # adjust for snappiness
+            camera_speed = 0.1  # adjust for snappiness
 
-            # Fallback to battle position
+            # === standard camera target ===
             target = self.battle_position
-            enemy = self.battle_participants["enemies"][0]
-            player = self.battle_participants["heroes"][0]
 
-            # CHANGE TO THE ONE IN TURN
             performer = self.battle_loop.performer
             attack_target = self.battle_loop.target
+
+            # === camera shake trigger ===
+            # if not self.shake_duration and performer.hit_landed and MOVES[performer.current_attack]["shake"]:
+            #     self.shake_duration = 200
+            #     self.shake_intensity = 1
 
             if performer.spells:
                 if performer.animation_state in [AnimationState.BUFF, AnimationState.WAIT]:
                     performer.stationary_spells.update((performer.hitbox.center - self.offset))
                     target = performer.rect.center
-                if performer.animation_state == AnimationState.ATTACK:
+                elif performer.animation_state == AnimationState.ATTACK:
                     performer.projectiles.update(performer.hitbox.center - self.offset, self.offset, attack_target)
                     performer.stationary_spells.update((attack_target.hitbox.center - self.offset))
                     target = self.battle_position
 
-
-            elif self.battle_loop.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION] and not performer.animation_state == AnimationState.IDLE:
+            elif self.battle_loop.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]:
                 target = performer.rect.center
 
-            # elif self.battle_loop.state == BattleState.PLAYER_ANIMATION and not player.animation_state == AnimationState.IDLE :
-            #     target = player.rect.center
-            # elif self.battle_loop.state == BattleState.ENEMY_ANIMATION and not enemy.animation_state == AnimationState.IDLE :
-            #     target = enemy.rect.center
-
-            # Apply shake
+            # === apply camera shake ===
             if self.shake_duration > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
-                self.shake_duration -= 1
+                self.shake_duration -= 100
             else:
                 self.shake_offset = pygame.Vector2(0, 0)
 
-            # Smooth camera
+            # === move offset to target by camera speed amount increments ===
             self.offset_float.x += (target[0] - self.screen_center_x - self.offset_float.x) * camera_speed
             self.offset_float.y += (target[1] - self.screen_center_y - self.offset_float.y) * camera_speed
 
@@ -118,48 +114,41 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.offset.y = self.offset_float.y + self.shake_offset.y
 
     def draw_sprites(self):
-        # Get how far the player is from the screen center (1000 - 600 = 300, move everything by this amount)
-        # Move all sprites by the offset calculated here
-        # If the camera / player.x increases, all the sprite's x positions decrease
-        # If player move right all sprites move left
-        # Draw all the ground sprites.
         visible_sprites = list(self.get_visible_sprites())
+
+        # === draw the ground sprites ===
         ground_sprites = [sprite for sprite in visible_sprites if
                           sprite.type and sprite.type in ["ground", "water"]]
         for sprite in ground_sprites:
             offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
             self.display_surface.blit(sprite.image, offset_pos)
 
-        # Draw the other sprites with overlapping.
-        # Get all visible sprites
+
         overlapping_sprites = [sprite for sprite in visible_sprites
-                         if sprite.type in ["player", "tree", "enemy", "battle_spot"]]
+                         if sprite.type in ["player", "tree", "enemy"]]
 
-        # Decide if enemy needs to be drawn last
-        draw_enemy_last = self.animation_camera == BattleState.ENEMY_ANIMATION
-        enemy_sprite = self.battle_participants["enemies"][0] if draw_enemy_last else None
+        # === draw the battle performer last ===
+        draw_performer_last = self.battle_loop
 
-        # Sort by Y (with optional tree offset)
+        # === sort by ascending y positions ===
         sorted_sprites = sorted(overlapping_sprites,
                                 key=lambda sprite: sprite.rect.centery + (32 if sprite.type == "tree" else 0))
 
-        # Draw all sprites except enemy (if drawing last)
+        # === draw the y sorted sprites ===
         for sprite in sorted_sprites:
-            if draw_enemy_last and sprite == enemy_sprite:
-                continue  # Skip for now
-            offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
+            if draw_performer_last and sprite == self.battle_loop.performer:
+                continue
             if hasattr(sprite, "image"):
+                # === draw player not using rect as that uses int ===
                 if sprite.type == "player":
-                    pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
-                    self.display_surface.blit(sprite.image, pos)
+                    offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
                 else:
-                    self.display_surface.blit(sprite.image, offset_pos)
-                # else it's invisible
+                    offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
+                self.display_surface.blit(sprite.image, offset_pos)
 
-        # Now draw the enemy on top
-        if draw_enemy_last and enemy_sprite:
-            offset_pos = enemy_sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
-            self.display_surface.blit(enemy_sprite.image, offset_pos)
+        if draw_performer_last:
+            offset_pos = self.battle_loop.performer.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
+            self.display_surface.blit(self.battle_loop.performer.image, offset_pos)
 
         self.offset += self.shake_offset
 
@@ -173,18 +162,14 @@ class YSortCameraGroup(pygame.sprite.Group):
                 enemy.hp = enemy.max_hp
                 enemy.action = "idle"
                 enemy.death = False
-                # enemy.opacity = 255
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
         enemies = self.battle_participants["enemies"]
         enemy = self.battle_participants["enemies"][0]
 
-        second_enemy = random.choices([True, False], k=1, weights = [1, 0])[0]
+        second_enemy = random.choices([True, False], k=1, weights = [0.5, 0.5])[0]
         if second_enemy: enemies.append(enemy.clone("Skeleton", (enemy.x, enemy.y)))
-
-
-
 
 
         for participant in enemies:

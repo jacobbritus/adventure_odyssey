@@ -39,10 +39,10 @@ def sprite_converter(sprite_file: str, row: int, sprites_amount: int, sprite_wid
 player_sprites = {
     "idle": {
         "sprites": {
-            "down": sprite_converter("sprites/characters/me2.png", 0, 6, 96, 80, False),
-            "right": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 1, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/me2.png", 2, 6, 96, 80, False),
+            "down": sprite_converter("sprites/characters/jacob.png", 0, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/jacob.png", 1, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 1, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/jacob.png", 2, 6, 96, 80, False),
         },
         "sound": get_file_location("sounds/sword_slash"),
         "impact_frame": None
@@ -50,17 +50,17 @@ player_sprites = {
     },
     "running": {
         "sprites": {
-            "down": sprite_converter("sprites/characters/me2.png", 3, 6, 96, 80, False),
-            "right": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 4, 6, 96, 80, True),
-            "up": sprite_converter("sprites/characters/me2.png", 5, 6, 96, 80, False),
+            "down": sprite_converter("sprites/characters/jacob.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/jacob.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/jacob.png", 5, 6, 96, 80, False),
         },
         "sound": "sounds/footsteps.wav"
     },
     "sword_slash": {
         "sprites": {
-            "right": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 7, 4, 96, 80, True),
+            "right": sprite_converter("sprites/characters/jacob.png", 7, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 7, 4, 96, 80, True),
         },
         "sound": get_file_location("sounds/sword_slash.wav"),
         "impact_frame": 2
@@ -70,22 +70,22 @@ player_sprites = {
 
     "punch": {
             "sprites": {
-                "right": sprite_converter("sprites/characters/me2.png", 11, 4, 96, 80, False),
-                "left": sprite_converter("sprites/characters/me2.png", 11, 4, 96, 80, True),
+                "right": sprite_converter("sprites/characters/jacob.png", 11, 4, 96, 80, False),
+                "left": sprite_converter("sprites/characters/jacob.png", 11, 4, 96, 80, True),
             },
             "sound": get_file_location("sounds/sword_slash.wav"),
             "impact_frame": 2},
     "death": {
         "sprites": {
-            "right": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 9, 3, 96, 80, True),
+            "right": sprite_converter("sprites/characters/jacob.png", 9, 3, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 9, 3, 96, 80, True),
         },
         "sound": "sounds/death.wav"
     },
 "cast": {
         "sprites": {
-            "right": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, False),
-            "left": sprite_converter("sprites/characters/me2.png", 10, 5, 96, 80, True),
+            "right": sprite_converter("sprites/characters/jacob.png", 10, 5, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 10, 5, 96, 80, True),
         },
         "sound": "sounds/skeleton_death.wav",
         "impact_frame": None}

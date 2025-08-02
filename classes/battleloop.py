@@ -1,7 +1,4 @@
 import random
-
-import pygame
-
 from classes.UI import CombatMenu, HpBar
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
@@ -25,7 +22,6 @@ class BattleLoop:
         self.combat_menu = CombatMenu(player_skills = self.player.attacks, functions = [self.player_turn, self.end_battle])
         self.player_hp_bar = HpBar(
             owner=self.player,
-            side = "left",
             y_offset = 0)
 
 
@@ -34,8 +30,7 @@ class BattleLoop:
         for index, enemy in enumerate(self.enemies):
             self.enemy_hp_bars_test.update({enemy: HpBar(
                 owner = enemy,
-                side="right",
-                y_offset=index * 64)})
+                y_offset= 0)})
 
         # === battle state ===
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
@@ -141,11 +136,25 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        if self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_ANIMATION, BattleState.ENEMY_TURN]:
+        if not self.state == BattleState.END_MENU:
             self.player_hp_bar.draw(self.window, None)
 
-        for enemy, hp_bar in self.enemy_hp_bars_test.items():
-            hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+            for enemy, hp_bar in self.enemy_hp_bars_test.items():
+                hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+        # if self.player.animation_state in [AnimationState.APPROACH] and MOVES[self.player.current_attack]["type"] == AttackType.PHYSICAL.value:
+        #     self.player_hp_bar.draw(self.window, None)
+        # elif self.player.current_attack and MOVES[self.player.current_attack]["type"] == AttackType.BUFF.value:
+        #     self.player_hp_bar.draw(self.window, None)
+        #
+        #
+        #
+        #
+        # elif (self.state in [BattleState.PLAYER_TURN, BattleState.ENEMY_ANIMATION, BattleState.ENEMY_TURN]
+        #         or self.player_hp_bar.bars["mana"]["current_width"] != self.player_hp_bar.bars["mana"]["target_width"]):
+        #     self.player_hp_bar.draw(self.window, None)
+        #
+        # for enemy, hp_bar in self.enemy_hp_bars_test.items():
+        #     hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
             self.combat_menu.draw(self.window, self.player.mana)
@@ -163,7 +172,6 @@ class BattleLoop:
         self.state = BattleState.PLAYER_ANIMATION
         self.player.current_attack = internal_attack
         self.player.mana -= MOVES[internal_attack]["mana"]
-        self.target.selected = False
         self.handle_attack(self.player, self.player.current_attack)
 
     def handle_attack(self, performer, attack_name) -> None:

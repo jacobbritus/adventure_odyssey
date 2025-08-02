@@ -181,7 +181,6 @@ class Enemy(Entity):
                     self.action = "idle"
 
             else:
-                print("check")
                 # Target reached
                 self.random_target_reached = True
                 self.move_delay = current_time + 3000  # wait half a second before next target

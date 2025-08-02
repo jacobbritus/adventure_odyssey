@@ -5,14 +5,14 @@ class StationarySpell(pygame.sprite.Sprite):
     def __init__(self, spell_name, group, pos):
         super().__init__(group)
         self.spell_name = spell_name
+        self.opacity = 255
+
         self.sprites, self.life_time, self.fade_time, self.offset = self.get_sprites()
         self.frame = 0
         self.image = self.sprites[self.frame]
         self.rect = self.image.get_rect(center = pos)
         self.position = pos
         self.hit = False
-
-        self.opacity = 255
 
     def update(self, pos):
         self.rect.center = pos - self.offset
@@ -26,6 +26,7 @@ class StationarySpell(pygame.sprite.Sprite):
         if self.spell_name == "heal":
             return heal_sprites, pygame.time.get_ticks() + 2000, pygame.time.get_ticks() + 1250, (0,0)
         if self.spell_name == "level_up":
+            self.opacity = 150
             return level_up_sprites, pygame.time.get_ticks() + 2000, pygame.time.get_ticks() + 1250, (0, 0)
         if self.spell_name == "lightning_strike":
             return lightning_sprites, pygame.time.get_ticks() + 1200, pygame.time.get_ticks() + 800, (0,100)
@@ -49,6 +50,9 @@ class StationarySpell(pygame.sprite.Sprite):
         if self.frame >= last_frame: self.frame = 0
 
         self.image = self.sprites[int(self.frame)]
+
+        self.image.set_alpha(self.opacity)
+
 
 class ProjectileSpell(pygame.sprite.Sprite):
     def __init__(self, group, spell_type, start_pos, end_pos, speed):
