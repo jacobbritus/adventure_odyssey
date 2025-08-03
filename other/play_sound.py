@@ -4,10 +4,10 @@ import random
 def play_sound(sound_category, name, number=None):
     channel = pygame.mixer.find_channel()
     if not channel:
-        return  # No available channel, skip
+        return
 
     try:
-        sounds = sound_effects[sound_category][name]
+        sounds = SOUND_EFFECTS[sound_category][name]
 
         # If it's a list
         if isinstance(sounds, list):

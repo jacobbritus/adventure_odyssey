@@ -7,11 +7,12 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.0
+MUSIC_VOLUME = 0.5
 EFFECT_VOLUME = 0.25
+UI_OPACITY = 200
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
 
 FPS = 60
 TILE_SIZE = 32
@@ -78,13 +79,18 @@ FOREST_MAP = get_file_location("tmx/untitled.tmx")
 
 # === background music and sounds ===
 FOREST_MUSIC = get_file_location("sounds/background/forest_theme.mp3")
-BATTLE_MUSIC_1 = get_file_location("sounds/background/10-Fight.mp3")
-BATTLE_MUSIC_2 = get_file_location("sounds/background/11-Fight2.mp3")
-BATTLE_MUSIC_3 = get_file_location("sounds/background/12-Fight3.mp3")
+
+BATTLE_MUSIC = [get_file_location("sounds/background/10-Fight.mp3"),
+                get_file_location("sounds/background/11-Fight2.mp3"),
+                get_file_location("sounds/background/12-Fight3.mp3")]
+
+VICTORY_MUSIC =  [get_file_location("sounds/background/victory1.wav"),
+        get_file_location("sounds/background/victory2.wav"),
+        get_file_location("sounds/background/victory3.wav")]
 
 
 # === sound effects ===
-sound_effects = {
+SOUND_EFFECTS = {
     "moves": {
         "fire_ball": [pygame.mixer.Sound(get_file_location("sounds/effects/fire_woosh.mp3")), pygame.mixer.Sound(get_file_location("sounds/effects/fire_impact.mp3"))],
         "sword_slash": pygame.mixer.Sound(get_file_location("sounds/effects/sword_slash.wav")),
@@ -102,11 +108,14 @@ sound_effects = {
         "perfect_block": pygame.mixer.Sound(get_file_location("sounds/effects/perfect_block_2.mp3")),
         "critical_hit": pygame.mixer.Sound(get_file_location("sounds/effects/critical_hit_3.mp3")),
         "level_up": pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3")),
+        "victory": [pygame.mixer.Sound(get_file_location("sounds/background/victory1.wav")),
+        pygame.mixer.Sound(get_file_location("sounds/background/victory2.wav")),
+        pygame.mixer.Sound(get_file_location("sounds/background/victory3.wav")),]
     }
 }
 
 # === set volume to all effects ===
-for category in sound_effects.values():
+for category in SOUND_EFFECTS.values():
     for effect in category.values():
         sounds = effect if isinstance(effect, list) else [effect]
         for sound in sounds:
@@ -167,3 +176,6 @@ BUTTON_LARGE_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/si
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
 FONT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")
+
+
+TEST = (COMBAT_MENU_MAIN_BG, (0,0))

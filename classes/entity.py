@@ -481,7 +481,7 @@ class Entity(pygame.sprite.Sprite):
                     unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
             elif self.type == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 120),
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 50),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
             else:

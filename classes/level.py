@@ -3,6 +3,7 @@ import random
 import pygame.time
 import pytmx
 
+from other.play_sound import play_sound
 from other.settings import *
 from datetime import datetime
 from classes.camera import YSortCameraGroup
@@ -193,18 +194,14 @@ class Level:
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
 
-        self.visible_sprites.battle_loop.draw_ui()
 
-        if self.visible_sprites.battle_loop.battle_text_surface:
-            self.display_surface.blit(self.visible_sprites.battle_loop.battle_text_bg,
-                                      self.visible_sprites.battle_loop.battle_text_bg_pos)
-            self.display_surface.blit(self.visible_sprites.battle_loop.battle_text_surface,
-                                      self.visible_sprites.battle_loop.battle_text_pos)
 
         self.update_day_cycle()
         self.display_surface.blit(self.day_cycle_overlay, (0,0))
 
+        self.visible_sprites.battle_loop.draw_ui()
 
+        self.visible_sprites.battle_loop.top_screen_description(self.display_surface)
         # use this smart ass
         self.visible_sprites.battle_loop.run()
         # here to be drawn on top of the overlay
@@ -228,12 +225,26 @@ class Level:
             pygame.mixer.music.play(-1)
             self.current_music = "forest"
 
-        elif self.visible_sprites.state == LevelState.BATTLE and self.current_music != "battle":
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load(random.choice([BATTLE_MUSIC_1, BATTLE_MUSIC_2, BATTLE_MUSIC_3]))
-            pygame.mixer.music.set_volume(MUSIC_VOLUME)
-            pygame.mixer.music.play(-1)
-            self.current_music = "battle"
+        elif self.visible_sprites.state == LevelState.BATTLE:
+
+            if not self.visible_sprites.battle_loop.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
+                if not self.current_music == "battle":
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load(random.choice(BATTLE_MUSIC))
+                    pygame.mixer.music.set_volume(MUSIC_VOLUME)
+                    pygame.mixer.music.play(-1)
+                    self.current_music = "battle"
+            else:
+
+                if not self.current_music == "victory":
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load(random.choice(VICTORY_MUSIC))
+                    pygame.mixer.music.set_volume(MUSIC_VOLUME)
+                    pygame.mixer.music.play()
+                    self.current_music = "victory"
+
+
+
 
 
 

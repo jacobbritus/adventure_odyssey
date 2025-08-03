@@ -102,7 +102,7 @@ class Enemy(Entity):
             self.sprinting = True
 
             if not self.detected_player:
-                pygame.mixer.Channel(1).play(sound_effects["gameplay"]["enemy_alert"])
+                pygame.mixer.Channel(1).play(SOUND_EFFECTS["gameplay"]["enemy_alert"])
 
 
             self.detected_player = True
