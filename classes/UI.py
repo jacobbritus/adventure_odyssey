@@ -7,23 +7,53 @@ from other.settings import *
 class HpBar:
     def __init__(self, owner, y_offset):
         self.owner = owner
-        self.mana = hasattr(self.owner, "mana")
+        self.has_mana = hasattr(self.owner, "mana")
 
         # === images ===
-        font = pygame.font.Font(FONT_ONE, 16)
-        self.name = font.render(str(owner.name).upper(), True, (236, 226, 196))
-        self.name_bg = font.render(str(owner.name).upper(), True, (81, 57, 44))
+        self.font = pygame.font.Font(FONT_ONE, 16)
+        self.name = self.font.render(str(owner.name).upper(), True, (255, 255, 255))
+        self.name_bg = self.font.render(str(owner.name).upper(), True, (81, 57, 44))
 
         # === positions ===
-        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - NEW_HP_BG.get_width() - 16, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() - 16 + y_offset)
-        name_pos_offset = (10, 2)
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - HP_BAR_BG.get_width(), WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() + y_offset)
+        name_pos_offset = (36, 2)
         self.name_pos = self.background_box_pos + name_pos_offset
-        name_bg_offset = (2, 0)
-        self.name_bg_pos = self.name_pos + name_bg_offset
-        hp_bar_offset = (118, 4)
+        self.name_bg_pos = self.name_pos + (2, 0)
+        self.name_bg_pos2 = self.name_pos + (2, 2)
+
+        hp_bar_offset = (165, 12)
         self.hp_bar_pos = self.background_box_pos + hp_bar_offset
-        mana_bar_offset = (114, 14)
+        mana_bar_offset = (257, 12)
         self.mana_bar_pos = self.background_box_pos + mana_bar_offset
+
+        # === character icon ===
+        if self.has_mana:
+            char_icon = self.owner.icon
+            bg_borders_length = 4
+            char_icon_rect = pygame.Rect(0, char_icon.get_height() - NEW_HP_BG.get_height(), 32, NEW_HP_BG.get_height() - bg_borders_length)
+            self.char_icon = char_icon.subsurface(char_icon_rect).copy()
+            char_icon_offset = (4, 2)
+            self.char_icon_pos = self.background_box_pos + char_icon_offset
+
+        # === hp and mana text ===
+        self.hp_text_surface = self.font.render(f"{self.owner.hp}/{self.owner.max_hp}", True, (255, 255, 255))
+        hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
+        self.hp_text_pos = self.hp_bar_pos + hp_text_offset
+        self.hp_text_bg_surface = self.font.render(f"{self.owner.hp}/{self.owner.max_hp}", True, (81, 57, 44))
+        self.hp_text_bg1_pos = self.hp_text_pos + (2, 0)
+        self.hp_text_bg2_pos = self.hp_text_pos + (2, 2)
+
+        self.hp = self.owner.hp
+
+        if self.has_mana:
+            self.mana = self.owner.mana
+            self.mana_text_surface = self.font.render(f"{self.owner.mana}/{self.owner.max_mana}", True, (255, 255, 255))
+            mana_text_offset = (74 - self.mana_text_surface.get_width(), -14)
+            self.mana_text_pos = self.mana_bar_pos + mana_text_offset
+            self.mana_text_bg_surface = self.font.render(f"{self.owner.mana}/{self.owner.max_mana}", True, (81, 57, 44))
+            self.mana_text_bg1_pos = self.mana_text_pos + (2, 0)
+            self.mana_text_bg2_pos = self.mana_text_pos + (2, 2)
+
 
         # === stat bars ===
         self.normal_speed = 2
@@ -41,18 +71,18 @@ class HpBar:
                 "bg_width": int(NEW_HP_BAR.get_width() * self.owner.hp / self.owner.max_hp),
             }
         }
-        if self.mana:
-            self.bars.update({"mana": {
-                "image": NEW_MANA_BAR,
-                "current_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
-                "target_width": NEW_MANA_BAR.get_width(),
-                "bar": None,
-                "bg_bar": None,
-                "bg_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
-            }
-            })
+        if self.has_mana:
+            self.bars.update({
+                "mana": {
+                    "image": NEW_MANA_BAR,
+                    "current_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
+                    "target_width": NEW_MANA_BAR.get_width(),
+                    "bar": None,
+                    "bg_bar": None,
+                    "bg_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
+                }})
 
-        self.opacity = 255
+        self.opacity = 155
 
     def mask(self, window, elements):
         """Used to darken unselected enemy hp bars."""
@@ -68,26 +98,26 @@ class HpBar:
         target = int(NEW_HP_BAR.get_width() * ratio)
         self.bars["hp"]["target_width"] = target
 
-        if self.mana:
+        if self.has_mana:
             ratio = max(0, min(self.owner.mana / self.owner.max_mana, 1))
             target = int(NEW_MANA_BAR.get_width() * ratio)
             self.bars["mana"]["target_width"] = target
 
     def update_bars(self) -> None:
         """Slowly increase or decrease the current bar width until equal to the target width."""
-        stats = ["hp", "mana"] if self.mana else ["hp"]
+        stats = ["hp", "mana"] if self.has_mana else ["hp"]
         for key in stats:
             bar = self.bars[key]
 
             # === modify the foreground bar ===
             if bar["current_width"] < bar["target_width"]:
-                bar["current_width"] = min(bar["current_width"] + self.normal_speed, bar["target_width"])
+                bar["current_width"] = min(bar["current_width"] + self.delayed_speed, bar["target_width"])
             else:
                 bar["current_width"] = max(bar["current_width"] - self.normal_speed, bar["target_width"])
 
             # === modify the background bar ===
             if bar["bg_width"] < bar["target_width"]:
-                bar["bg_width"] = min(bar["bg_width"] + self.delayed_speed, bar["target_width"])
+                bar["bg_width"] = min(bar["bg_width"] + self.normal_speed , bar["target_width"])
             else:
                 bar["bg_width"] = max(bar["bg_width"] - self.delayed_speed, bar["target_width"])
 
@@ -102,11 +132,23 @@ class HpBar:
             return [
                 (NEW_HP_BOX, self.hp_bar_pos),
                 (self.bars["hp"]["bg_bar"], self.hp_bar_pos),
-
-                (self.bars["hp"]["bar"], self.hp_bar_pos)]
+                (self.bars["hp"]["bar"], self.hp_bar_pos),
+            (self.hp_text_bg_surface, self.hp_text_bg1_pos),
+            (self.hp_text_bg_surface, self.hp_text_bg2_pos),
+            (self.hp_text_surface, self.hp_text_pos)]
         else:
             return [
-                (NEW_HP_BG, self.background_box_pos),
+                (HP_BAR_BG, self.background_box_pos),
+                (self.char_icon, self.char_icon_pos),
+                (self.hp_text_bg_surface, self.hp_text_bg1_pos),
+                (self.hp_text_bg_surface, self.hp_text_bg2_pos),
+                (self.hp_text_surface, self.hp_text_pos),
+
+                (self.mana_text_bg_surface, self.mana_text_bg1_pos),
+                (self.mana_text_bg_surface, self.mana_text_bg2_pos),
+                (self.mana_text_surface, self.mana_text_pos),
+
+                (self.name_bg, self.name_bg_pos2),
                 (self.name_bg, self.name_bg_pos),
                 (self.name, self.name_pos),
                 (self.bars["mana"]["bg_bar"], self.mana_bar_pos),
@@ -115,6 +157,48 @@ class HpBar:
                 (self.bars["hp"]["bar"], self.hp_bar_pos),
                 (self.bars["mana"]["bar"], self.mana_bar_pos)]
 
+    def update_stat_text(self) -> None:
+        def animate_stat(current, target, speed=0.08):
+            if current > target:
+                return max(current - speed, target)
+            else:
+                return min(current + speed, target)
+
+        def render_stat_text(value, max_value, font, fg_color=(255, 255, 255), bg_color=(81, 57, 44)):
+            text = f"{int(value)}/{max_value}"
+            return (
+                font.render(text, True, fg_color),
+                font.render(text, True, bg_color)
+            )
+
+        # Animate and render HP
+        self.hp = animate_stat(self.hp, self.owner.hp)
+        self.hp_text_surface, self.hp_text_bg_surface = render_stat_text(self.hp, self.owner.max_hp, self.font)
+
+        hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
+
+        self.hp_text_pos = self.hp_bar_pos + hp_text_offset
+        self.hp_text_bg1_pos = self.hp_text_pos + (2, 0)
+        self.hp_text_bg2_pos = self.hp_text_pos + (0, 2)
+
+        # Animate and render Mana (if applicable)
+        if self.has_mana:
+            self.mana = animate_stat(self.mana, self.owner.mana)
+            self.mana_text_surface, self.mana_text_bg_surface = render_stat_text(self.mana, self.owner.max_mana,
+                                                                                 self.font)
+
+            mana_text_offset = (74 - self.mana_text_surface.get_width(), -14)
+            self.mana_text_pos = self.mana_bar_pos + mana_text_offset
+            self.mana_text_bg1_pos = self.mana_text_pos + (2, 0)
+            self.mana_text_bg2_pos = self.mana_text_pos + (2, 2)
+
+    def dynamic_pos(self, dynamic_pos):
+        self.hp_bar_pos = dynamic_pos
+        hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
+
+        self.hp_text_pos = self.hp_bar_pos + hp_text_offset
+        self.hp_text_bg1_pos = self.hp_text_pos + (2, 0)
+        self.hp_text_bg2_pos = self.hp_text_pos + (0, 2)
 
     def draw(self, window, dynamic_pos: None or pygame.Vector2) -> None:
         """Draw all the images on the window"""
@@ -122,9 +206,14 @@ class HpBar:
         self.update_bars()
 
         elements = self.draw_components()
-        if dynamic_pos: self.hp_bar_pos = dynamic_pos
+        self.update_stat_text()
+
+        if dynamic_pos:
+            self.dynamic_pos(dynamic_pos)
+
         for surface, pos in elements:
-            surface.set_alpha(self.opacity)
+            if self.owner.type == "enemy":
+                surface.set_alpha(self.opacity)
             if self.owner.death and self.bars["hp"]["bg_width"] == 0:
                 self.opacity -= 5
                 surface.set_alpha(max(0, self.opacity))
@@ -222,6 +311,8 @@ class Button(pygame.sprite.Sprite):
                 self.color = (236, 226, 196)
 
                 if not self.hover_sound_played: play_sound("ui", "hover", None)
+                self.hovering = True
+
                 self.hover_sound_played = True
                 self.click_sound_played = False
         else:
@@ -281,14 +372,16 @@ class CombatMenu:
         self.skills_buttons: pygame.sprite.Group = pygame.sprite.Group()
 
         # === main menu position ===
-        self.main_menu_bg_pos = pygame.Vector2(16, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() - 16)
+        self.main_menu_bg_pos = pygame.Vector2(0, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() )
 
         # === skills menu position ===
         self.skills_bg_pos = self.main_menu_bg_pos + (112, 0)
 
         # === end menu position ===
-        self.end_menu_pos = pygame.Vector2(WINDOW_WIDTH // 2 - COMBAT_MENU_MAIN_BG.get_width() // 2,
-                                           WINDOW_HEIGHT // 2 - COMBAT_MENU_MAIN_BG.get_height() // 2)
+        self.end_menu_pos = pygame.Vector2(WINDOW_WIDTH // 2 - SKILLS_MENU_BG.get_width() // 2,
+                                           WINDOW_HEIGHT // 2 - SKILLS_MENU_BG.get_height() // 2)
+        self.victory_text_pos = pygame.Vector2(WINDOW_WIDTH // 2 - VICTORY_TEXT.get_width() // 2,
+                                           self.end_menu_pos.y + 4)
 
         # === enum states ===
         self.state = CombatMenuState.MAIN_MENU
@@ -310,8 +403,8 @@ class CombatMenu:
             window.blit(SKILLS_MENU_BG, self.skills_bg_pos)
 
         elif self.state == CombatMenuState.END_MENU:
-            window.blit(COMBAT_MENU_MAIN_BG, self.end_menu_pos)
-
+            window.blit(SKILLS_MENU_BG, self.end_menu_pos)
+            window.blit(VICTORY_TEXT, self.victory_text_pos)
             self.draw_end_menu()
 
         for button in self.buttons_group:
@@ -369,10 +462,10 @@ class CombatMenu:
     def draw_end_menu(self) -> None:
         """Draw the buttons for the end menu."""
         if not self.buttons_group:
-            button_offset = (6, 75)
+            button_offset = (6, 92)
             pos = self.end_menu_pos + button_offset
 
-            Button(self.buttons_group, None, self.run_function, "END", ButtonVariant.DEFAULT, pos, False)
+            Button(self.buttons_group, None, self.run_function, "END", ButtonVariant.WIDE, pos, False)
 
     def draw_skills_menu(self) -> None:
         """Draw the buttons for the skills menu."""

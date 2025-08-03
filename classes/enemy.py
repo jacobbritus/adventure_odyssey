@@ -187,8 +187,8 @@ class Enemy(Entity):
                 self.moving_randomly = False
                 self.action = "idle"
 
-    def clone(self, name, pos):
-        return Enemy(name, self.image, pos, self.group, self.obstacle_sprites)
+    def clone(self, name):
+        return Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
 
     def update_enemy(self, player, window, offset) -> None:

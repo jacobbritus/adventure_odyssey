@@ -35,6 +35,7 @@ class Player(Entity):
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites
+        self.icon = PLAYER_ICON
         self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)

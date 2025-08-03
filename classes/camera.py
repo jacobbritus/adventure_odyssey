@@ -165,14 +165,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
+        heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
-        enemy = self.battle_participants["enemies"][0]
 
-        second_enemy = random.choices([True, False], k=1, weights = [0.5, 0.5])[0]
-        if second_enemy: enemies.append(enemy.clone("Skeleton", (enemy.x, enemy.y)))
+        second_enemy = random.choices([True, False], k=1, weights = [0.9, 0.1])[0]
+        if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
 
 
-        for participant in enemies:
+        for participant in [*enemies, *heroes]:
             participant.in_battle = True
             participant.action = "idle"
 
@@ -228,7 +228,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + 16 * len(list(enemies))
             self.battle_position.update(battle_center_x, battle_center_y)
 
-            self.battle_loop = BattleLoop(player, enemies, self.display_surface, self.offset)
+            self.battle_loop = BattleLoop(heroes, enemies, self.display_surface, self.offset)
 
     def enemy_collision(self, player):
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]

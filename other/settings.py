@@ -131,11 +131,14 @@ NEW_HP_BAR = pygame.image.load(get_file_location("sprites/UI/new_hp.png"))
 NEW_MANA_BAR = pygame.image.load(get_file_location("sprites/UI/new_mana.png"))
 BG_BAR = pygame.image.load(get_file_location("sprites/UI/second_bar.png"))
 
+HP_BAR_BG = pygame.image.load(get_file_location("sprites/UI/hp_test.png"))
+
 
 # === combat menu
 COMBAT_MENU_MAIN_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
+PLAYER_ICON = pygame.image.load(get_file_location("sprites/UI/player_face.png"))
 SKILLS_MENU_BG = pygame.image.load(get_file_location("sprites/UI/skills_bg.png"))
-
+VICTORY_TEXT = pygame.image.load(get_file_location("sprites/UI/victory_text.png"))
 
 
 # ___buttons___

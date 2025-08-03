@@ -1,14 +1,17 @@
 import random
+
 from classes.UI import CombatMenu, HpBar
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
+from other.play_sound import play_sound
 from other.settings import *
 from collections import deque
 
 class BattleLoop:
-    def __init__(self, player, enemies, window: pygame.Surface, offset: pygame.Vector2):
+    def __init__(self, heroes, enemies, window: pygame.Surface, offset: pygame.Vector2):
         # === general stuff ===
-        self.player = player
+        self.heroes = heroes
+        self.player = self.heroes[0]
         self.enemies = enemies
         self.original_enemy = enemies[0]
         self.window: pygame.Surface = window
@@ -19,9 +22,9 @@ class BattleLoop:
         self.winner = None
 
         # === UI setup ===
-        self.combat_menu = CombatMenu(player_skills = self.player.attacks, functions = [self.player_turn, self.end_battle])
+        self.combat_menu = CombatMenu(player_skills = self.heroes[0].attacks, functions = [self.get_player_input, self.end_battle])
         self.player_hp_bar = HpBar(
-            owner=self.player,
+            owner=self.heroes[0],
             y_offset = 0)
 
 
@@ -34,13 +37,13 @@ class BattleLoop:
 
         # === battle state ===
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
-        participants = self.enemies + [self.player]
+        participants = [*self.enemies, *self.heroes]
         participants.sort(key = lambda x: x.core_stats["speed"], reverse = True)
 
         self.battle_queue = deque(participants)
 
         self.performer = self.battle_queue[0]
-        self.target = self.original_enemy
+        self.target = None
 
         if self.performer.type == "player":
             self.state = BattleState.PLAYER_TURN
@@ -61,44 +64,81 @@ class BattleLoop:
         start_delay = 1000 if self.state == BattleState.PLAYER_TURN else 2000
         self.delay: pygame.time = self.current_time + start_delay
 
-
-
         # === visual cues ===
         # damage, critical hit and perfect block
         self.screen_messages_group: pygame.sprite.Group = pygame.sprite.Group()
+        # top screen text
+        self.top_text = None
+
+        # === sound ===
+        self.click_sound_played = False
+        self.hover_sound_played = False
+
+
 
     def set_delay(self, ms):
         self.delay = self.current_time + ms
 
+    def top_screen_description(self):
+        if self.state in [BattleState.PLAYER_TURN, BattleState.PLAYER_ANIMATION]:
+            for button in self.combat_menu.buttons_group:
+                if button.delete and button.text_string in self.combat_menu.formatted_skills:
+                    self.top_text = button.text_string
+                elif button.hovering:
+                    self.top_text = button.text_string
+
+        elif self.state in [BattleState.ENEMY_TURN, BattleState.ENEMY_ANIMATION]:
+            self.top_text = self.performer.current_attack
+
+
+
+
+
+
+
 
     def get_mouse_input(self) -> None:
-        if self.state == BattleState.PLAYER_TURN:
-            mouse_pos = pygame.mouse.get_pos()
-            press = pygame.mouse.get_pressed()[0]
+        mouse_pos = pygame.mouse.get_pos()
+        press = pygame.mouse.get_pressed()[0]
 
-            for enemy in self.enemies:
-                pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
-                rect = pygame.Rect(pos.x, pos.y, 32, 32)
-                if rect.collidepoint(mouse_pos) and press and not enemy.death:
+        for enemy in self.enemies:
+            pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
+            rect = pygame.Rect(pos.x, pos.y, 32, 32)
+            if rect.collidepoint(mouse_pos):
+                if press and not enemy.death:
+                    if not self.click_sound_played:
+                        play_sound("ui", "press", None)
+                    self.click_sound_played = True
+
                     for other in self.enemies:
-                        other.selected = False
-
+                        other.selected = True
                     self.target = enemy
+                    self.player_turn()
+                    break
+                else:
+                    if not self.hover_sound_played:
+                        play_sound("ui", "hover", None)
+                        self.hover_sound_played = True
                     enemy.selected = True
-        else:
-            for other in self.enemies:
-                other.selected = True
+            else:
+                enemy.selected = False
+
+        if all(not enemy.selected for enemy in self.enemies):
+            self.hover_sound_played = False
+            self.click_sound_played = False
+
 
     def run(self) -> None:
         """The main loop."""
+        self.top_screen_description()
+        print(self.top_text)
         self.current_time = pygame.time.get_ticks()
         self.animations()
-        self.get_mouse_input()
-
 
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
-              pass
+                if self.performer.current_attack: self.get_mouse_input()
+
 
             elif self.state == BattleState.ENEMY_TURN:
                 self.enemy_turn()
@@ -116,7 +156,7 @@ class BattleLoop:
         self.screen_messages_group.update()
         self.screen_messages_group.draw(self.window)
 
-        participants = [self.player] + self.enemies
+        participants = [*self.heroes, *self.enemies]
 
         for participant in participants:
             number_offset = 0
@@ -125,10 +165,10 @@ class BattleLoop:
                     ScreenMessages(self.screen_messages_group, value, color, number_offset, participant)
                     number_offset += 1
                 elif message_type == "perfect_block":
-                    offset = -4 if participant == self.player else 0.5
+                    offset = -4 if participant in self.heroes else 0.5
                     ScreenMessages(self.screen_messages_group, value, color, offset, participant)
                 elif message_type == "critical_hit":
-                    offset = -2 if participant == self.player else 0.5
+                    offset = -2 if participant in self.heroes else 0.5
                     ScreenMessages(self.screen_messages_group, value, color, offset, participant)
 
             participant.screen_messages.clear()
@@ -157,7 +197,7 @@ class BattleLoop:
         #     hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
-            self.combat_menu.draw(self.window, self.player.mana)
+            self.combat_menu.draw(self.window, self.performer.mana)
 
 
         self.screen_messages()
@@ -166,33 +206,43 @@ class BattleLoop:
         """End battle when the player picks run / this function."""
         self.state = BattleState.END_BATTLE
 
-    def player_turn(self, attack) -> None:
+    def get_player_input(self, attack) -> None:
         """Takes in the picked attack from the combat menu."""
         internal_attack = attack.replace(" ", "_").lower()
-        self.state = BattleState.PLAYER_ANIMATION
-        self.player.current_attack = internal_attack
-        self.player.mana -= MOVES[internal_attack]["mana"]
-        self.handle_attack(self.player, self.player.current_attack)
+        self.performer.current_attack = internal_attack
 
-    def handle_attack(self, performer, attack_name) -> None:
+        enemy_count = len([enemy for enemy in self.enemies if enemy in self.battle_queue])
+
+        if MOVES[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
+            self.target = [enemy for enemy in self.battle_queue if enemy.type == "enemy"][0]
+            self.player_turn()
+
+    def player_turn(self) -> None:
+        self.state = BattleState.PLAYER_ANIMATION
+        self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
+        self.handle_attack()
+
+
+    def handle_attack(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
-        if MOVES[attack_name]["type"] == AttackType.PHYSICAL.value:
-            performer.animation_state = AnimationState.APPROACH
-        elif MOVES[attack_name]["type"] == AttackType.BUFF.value:
-            performer.spawn_projectile = False
-            performer.animation_state = AnimationState.BUFF
-        elif MOVES[attack_name]["type"] == AttackType.SPECIAL.value:
-            performer.spawn_projectile = False
+        if MOVES[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
+            self.performer.animation_state = AnimationState.APPROACH
+        elif MOVES[self.performer.current_attack]["type"] == AttackType.BUFF.value:
+            self.performer.spawn_projectile = False
+            self.performer.animation_state = AnimationState.BUFF
+        elif MOVES[self.performer.current_attack]["type"] == AttackType.SPECIAL.value:
+            self.performer.spawn_projectile = False
             self.set_delay(1000)
-            performer.animation_state = AnimationState.WAIT
+            self.performer.animation_state = AnimationState.WAIT
+
 
     def enemy_turn(self) -> None:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
-        self.performer.current_attack = random.choice(self.original_enemy.moves)
-        self.target = self.player
+        self.performer.current_attack = random.choice(self.performer.moves)
+        self.target = random.choice(self.heroes)
 
-        self.handle_attack(self.performer, self.performer.current_attack)
+        self.handle_attack()
 
     def animation_phases(self, performer, target) -> None:
         """Handles the different animation phases and their delays."""
@@ -247,18 +297,22 @@ class BattleLoop:
                 performer.return_animation(performer.battle_pos)
 
         # === END MENU ===
-        elif all(enemy.hp <= 0 for enemy in self.enemies) or self.player.death:
-            self.winner = self.player
+        elif all(enemy.hp <= 0 for enemy in self.enemies) or all(hero.hp <= 0 for hero in self.heroes):
+            if all(enemy.hp <= 0 for enemy in self.enemies):
+                self.winner = self.player
+            else:
+                ...
             self.state = BattleState.END_MENU
 
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
         elif performer.animation_state == AnimationState.IDLE:
             if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
             if self.current_time >= self.delay:
-
+                self.performer.current_attack = None
 
                 self.battle_queue.rotate(-1)
                 self.performer = self.battle_queue[0]
+
 
                 if self.performer.type == "player":
                     # === set an enemy target ===
@@ -266,19 +320,22 @@ class BattleLoop:
                     self.state = BattleState.PLAYER_TURN
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()
-                    self.player.mana += 1
-                    self.player.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
+                    self.performer.mana += 1
+                    self.performer.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
 
                 else:
+                    print("check2")
+
                     self.state = BattleState.ENEMY_TURN
 
                 self.set_delay(1000)
+                self.top_text = None
 
     def animations(self) -> None:
         """Runs the player and enemy animation phases."""
         if self.state == BattleState.PLAYER_ANIMATION:
 
-            self.animation_phases(self.player, self.target)
+            self.animation_phases(self.performer, self.target)
 
         elif self.state == BattleState.ENEMY_ANIMATION:
 
