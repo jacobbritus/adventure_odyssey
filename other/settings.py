@@ -10,8 +10,8 @@ SCALE = 2
 MUSIC_VOLUME = 0.0
 EFFECT_VOLUME = 0.25
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 480
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 FPS = 60
 TILE_SIZE = 32
@@ -33,7 +33,8 @@ MOVES = {
         "stat": "magic",
         "type": "special",
         "mana": 3,
-        "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")]
+        "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")],
+        "description": "A conjured flame hurled to deal magic damage to one enemy."
     },
     "sword_slash": {
         "base_damage": 3,
@@ -41,7 +42,10 @@ MOVES = {
         "stat": "strength",
         "type": "physical",
         "mana": 1,
-        "sound": [get_file_location("sounds/effects/sword_slash.wav")]
+        "sound": [get_file_location("sounds/effects/sword_slash.wav")],
+        "description": "A precise sword strike that deals physical damage to one enemy."
+
+
     },
     "punch": {
         "base_damage": 50,
@@ -49,13 +53,15 @@ MOVES = {
         "stat": "strength",
         "type": "physical",
         "mana": 0,
-        "sound": [get_file_location("sounds/effects/punch.mp3")]
+        "sound": [get_file_location("sounds/effects/punch.mp3")],
+        "description": "A close-range blow that deals physical damage to one enemy."
     },
     "heal": {
         "hp": 5,
         "type": "buff",
         "mana": 2,
-        "sound": get_file_location("sounds/effects/heal.mp3")
+        "sound": get_file_location("sounds/effects/heal.mp3"),
+        "description": "A restoring spell that replenishes HP for one ally."
     },
     "lightning_strike": {
         "base_damage": 7,
@@ -63,7 +69,8 @@ MOVES = {
         "stat": "strength",
         "type": "special",
         "mana": 5,
-        "sound": [get_file_location("sounds/effects/lightning_strike.mp3")]},
+        "sound": [get_file_location("sounds/effects/lightning_strike.mp3")],
+        "description": "A surge of lightning that deals magic damage to one enemy."}
 }
 
 # === maps ===
@@ -134,11 +141,13 @@ BG_BAR = pygame.image.load(get_file_location("sprites/UI/second_bar.png"))
 HP_BAR_BG = pygame.image.load(get_file_location("sprites/UI/hp_test.png"))
 
 
-# === combat menu
+# === combat menu ===
 COMBAT_MENU_MAIN_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
 PLAYER_ICON = pygame.image.load(get_file_location("sprites/UI/player_face.png"))
 SKILLS_MENU_BG = pygame.image.load(get_file_location("sprites/UI/skills_bg.png"))
 VICTORY_TEXT = pygame.image.load(get_file_location("sprites/UI/victory_text.png"))
+SMALL_BATTLE_TEXT_BG = pygame.image.load(get_file_location("sprites/UI/small_battle_text_bg.png"))
+LARGE_BATTLE_TEXT_BG = pygame.image.load(get_file_location("sprites/UI/large_battle_text_bg.png"))
 
 
 # ___buttons___

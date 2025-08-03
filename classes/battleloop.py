@@ -1,5 +1,7 @@
 import random
 
+import pygame.font
+
 from classes.UI import CombatMenu, HpBar
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
@@ -68,7 +70,12 @@ class BattleLoop:
         # damage, critical hit and perfect block
         self.screen_messages_group: pygame.sprite.Group = pygame.sprite.Group()
         # top screen text
-        self.top_text = None
+        self.battle_text_string = None
+        self.battle_text_surface = None
+        self.battle_text_bg = None
+        self.battle_text_bg_pos = None
+        self.battle_text_pos = None
+        self.font = pygame.font.Font(FONT_ONE, 16)
 
         # === sound ===
         self.click_sound_played = False
@@ -80,22 +87,40 @@ class BattleLoop:
         self.delay = self.current_time + ms
 
     def top_screen_description(self):
-        if self.state in [BattleState.PLAYER_TURN, BattleState.PLAYER_ANIMATION]:
+        if self.state in [BattleState.PLAYER_TURN]:
             for button in self.combat_menu.buttons_group:
-                if button.delete and button.text_string in self.combat_menu.formatted_skills:
-                    self.top_text = button.text_string
-                elif button.hovering:
-                    self.top_text = button.text_string
+                internal_name = button.text_string.replace(" ", "_").lower()
+                if internal_name in MOVES.keys():
+                    # === display the attack name ===
+                    if button.delete:
+                        self.battle_text_string = button.text_string
+                        self.battle_text_bg = SMALL_BATTLE_TEXT_BG
+                        break
+                    # === display the hovered attack's description ===
+                    elif button.hovering:
+                        self.battle_text_bg = LARGE_BATTLE_TEXT_BG
+                        self.battle_text_string = MOVES[internal_name]["description"].upper()
 
-        elif self.state in [BattleState.ENEMY_TURN, BattleState.ENEMY_ANIMATION]:
-            self.top_text = self.performer.current_attack
+                    # === display nothing ===
+                    elif all(not button.hovering for button in self.combat_menu.buttons_group):
+                        self.battle_text_string = None
 
+        # === display the performed attack's name ===
+        elif self.state in [BattleState.ENEMY_TURN, BattleState.ENEMY_ANIMATION, BattleState.PLAYER_ANIMATION]:
+            if self.performer.current_attack:
+                formatted_skill_name = self.performer.current_attack.replace("_", " ").upper()
+                self.battle_text_string = formatted_skill_name
+                self.battle_text_bg = SMALL_BATTLE_TEXT_BG
 
-
-
-
-
-
+        # === update and render the background and text ===
+        if self.battle_text_string and not self.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
+            self.battle_text_bg_pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.battle_text_bg.get_width() // 2,
+                           32)
+            self.battle_text_surface = self.font.render(self.battle_text_string, True, (255, 255, 255))
+            self.battle_text_pos = self.battle_text_bg_pos + (self.battle_text_bg.get_width() // 2 - self.battle_text_surface.get_width() // 2,
+                                                              6)
+        else:
+            self.battle_text_surface = None
 
     def get_mouse_input(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
@@ -114,6 +139,7 @@ class BattleLoop:
                         other.selected = True
                     self.target = enemy
                     self.player_turn()
+
                     break
                 else:
                     if not self.hover_sound_played:
@@ -131,9 +157,10 @@ class BattleLoop:
     def run(self) -> None:
         """The main loop."""
         self.top_screen_description()
-        print(self.top_text)
         self.current_time = pygame.time.get_ticks()
         self.animations()
+
+        print(self.battle_text_string)
 
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -329,7 +356,7 @@ class BattleLoop:
                     self.state = BattleState.ENEMY_TURN
 
                 self.set_delay(1000)
-                self.top_text = None
+                self.battle_text_string = None
 
     def animations(self) -> None:
         """Runs the player and enemy animation phases."""
