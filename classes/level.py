@@ -146,10 +146,9 @@ class Level:
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
 
+        self.update_day_cycle()
         self.visible_sprites.transition_screen()
 
-        self.update_day_cycle()
-        self.display_surface.blit(self.day_cycle_overlay, (0,0))
 
         if self.player.level_up_visual:
             self.player.level_up_visual.draw(self.display_surface)
@@ -160,14 +159,14 @@ class Level:
 
     def update_day_cycle(self):
         day_phases = {
-            5: {"color": (255,223,186), "opacity": 50},
-            8: {"color": (255, 250, 240), "opacity": 30},
+            5: {"color": (255,223,186), "opacity": 75},
+            8: {"color": (255, 250, 240), "opacity": 75},
             12: {"color": (255, 255, 255), "opacity": 0},
-            16: {"color": (255, 238, 131), "opacity": 20},
-            18: {"color": (255, 174, 66), "opacity": 50},
-            20: {"color": (34, 0, 51), "opacity": 75},
-            22: {"color": (0, 0, 0), "opacity": 100},
-            0: {"color": (0, 0, 0), "opacity": 125},
+            16: {"color": (255, 238, 131), "opacity": 75},
+            18: {"color": (255, 174, 66), "opacity": 100},
+            20: {"color": (34, 0, 51), "opacity": 150},
+            22: {"color": (0, 0, 0), "opacity": 150},
+            0: {"color": (0, 0, 0), "opacity": 150},
 
         }
 
@@ -177,7 +176,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[18]
+        current_phase = day_phases[5]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -197,7 +196,6 @@ class Level:
 
 
         self.update_day_cycle()
-        self.display_surface.blit(self.day_cycle_overlay, (0,0))
 
         self.visible_sprites.battle_loop.draw_ui()
 
@@ -234,19 +232,15 @@ class Level:
                     pygame.mixer.music.set_volume(MUSIC_VOLUME)
                     pygame.mixer.music.play(-1)
                     self.current_music = "battle"
-            else:
-
+            elif self.player in self.visible_sprites.battle_loop.winner:
                 if not self.current_music == "victory":
                     pygame.mixer.music.stop()
                     pygame.mixer.music.load(random.choice(VICTORY_MUSIC))
                     pygame.mixer.music.set_volume(MUSIC_VOLUME)
                     pygame.mixer.music.play()
                     self.current_music = "victory"
-
-
-
-
-
+            else:
+                pygame.mixer.music.stop()
 
     def dust_particle(self):
         DustParticle(self.player, self.visible_sprites)

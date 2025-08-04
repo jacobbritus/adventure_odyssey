@@ -28,6 +28,7 @@ class ScreenMessages(pygame.sprite.Sprite):
 
         if self.timer <= 50:
             self.opacity -= 10
-            if self.opacity >= 0: self.image.set_alpha(self.opacity)
-            else: self.image.set_alpha(0)
+            self.image.set_alpha(min(self.opacity, 0))
+
+
 

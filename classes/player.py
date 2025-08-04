@@ -15,7 +15,7 @@ class Player(Entity):
 
         # General
         self.type = "player"
-        self.name = "Jacob"
+        self.name = "jacob"
 
         # Location
         self.x: int = spawn_coordinates[0]
@@ -35,7 +35,7 @@ class Player(Entity):
 
         # Image
         self.sprite_dict: dict[str: str: list] = player_sprites
-        self.icon = PLAYER_ICON
+        self.icon = UI["character_icons"][self.name]
         self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
@@ -59,7 +59,7 @@ class Player(Entity):
             "luck": 7,
         }
 
-        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.hp: int = int(1 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.mana: int = 2
         self.max_mana = 5
@@ -72,7 +72,7 @@ class Player(Entity):
         self.dust_particles = dust_particles
         self.level_up_visual = pygame.sprite.Group()
 
-        self.attacks = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
+        self.skills = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
         self.post_battle_iframes = pygame.time.get_ticks() + 0
         self.block_cooldown_end = pygame.time.get_ticks() + 0
 

@@ -7,8 +7,8 @@ pygame.mixer.init()
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.5
-EFFECT_VOLUME = 0.25
+MUSIC_VOLUME = 0.25
+EFFECT_VOLUME = 0.5
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -131,51 +131,29 @@ for file in os.listdir(grass_footsteps_dir):
         sound.set_volume(EFFECT_VOLUME)
         GRASS_FOOTSTEPS.append(sound)
 
-# === book ===
-BOOK_IMAGE = pygame.image.load(get_file_location("sprites/UI/book_stuff/book.png"))
-DIVIDER = pygame.image.load(get_file_location("sprites/UI/divider.png"))
-INFO_TITLE = pygame.image.load(get_file_location("sprites/UI/book_stuff/info_title.png"))
-INFO_PAGE = pygame.image.load(get_file_location("sprites/UI/book_stuff/info_page.png"))
-BOOK_SKILLS_TITLE = get_file_location("sprites/UI/book_stuff/skills_title.png") # to be implemented
+
+# === load UI ===
+UI_directory = get_file_location("sprites/UI")
+UI_directories = [directory for directory in os.listdir(UI_directory)
+                  if os.path.isdir(os.path.join(UI_directory, directory))]
+
+UI = {}
+for directory in UI_directories:
+
+    images_dict = {}
+    for image in os.listdir(get_file_location(os.path.join(UI_directory, directory))):
+        png_image = pygame.image.load(get_file_location(os.path.join(UI_directory, directory, image)))
+        png_image.set_alpha(UI_OPACITY)
+        images_dict[image.strip(".png")] = png_image
+
+    UI[directory] = images_dict
+
 
 # ___hp bar___
 EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
-
-NEW_HP_BG = pygame.image.load(get_file_location("sprites/UI/new_hp_bar.png"))
-NEW_HP_BOX = pygame.image.load(get_file_location("sprites/UI/new_hp_box.png"))
-NEW_HP_BAR = pygame.image.load(get_file_location("sprites/UI/new_hp.png"))
-NEW_MANA_BAR = pygame.image.load(get_file_location("sprites/UI/new_mana.png"))
-BG_BAR = pygame.image.load(get_file_location("sprites/UI/second_bar.png"))
-
-HP_BAR_BG = pygame.image.load(get_file_location("sprites/UI/hp_test.png"))
-
-
-# === combat menu ===
-COMBAT_MENU_MAIN_BG = pygame.image.load(get_file_location("sprites/UI/combat_menu_bg.png"))
-PLAYER_ICON = pygame.image.load(get_file_location("sprites/UI/player_face.png"))
-SKILLS_MENU_BG = pygame.image.load(get_file_location("sprites/UI/skills_bg.png"))
-VICTORY_TEXT = pygame.image.load(get_file_location("sprites/UI/victory_text.png"))
-SMALL_BATTLE_TEXT_BG = pygame.image.load(get_file_location("sprites/UI/small_battle_text_bg.png"))
-LARGE_BATTLE_TEXT_BG = pygame.image.load(get_file_location("sprites/UI/large_battle_text_bg.png"))
-
-
-# ___buttons___
-BUTTON_SMALL_NORMAL = pygame.image.load(get_file_location("sprites/UI/button_small.png"))
-BUTTON_SMALL_SELECTED = pygame.image.load(get_file_location("sprites/UI/button_small_selected.png"))
-BUTTON_SMALL_PRESSED = pygame.image.load(get_file_location("sprites/UI/button_small_pressed.png"))
-
-BUTTON_SIMPLE_NORMAL = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
-BUTTON_SIMPLE_SELECTED = pygame.image.load(get_file_location("sprites/UI/simple_button_selected.png"))
-BUTTON_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/simple_button_normal.png"))
-
-BUTTON_LARGE_SIMPLE_NORMAL = pygame.image.load(get_file_location("sprites/UI/simple_large_button_normal.png"))
-BUTTON_LARGE_SIMPLE_SELECTED = pygame.image.load(get_file_location("sprites/UI/simple_large_button_selected.png"))
-BUTTON_LARGE_SIMPLE_PRESSED = pygame.image.load(get_file_location("sprites/UI/simple_large_button_normal.png"))
-
 
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
 FONT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")
 
 
-TEST = (COMBAT_MENU_MAIN_BG, (0,0))

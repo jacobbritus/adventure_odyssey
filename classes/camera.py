@@ -260,10 +260,8 @@ class YSortCameraGroup(pygame.sprite.Group):
             alpha = int((time_elapsed / self.delay_time) * 1000)
             overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)  # enable per-pixel alpha
 
-            if alpha < 255:
-                overlay.fill((0, 0, 0, alpha))  # fill with black + alpha
-            else:
-                overlay.fill((0, 0, 0, 255))  # fill with black + alpha
+            overlay.fill((0, 0, 0, min(alpha, 255)))  # fill with black + alpha
+
 
             self.display_surface.blit(overlay, (0, 0))
 

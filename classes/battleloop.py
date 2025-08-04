@@ -2,7 +2,7 @@ import random
 
 import pygame.font
 
-from classes.UI import CombatMenu, HpBar
+from classes.UI import BattleMenu, StatusBar
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
 from other.play_sound import play_sound
@@ -27,8 +27,8 @@ class BattleLoop:
         self.winner = None
 
         # === UI setup ===
-        self.combat_menu = CombatMenu(player_skills = self.heroes[0].attacks, functions = [self.get_player_input, self.end_battle])
-        self.player_hp_bar = HpBar(
+        self.combat_menu = BattleMenu(performer= heroes[0], functions = [self.get_player_input, self.end_battle])
+        self.player_hp_bar = StatusBar(
             owner=self.heroes[0],
             y_offset = 0)
 
@@ -36,7 +36,7 @@ class BattleLoop:
         self.enemy_hp_bars_test = {}
 
         for index, enemy in enumerate(self.enemies):
-            self.enemy_hp_bars_test.update({enemy: HpBar(
+            self.enemy_hp_bars_test.update({enemy: StatusBar(
                 owner = enemy,
                 y_offset= 0)})
 
@@ -77,8 +77,6 @@ class BattleLoop:
         self.battle_text_surface = None
         self.battle_text_bg = None
         self.battle_text_bg_pos = None
-        SMALL_BATTLE_TEXT_BG.set_alpha(200)
-        LARGE_BATTLE_TEXT_BG.set_alpha(200)
         self.battle_text_pos = None
         self.font = pygame.font.Font(FONT_ONE, 16)
 
@@ -98,7 +96,7 @@ class BattleLoop:
                 if internal_name in MOVES.keys():
                     # === display the hovered attack's description ===
                     if button.hovering:
-                        self.battle_text_bg = LARGE_BATTLE_TEXT_BG
+                        self.battle_text_bg = UI["battle_message_box"]["large_background"]
                         self.battle_text_string = MOVES[internal_name]["description"].upper()
 
                     # === display nothing ===
@@ -110,7 +108,7 @@ class BattleLoop:
             if self.performer.current_attack:
                 formatted_skill_name = self.performer.current_attack.replace("_", " ").upper()
                 self.battle_text_string = f"{self.performer.name.upper()} USED {formatted_skill_name}!"
-                self.battle_text_bg = LARGE_BATTLE_TEXT_BG
+                self.battle_text_bg = UI["battle_message_box"]["large_background"]
 
         # === update and render the background and text ===
         if self.battle_text_string and not self.state in [BattleState.END_BATTLE]:
@@ -136,7 +134,7 @@ class BattleLoop:
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
         self.battle_text_string = "SELECT A TARGET"
-        self.battle_text_bg = SMALL_BATTLE_TEXT_BG
+        self.battle_text_bg = UI["battle_message_box"]["small_background"]
 
         for enemy in self.enemies:
             pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
@@ -187,9 +185,15 @@ class BattleLoop:
                 self.player.post_battle_iframes = pygame.time.get_ticks() + time
 
             elif self.state == self.state.END_MENU:
-                self.battle_text_string = "BATTLE WON"
+                if self.winner == self.heroes:
+                    self.battle_text_string = "BATTLE WON"
+                else:
+                    self.battle_text_string = "BATTLE LOST"
 
+                # branch to win_menu and lose_menu
                 self.combat_menu.state = CombatMenuState.END_MENU
+
+
 
     def screen_messages(self) -> None:
         """Displays and updates screen messages like damage dealt, recovered, critical hits, etc."""
@@ -237,7 +241,7 @@ class BattleLoop:
         #     hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
         if self.state == BattleState.PLAYER_TURN or self.state == BattleState.END_MENU:
-            self.combat_menu.draw(self.window, self.performer.mana)
+            self.combat_menu.draw(self.window, self.performer)
 
 
         self.screen_messages()
@@ -339,9 +343,9 @@ class BattleLoop:
         # === END MENU ===
         elif all(enemy.hp <= 0 for enemy in self.enemies) or all(hero.hp <= 0 for hero in self.heroes):
             if all(enemy.hp <= 0 for enemy in self.enemies):
-                self.winner = self.player
+                self.winner = self.heroes
             else:
-                ...
+                self.winner = self.enemies
             self.state = BattleState.END_MENU
 
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN

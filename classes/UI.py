@@ -6,19 +6,18 @@ from other.settings import *
 from other.text_bg_effect import text_bg_effect
 
 
-class HpBar:
+class StatusBar:
     def __init__(self, owner, y_offset):
         self.owner = owner
         self.has_mana = hasattr(self.owner, "mana")
 
         # === images ===
         self.font = pygame.font.Font(FONT_ONE, 16)
-        self.name = self.font.render(str(owner.name).upper(), True, (255, 255, 255))
-        HP_BAR_BG.set_alpha(UI_OPACITY)
+        self.name_surface = self.font.render(str(owner.name).upper(), True, (255, 255, 255))
 
         # === positions ===
-        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - HP_BAR_BG.get_width(),
-                                                 WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height() + y_offset)
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - UI["status_bar"]["background"].get_width(),
+                                                 WINDOW_HEIGHT - UI["battle_menu"]["main_background"].get_height() + y_offset)
         name_pos_offset = (36, 2)
         self.name_pos = self.background_box_pos + name_pos_offset
 
@@ -31,50 +30,57 @@ class HpBar:
         if self.has_mana:
             char_icon = self.owner.icon
             bg_borders_length = 4
-            char_icon_rect = pygame.Rect(0, char_icon.get_height() - NEW_HP_BG.get_height(), 32,
-                                         NEW_HP_BG.get_height() - bg_borders_length)
+            char_icon_rect = pygame.Rect(0, char_icon.get_height() - UI["status_bar"]["background"].get_height(), 32,
+                                         UI["status_bar"]["background"].get_height() - bg_borders_length)
             self.char_icon = char_icon.subsurface(char_icon_rect).copy()
             char_icon_offset = (4, 2)
             self.char_icon_pos = self.background_box_pos + char_icon_offset
 
         # === hp and mana text ===
+        self.hp_icon = self.font.render("HP", True, (217, 87, 99))
+        self.hp_icon_offset = (-16, -7)
+        self.hp_icon_pos = pygame.Vector2(self.hp_bar_pos + self.hp_icon_offset)
+
         self.hp_text_surface = self.font.render(f"{self.owner.hp}/{self.owner.max_hp}", True, (255, 255, 255))
-        hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
-        self.hp_text_pos = pygame.Vector2(self.hp_bar_pos + hp_text_offset)
+        self.hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
+        self.hp_text_pos = pygame.Vector2(self.hp_bar_pos + self.hp_text_offset)
 
         self.hp = self.owner.hp
 
         if self.has_mana:
+            self.mana_icon = self.font.render("SP", True, (99, 155, 255))
+            self.mana_icon_pos = pygame.Vector2(self.mana_bar_pos + self.hp_icon_offset)
+
             self.mana = self.owner.mana
             self.mana_text_surface = self.font.render(f"{self.owner.mana}/{self.owner.max_mana}", True, (255, 255, 255))
-            mana_text_offset = (74 - self.mana_text_surface.get_width(), -14)
-            self.mana_text_pos = self.mana_bar_pos + mana_text_offset
+            self.mana_text_pos = self.mana_bar_pos + self.hp_text_offset
 
         # === stat bars ===
         self.normal_speed = 2
         self.delayed_speed = 0.25
-        self.bg_bar = BG_BAR
-
+        self.bg_bar = UI["status_bar"]["delay_bar"]
+        hp_bar_image = UI["status_bar"]["hp_bar"]
         self.bars = {
             "hp": {
-                "image": NEW_HP_BAR,
+                "image": hp_bar_image,
 
-                "current_width": int(NEW_HP_BAR.get_width() * self.owner.hp / self.owner.max_hp),
-                "target_width": NEW_HP_BAR.get_width(),
+                "current_width": int(hp_bar_image.get_width() * self.owner.hp / self.owner.max_hp),
+                "target_width": hp_bar_image.get_width(),
                 "bar": None,
                 "bg_bar": None,
-                "bg_width": int(NEW_HP_BAR.get_width() * self.owner.hp / self.owner.max_hp),
+                "bg_width": int(hp_bar_image.get_width() * self.owner.hp / self.owner.max_hp),
             }
         }
         if self.has_mana:
+            mana_bar_image = UI["status_bar"]["mana_bar"]
             self.bars.update({
                 "mana": {
-                    "image": NEW_MANA_BAR,
-                    "current_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
-                    "target_width": NEW_MANA_BAR.get_width(),
+                    "image": mana_bar_image,
+                    "current_width": int(mana_bar_image.get_width() * self.owner.mana / self.owner.max_mana),
+                    "target_width": mana_bar_image.get_width(),
                     "bar": None,
                     "bg_bar": None,
-                    "bg_width": int(NEW_MANA_BAR.get_width() * self.owner.mana / self.owner.max_mana),
+                    "bg_width": int(mana_bar_image.get_width() * self.owner.mana / self.owner.max_mana),
                 }})
 
         self.opacity = 200
@@ -90,12 +96,12 @@ class HpBar:
     def set_bars(self) -> None:
         """Update the hp bar target length, making it relative to the current-hp to max-hp ratio."""
         ratio = max(0, min(self.owner.hp / self.owner.max_hp, 1))
-        target = int(NEW_HP_BAR.get_width() * ratio)
+        target = int(self.bars["hp"]["image"].get_width() * ratio)
         self.bars["hp"]["target_width"] = target
 
         if self.has_mana:
             ratio = max(0, min(self.owner.mana / self.owner.max_mana, 1))
-            target = int(NEW_MANA_BAR.get_width() * ratio)
+            target = int(self.bars["mana"]["image"].get_width() * ratio)
             self.bars["mana"]["target_width"] = target
 
     def update_bars(self) -> None:
@@ -103,6 +109,12 @@ class HpBar:
         stats = ["hp", "mana"] if self.has_mana else ["hp"]
         for key in stats:
             bar = self.bars[key]
+
+
+            self.normal_speed = max(abs((bar["current_width"] - bar["target_width"] )// 10), 2)
+            print(self.normal_speed)
+
+            self.delayed_speed = max(abs((bar["bg_width"] - bar["target_width"] )// 20), 0.25)
 
             # === modify the foreground bar ===
             if bar["current_width"] < bar["target_width"]:
@@ -125,13 +137,18 @@ class HpBar:
     def draw_components(self):
         if self.owner.type == "enemy":
             elements =  [
-                (NEW_HP_BOX.copy(), self.hp_bar_pos),
-
+                (UI["status_bar"]["hp_box"].copy(), self.hp_bar_pos), # copied as its opacity gets lowered upon owner death
                 (self.bars["hp"]["bg_bar"], self.hp_bar_pos),
                 (self.bars["hp"]["bar"], self.hp_bar_pos),
-
+                (self.hp_icon, self.hp_icon_pos),
                 (self.hp_text_surface, self.hp_text_pos)]
-            for text_bg in text_bg_effect(f"{int(self.hp)}/{self.owner.max_hp}", self.font, self.hp_text_pos, None):
+            text_bgs = [
+                *text_bg_effect(f"{int(self.hp)}/{self.owner.max_hp}", self.font, self.hp_text_pos, None),
+                *text_bg_effect(f"HP", self.font, self.hp_icon_pos, None)
+
+            ]
+
+            for text_bg in text_bgs:
                 elements.insert(2, text_bg)
 
 
@@ -139,12 +156,14 @@ class HpBar:
             return elements
         else:
             elements = [
-                (HP_BAR_BG, self.background_box_pos),
+                (UI["status_bar"]["background"], self.background_box_pos),
                 (self.char_icon, self.char_icon_pos),
+                (self.hp_icon, self.hp_icon_pos),
+                (self.mana_icon, self.mana_icon_pos),
 
                 (self.hp_text_surface, self.hp_text_pos),
                 (self.mana_text_surface, self.mana_text_pos),
-                (self.name, self.name_pos),
+                (self.name_surface, self.name_pos),
                 (self.bars["mana"]["bg_bar"], self.mana_bar_pos),
                 (self.bars["hp"]["bg_bar"], self.hp_bar_pos),
 
@@ -154,7 +173,10 @@ class HpBar:
             text_bgs = [
                 *text_bg_effect(self.owner.name.upper(), self.font, self.name_pos, None),
                 *text_bg_effect(f"{int(self.mana)}/{self.owner.max_mana}", self.font, self.mana_text_pos, None),
-                *text_bg_effect(f"{int(self.hp)}/{self.owner.max_hp}", self.font, self.hp_text_pos, None)
+                *text_bg_effect(f"{int(self.hp)}/{self.owner.max_hp}", self.font, self.hp_text_pos, None),
+                *text_bg_effect(f"HP", self.font, self.hp_icon_pos, None),
+                 *text_bg_effect(f"SP", self.font, self.mana_icon_pos, None)
+
             ]
 
             for text_bg in text_bgs:
@@ -163,9 +185,8 @@ class HpBar:
             return elements
 
 
-
     def update_stat_text(self) -> None:
-        def animate_stat(current, target, speed=0.08):
+        def animate_stat(current, target, speed=self.delayed_speed / 2):
             if current > target:
                 return max(current - speed, target)
             else:
@@ -195,11 +216,8 @@ class HpBar:
 
     def dynamic_pos(self, dynamic_pos):
         self.hp_bar_pos = dynamic_pos
-        hp_text_offset = (74 - self.hp_text_surface.get_width(), -14)
-
-        self.hp_text_pos = self.hp_bar_pos + hp_text_offset
-        self.hp_text_bg1_pos = self.hp_text_pos + (2, 0)
-        self.hp_text_bg2_pos = self.hp_text_pos + (0, 2)
+        self.hp_icon_pos = self.hp_bar_pos + self.hp_icon_offset
+        self.hp_text_pos = self.hp_bar_pos + self.hp_text_offset
 
     def draw(self, window, dynamic_pos: None or pygame.Vector2) -> None:
         """Draw all the images on the window"""
@@ -285,19 +303,21 @@ class Button(pygame.sprite.Sprite):
     @staticmethod
     def get_images(variant):
         """Return button images based on the variant parameter"""
-        if variant == ButtonVariant.DEFAULT:
-            buttons =  BUTTON_SIMPLE_NORMAL, BUTTON_SIMPLE_PRESSED, BUTTON_SIMPLE_SELECTED
+        root = UI["buttons"]
+        statuses = ["unselected", "pressed", "selected"]
+        if variant == ButtonVariant.MEDIUM:
+            buttons = [root[variant.value + "_" + status] for status in statuses]
 
         elif variant == ButtonVariant.WIDE:
-            buttons =  BUTTON_LARGE_SIMPLE_NORMAL, BUTTON_LARGE_SIMPLE_PRESSED, BUTTON_LARGE_SIMPLE_SELECTED
+            buttons = [root[variant.value + "_" + status] for status in statuses]
 
         elif variant == ButtonVariant.SMALL:
-            buttons =  BUTTON_SMALL_NORMAL, BUTTON_SMALL_PRESSED, BUTTON_SMALL_SELECTED
+            buttons = [root[variant.value + "_" + status] for status in statuses]
+
+
         else:
             buttons = None
 
-        for button in buttons:
-            button.set_alpha(UI_OPACITY)
 
         return buttons
 
@@ -378,12 +398,12 @@ class Button(pygame.sprite.Sprite):
             window.blit(mask, self.pos)
 
 
-class CombatMenu:
-    def __init__(self, player_skills: list[str], functions):
+class BattleMenu:
+    def __init__(self, performer, functions):
         # === player's attacks and functions ===
         # e.g., attack(name of button clicked) and player_run(no parameter)
-        self.player_skills = player_skills
-        self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in player_skills]
+        self.performer = performer
+        self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in self.performer.skills]
         self.attack_function = functions[0]
         self.run_function = functions[1]
 
@@ -392,41 +412,36 @@ class CombatMenu:
         self.skills_buttons: pygame.sprite.Group = pygame.sprite.Group()
 
         # === main menu position ===
-        self.main_menu_bg_pos = pygame.Vector2(0, WINDOW_HEIGHT - COMBAT_MENU_MAIN_BG.get_height())
-        COMBAT_MENU_MAIN_BG.set_alpha(UI_OPACITY)
+        self.main_menu_bg_pos = pygame.Vector2(0, WINDOW_HEIGHT - UI["battle_menu"]["main_background"].get_height())
 
         # === skills menu position ===
         self.skills_bg_pos = self.main_menu_bg_pos + (112, 0)
-        SKILLS_MENU_BG.set_alpha(UI_OPACITY)
 
         # === end menu position ===
-        self.end_menu_pos = pygame.Vector2(WINDOW_WIDTH // 2 - SKILLS_MENU_BG.get_width() // 2,
-                                           WINDOW_HEIGHT // 2 - SKILLS_MENU_BG.get_height() // 2)
-        self.victory_text_pos = pygame.Vector2(WINDOW_WIDTH // 2 - VICTORY_TEXT.get_width() // 2,
+        self.end_menu_pos = pygame.Vector2(WINDOW_WIDTH // 2 - UI["battle_menu"]["skills_background"].get_width() // 2,
+                                           WINDOW_HEIGHT // 2 - UI["battle_menu"]["skills_background"].get_height() // 2)
+        self.victory_text_pos = pygame.Vector2(WINDOW_WIDTH // 2 - UI["titles"]["victory_title"].get_width() // 2,
                                                self.end_menu_pos.y + 4)
 
         # === enum states ===
         self.state = CombatMenuState.MAIN_MENU
 
-        # === player's mana amount ===
-        self.player_mana: int = 0
 
-    def draw(self, window: pygame.Surface, current_mana: int) -> None:
+    def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
         self.update()
-        self.player_mana = current_mana
-
+        self.performer = performer
         if not self.state == CombatMenuState.END_MENU and self.state:
-            window.blit(COMBAT_MENU_MAIN_BG, self.main_menu_bg_pos)
+            window.blit(UI["battle_menu"]["main_background"], self.main_menu_bg_pos)
             self.draw_main_menu()
 
         # === buttons are drawn through the main menu skills button's function ===
         if self.state == CombatMenuState.SKILLS_MENU:
-            window.blit(SKILLS_MENU_BG, self.skills_bg_pos)
+            window.blit(UI["battle_menu"]["skills_background"], self.skills_bg_pos)
 
         elif self.state == CombatMenuState.END_MENU:
-            window.blit(SKILLS_MENU_BG, self.end_menu_pos)
-            window.blit(VICTORY_TEXT, self.victory_text_pos)
+            window.blit(UI["battle_menu"]["skills_background"], self.end_menu_pos)
+            window.blit(UI["titles"]["victory_title"], self.victory_text_pos)
             self.draw_end_menu()
 
         for button in self.buttons_group:
@@ -470,15 +485,15 @@ class CombatMenu:
             button_offset = (6, 7)
             pos = self.main_menu_bg_pos + button_offset
 
-            Button(self.buttons_group, None, None, "SKILLS", ButtonVariant.DEFAULT,
+            Button(self.buttons_group, None, None, "SKILLS", ButtonVariant.MEDIUM,
                    pos, False)
 
             y_offset = (0, 34)
-            Button(self.buttons_group, None, self.run_function, "ITEMS", ButtonVariant.DEFAULT,
+            Button(self.buttons_group, None, self.run_function, "ITEMS", ButtonVariant.MEDIUM,
                    pos + y_offset, False)
 
             y_offset = (0, 68)
-            Button(self.buttons_group, None, self.run_function, "RUN", ButtonVariant.DEFAULT,
+            Button(self.buttons_group, None, self.run_function, "RUN", ButtonVariant.MEDIUM,
                    pos + y_offset, False)
 
     def draw_end_menu(self) -> None:
@@ -499,12 +514,12 @@ class CombatMenu:
             return mana_amount >= cost
 
         if not self.skills_buttons:
-            for index, skill_name in enumerate(self.player_skills):
+            for index, skill_name in enumerate(self.performer.skills):
 
                 y_offset = (0, 20 * index)
                 padding = (6, 6)
                 pos = self.skills_bg_pos + padding + y_offset
-                if can_use_skill(skill_name, self.player_mana):
+                if can_use_skill(skill_name, self.performer.mana):
                     Button([self.buttons_group, self.skills_buttons], skill_name, self.attack_function, skill_name,
                            ButtonVariant.WIDE, pos, False)
                 else:
@@ -515,7 +530,7 @@ class CombatMenu:
 class MenuBook:
     def __init__(self, player):
         self.player = player
-        self.image = BOOK_IMAGE
+        self.image = UI["book"]["default_image"]
         self.book_width, self.book_height = self.image.get_size()
         self.frame = 0
         self.state = None
@@ -534,14 +549,13 @@ class MenuBook:
             BookState.CLOSE_BOOK: {"sprites": "close_book", "offset": self.pos + pygame.Vector2(0, -160)}
         }
 
-        self.content = [{"title": INFO_TITLE, "content": self.info_page}]
+        self.content = [{"title": UI["titles"]["info_title"], "content": self.info_page}]
         self.current_page = 0
         self.buttons_group = pygame.sprite.Group()
 
     def draw(self, window):
         self.update()
         if self.running:
-            # self.image.set_alpha(235)
             window.blit(self.image, self.pos)
 
         if not self.state and self.running: self.contents(window)
@@ -574,7 +588,7 @@ class MenuBook:
                 self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
         else:
             self.frame = 0
-            self.image = BOOK_IMAGE
+            self.image = UI["book"]["default_image"]
             self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,
                                       WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
@@ -584,13 +598,13 @@ class MenuBook:
 
         container_width = 100
         title_pos = self.base_pos + (container_width - title.get_width() // 2, 28)
-        divider = DIVIDER
+        divider = UI["book"]["divider"]
         divider_pos = title_pos + (title.get_width() // 2 - divider.get_width() // 2 + 16, 8)
         window.blit(divider, divider_pos)
         window.blit(title, title_pos)
 
     def info_page(self, window):
-        image = INFO_PAGE
+        image = UI["book"]["info_page"]
         image_pos = self.base_pos + (68, 64)
         window.blit(image, image_pos)
 

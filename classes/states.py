@@ -45,9 +45,9 @@ class CombatMenuState(Enum):
 
 
 class ButtonVariant(Enum):
-    SMALL = auto()
-    DEFAULT = auto()
-    WIDE = auto()
+    SMALL = "small"
+    MEDIUM = "medium"
+    WIDE = "large"
 
 class AttackType(Enum):
     PHYSICAL = "physical"

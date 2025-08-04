@@ -404,6 +404,7 @@ class Entity(pygame.sprite.Sprite):
 
 
         target.hp -= damage
+        target.hp = max(target.hp, 0)
         target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
 
         if not target.hp <= 0 and not target.blocking:
