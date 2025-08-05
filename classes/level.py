@@ -168,12 +168,12 @@ class Level:
         }
 
         now = datetime.now().hour
-        closest_time = 5
+        closest_time = 24
         for time in day_phases.keys():
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[20]
+        current_phase = day_phases[closest_time]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])

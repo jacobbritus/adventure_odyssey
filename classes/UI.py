@@ -307,17 +307,17 @@ class StatusBar:
             else:
                 self.opacity = 0
 
-    def interact(self):
+    def mouse_interactions(self) -> None: # will be used for a feature (status effects?)
         mouse_pos = pygame.mouse.get_pos()
+        press = pygame.mouse.get_pressed()[0]
 
         rect = self.bg_bar.get_rect(topleft = self.background_box_pos)
 
-        print(rect)
-
-        if rect.collidepoint(mouse_pos):
+        if rect.collidepoint(mouse_pos) and press:
+            self.display_exp = True
             self.opacity = UI_OPACITY
         else:
-            self.opacity = 150
+                self.opacity = UI_OPACITY
 
     def draw(self, window, display_exp: bool) -> None:
         """Draw all the images on the window"""
@@ -329,9 +329,10 @@ class StatusBar:
 
         self.update_stat_text()
 
+        self.mouse_interactions()
+
 
         elements = self.draw_components()
-        self.interact()
         for surface, pos in elements:
             surface.set_alpha(self.opacity)
 
@@ -839,7 +840,7 @@ class MenuBook:
                     Button(self.buttons_group, None, self.level_up, "", ButtonVariant.SMALL, position, False)
 
             for button in self.buttons_group:
-                button.draw(window)
+                button.draw(window, UI_OPACITY)
 
     def level_up(self):
         for button in self.buttons_group:

@@ -27,22 +27,21 @@ class BattleLoop:
         self.winner = None
 
         # === UI setup ===
-        self.combat_menu = BattleMenu(performer= heroes[0], functions = [self.get_player_input, self.end_battle])
+        self.combat_menu = BattleMenu(performer=heroes[0], functions=[self.get_player_input, self.end_battle])
         self.player_hp_bar = StatusBar(
             owner=self.heroes[0],
-            y_offset = 0)
-
+            y_offset=0)
 
         self.enemy_hp_bars_test = {}
 
         for index, enemy in enumerate(self.enemies):
             self.enemy_hp_bars_test.update({enemy: EnemyStatusBar(
-                owner = enemy)})
+                owner=enemy)})
 
         # === battle state ===
         # player turn, player animation, enemy turn, enemy animation, end screen and end battle.
         participants = [*self.enemies, *self.heroes]
-        participants.sort(key = lambda x: x.core_stats["speed"], reverse = True)
+        participants.sort(key=lambda x: x.core_stats["speed"], reverse=True)
 
         self.battle_queue = deque(participants)
 
@@ -84,13 +83,11 @@ class BattleLoop:
         self.click_sound_played = False
         self.hover_sound_played = False
 
-
-
     def set_delay(self, ms):
         self.delay = self.current_time + ms
 
     def top_screen_description(self, window):
-        if self.state in [BattleState.PLAYER_TURN]:
+        if self.state == BattleState.PLAYER_TURN:
             for button in self.combat_menu.buttons_group:
                 internal_name = button.text_string.replace(" ", "_").lower()
                 if internal_name in MOVES.keys():
@@ -113,28 +110,22 @@ class BattleLoop:
         # === update and render the background and text ===
         if self.battle_text_string and not self.state in [BattleState.END_BATTLE]:
             self.battle_text_bg_pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.battle_text_bg.get_width() // 2,
-                           32)
+                                                     32)
             self.battle_text_surface = self.font.render(self.battle_text_string, True, (255, 255, 255))
-            self.battle_text_pos = self.battle_text_bg_pos + (self.battle_text_bg.get_width() // 2 - self.battle_text_surface.get_width() // 2,
-                                                              6)
+            self.battle_text_pos = self.battle_text_bg_pos + (
+                self.battle_text_bg.get_width() // 2 - self.battle_text_surface.get_width() // 2,
+                6)
         elif not self.battle_text_string:
             self.battle_text_surface = None
             self.battle_text_opacity = 0
-
 
         # === blit the text ===
         if self.battle_text_surface:
             self.battle_text_bg.set_alpha(min(self.battle_text_opacity, UI_OPACITY))
             self.battle_text_surface.set_alpha(min(self.battle_text_opacity, UI_OPACITY))
-            self.battle_text_opacity += 20
-            window.blit(self.battle_text_bg,self.battle_text_bg_pos)
-            window.blit(self.battle_text_surface,self.battle_text_pos)
-
-
-
-
-
-
+            self.battle_text_opacity += 10
+            window.blit(self.battle_text_bg, self.battle_text_bg_pos)
+            window.blit(self.battle_text_surface, self.battle_text_pos)
 
     def get_mouse_input(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
@@ -171,15 +162,12 @@ class BattleLoop:
             self.hover_sound_played = False
             self.click_sound_played = False
 
-
     def run(self) -> None:
         """The main loop."""
         self.current_time = pygame.time.get_ticks()
         self.animations()
 
         self.draw_ui()
-
-
 
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -204,14 +192,12 @@ class BattleLoop:
                 # branch to win_menu and lose_menu
                 self.combat_menu.state = CombatMenuState.END_MENU
 
-
-
-
-
     def screen_messages(self) -> None:
         """Displays and updates screen messages like damage dealt, recovered, critical hits, etc."""
-        self.screen_messages_group.update()
-        self.screen_messages_group.draw(self.window)
+        for screen_message in self.screen_messages_group:
+            screen_message.update()
+            screen_message.draw(self.window)
+
 
         participants = [*self.heroes, *self.enemies]
 
@@ -222,7 +208,7 @@ class BattleLoop:
                     ScreenMessages(self.screen_messages_group, value, color, number_offset, participant)
                     number_offset += 1
                 elif message_type == "perfect_block":
-                    offset = -4 if participant in self.heroes else 0.5
+                    offset = -4 if participant in self.heroes else 1
                     ScreenMessages(self.screen_messages_group, value, color, offset, participant)
                 elif message_type == "critical_hit":
                     offset = -2 if participant in self.heroes else 0.5
@@ -233,17 +219,15 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        if not self.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
-            self.player_hp_bar.draw(self.window, False)
-
-            for enemy, hp_bar in self.enemy_hp_bars_test.items():
-                hp_bar.draw(self.window, enemy.screen_position + (12, 12))
-        elif self.state in [BattleState.END_MENU]:
-
-
+        if self.state in [BattleState.END_MENU] and self.winner == self.heroes:
             self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
             self.player_hp_bar.draw(self.window, True)
 
+        elif not self.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
+            self.player_hp_bar.draw(self.window, False)
+
+        for enemy, hp_bar in self.enemy_hp_bars_test.items():
+            hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
 
         if self.state == BattleState.PLAYER_TURN:
@@ -278,7 +262,6 @@ class BattleLoop:
         self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
         self.handle_attack()
 
-
     def handle_attack(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
         if MOVES[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
@@ -290,7 +273,6 @@ class BattleLoop:
             self.performer.spawn_projectile = False
             self.set_delay(1000)
             self.performer.animation_state = AnimationState.WAIT
-
 
     def enemy_turn(self) -> None:
         """Picks a random attack choice for the enemy."""
@@ -347,7 +329,7 @@ class BattleLoop:
 
         # === ATTACK > [ RETURN ] > IDLE ===
         elif performer.animation_state == AnimationState.RETURN:
-            if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
+            if not target.hp <= 0: target.action = "idle"  # change to animation state enemy hurt in entity
 
             if self.current_time >= self.delay:
                 performer.return_animation(performer.battle_pos)
@@ -368,14 +350,13 @@ class BattleLoop:
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
         elif performer.animation_state == AnimationState.IDLE:
 
-            if not target.hp <= 0: target.action = "idle" # change to animation state enemy hurt in entity
+            if not target.hp <= 0: target.action = "idle"  # change to animation state enemy hurt in entity
             if self.current_time >= self.delay:
 
                 self.performer.current_attack = None
 
                 self.battle_queue.rotate(-1)
                 self.performer = self.battle_queue[0]
-
 
                 if self.performer.type == "player":
                     # === set an enemy target ===
@@ -384,7 +365,7 @@ class BattleLoop:
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()
                     self.performer.mana += 1
-                    self.performer.screen_messages.append(("mana_recovered", 1, (150, 206, 255)))
+                    self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
 
                 else:
                     print("check2")

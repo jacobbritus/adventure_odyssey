@@ -373,7 +373,7 @@ class Entity(pygame.sprite.Sprite):
             if self.type == "player" and self.blocking:
                 play_sound("gameplay", "critical_hit", None)
                 self.critical_hit = True
-                self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
+                self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (255, 255, 102)))
 
                 # for projectile-based / non-repeating attacks:
                 if MOVES[self.current_attack]["type"] == "special":
@@ -386,7 +386,7 @@ class Entity(pygame.sprite.Sprite):
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
                 if self.critical_hit:
                     target.block_cooldown_end = pygame.time.get_ticks() + 0
-                    self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (0, 255, 0)))
+                    self.screen_messages.append(("critical_hit", "CRITICAL HIT!", (255, 255, 102)))
                     play_sound("gameplay", "critical_hit", None)
 
                 # for projectile-based / non-repeating attacks:
@@ -400,7 +400,7 @@ class Entity(pygame.sprite.Sprite):
             target.blocking = random.choices(bools, k=1, weights=weights)[0]
 
         if target.blocking:
-            target.screen_messages.append(("perfect_block", "PERFECT_BLOCK!", (0, 0, 255)))
+            target.screen_messages.append(("perfect_block", "PERFECT BLOCK!", (200, 255, 150)))
 
             damage //= 2
             play_sound("gameplay", "perfect_block", None)
@@ -408,7 +408,7 @@ class Entity(pygame.sprite.Sprite):
 
         target.hp -= damage
         target.hp = max(target.hp, 0)
-        target.screen_messages.append(("hp_dealt", damage, (255, 0, 0)))
+        target.screen_messages.append(("hp_dealt", "-" + str(damage), (217, 87, 99)))
 
         if not target.hp <= 0 and not target.blocking:
             target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255),

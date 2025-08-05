@@ -8,7 +8,6 @@ def text_bg_effect(text, font, pos, window):
     box_surf = pygame.Surface(box_size, pygame.SRCALPHA)  # Support transparency
     box_surf.fill((81, 57, 44, 255))  # Light translucent background
 
-
     if window:
         window.blit(text, pos + (2, 0))
         window.blit(text, pos + (2, 2))
