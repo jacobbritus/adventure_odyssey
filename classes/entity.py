@@ -46,6 +46,7 @@ class Entity(pygame.sprite.Sprite):
         self.delta_time = FPS / 1000
 
         # === battle stuff ===
+        self.hp_bar = None
         self.in_battle = False
         self.pre_battle_pos = None
         self.battle_pos = None

@@ -171,7 +171,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        second_enemy = random.choices([True, False], k=1, weights = [0.9, 0.1])[0]
+        second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
         if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
 
 
@@ -285,9 +285,18 @@ class YSortCameraGroup(pygame.sprite.Group):
         if self.battle_loop.winner == heroes:
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
 
+        else:
+            player.hp = player.max_hp
+            player.death = False
+            player.x, player.y = player.spawn
+            player.rect.topleft = player.spawn
+
 
         # === go back to initiate pos ====
         for participant in [player, original_enemy]:
+            if participant == player and self.battle_loop.winner == enemies:
+                participant.in_battle = False
+                continue
             participant.in_battle = False
             participant.rect.topleft = participant.pre_battle_pos
             participant.x, participant.y = participant.pre_battle_pos

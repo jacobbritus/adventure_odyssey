@@ -12,7 +12,8 @@ from classes.player import Player, DustParticle
 from classes.Tiles import StaticTile, AnimatedTile
 from pytmx.util_pygame import load_pygame
 from classes.states import BattleState, LevelState
-from classes.UI import MenuBook
+from classes.UI import MenuBook, StatusBar
+
 
 class Level:
     """A class to manage the game level."""
@@ -33,6 +34,10 @@ class Level:
 
         self.day_cycle_overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.create_map()
+
+        self.player.hp_bar = StatusBar(
+            owner=self.player,
+            y_offset=0)
 
 
     def create_map(self):
@@ -147,11 +152,9 @@ class Level:
         self.visible_sprites.update_camera(self.player)
 
         self.update_day_cycle()
+        self.player.hp_bar.draw(self.display_surface)
+
         self.visible_sprites.transition_screen()
-
-
-
-
         self.menu.draw(self.display_surface, )
 
     def update_day_cycle(self):

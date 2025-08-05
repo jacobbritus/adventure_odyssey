@@ -54,15 +54,19 @@ class StatusBar:
 
         self.bars = None
 
+
         self.setup_small_hp_bar()
         self.stats = ["hp"]
 
         self.opacity = UI_OPACITY
+        self.visible = False
+        self.press_delay = 0
+        self.x_offset = UI["status_bar"]["background"].get_width() - 32
 
         if self.owner.type == "player":
             self.stats.extend(["mana", "exp"])
 
-            self.setup_hero_status_bar(y_offset)
+            self.setup_hero_status_bar(y_offset, )
         self.setup_status_bars()
 
     def setup_small_hp_bar(self):
@@ -78,7 +82,7 @@ class StatusBar:
 
         self.bg_bar = UI["status_bar"]["background"]
 
-        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - bg_width, WINDOW_HEIGHT - menu_height + y_offset)
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - bg_width + self.x_offset, WINDOW_HEIGHT - menu_height + y_offset)
         self.name_surface = self.font.render(str(self.owner.name).upper(), True, (255, 255, 255))
         self.name_pos = self.background_box_pos + pygame.Vector2(36, 2)
 
@@ -309,19 +313,44 @@ class StatusBar:
 
     def mouse_interactions(self) -> None: # will be used for a feature (status effects?)
         mouse_pos = pygame.mouse.get_pos()
-        press = pygame.mouse.get_pressed()[0]
+        press = pygame.mouse.get_pressed()
+
 
         rect = self.bg_bar.get_rect(topleft = self.background_box_pos)
 
-        if rect.collidepoint(mouse_pos) and press:
-            self.display_exp = True
-            self.opacity = UI_OPACITY
-        else:
-                self.opacity = UI_OPACITY
+        if rect.collidepoint(mouse_pos):
+            if press[0] and pygame.time.get_ticks() >= self.press_delay:
+                if not self.visible:
+                    self.visible = True
+                else:
+                    self.visible = False
 
-    def draw(self, window, display_exp: bool) -> None:
+                self.press_delay = pygame.time.get_ticks() + 250
+
+            if press[2] and pygame.time.get_ticks() >= self.press_delay:
+                if not self.display_exp:
+                    self.display_exp = True
+
+                else:
+                    self.display_exp = False
+
+                self.press_delay = pygame.time.get_ticks() + 250
+
+
+
+        if self.visible:
+            self.x_offset = max(self.x_offset - 25, 0)
+            self.setup_hero_status_bar(0)
+        elif not self.visible:
+            self.x_offset = min(self.x_offset + 25, self.bg_bar.get_width() - 32)
+            self.setup_hero_status_bar(0)
+
+
+
+
+    def draw(self, window) -> None:
         """Draw all the images on the window"""
-        self.display_exp = display_exp
+        self.mouse_interactions()
 
         self.set_bars()
 
@@ -329,12 +358,8 @@ class StatusBar:
 
         self.update_stat_text()
 
-        self.mouse_interactions()
-
-
         elements = self.draw_components()
         for surface, pos in elements:
-            surface.set_alpha(self.opacity)
 
             window.blit(surface, pos)
 
@@ -581,7 +606,7 @@ class BattleMenu:
                                                self.end_menu_pos.y + 4)
 
         # === enum states ===
-        self.state = CombatMenuState.MAIN_MENU
+        self.state = None
         self.opacity = 0
         self.visible = False
         self.main_menu_bg = UI["battle_menu"]["main_background"]
@@ -612,8 +637,6 @@ class BattleMenu:
             window.blit(self.skills_menu_bg, self.skills_bg_pos)
 
         elif self.state == CombatMenuState.END_MENU:
-            # window.blit(UI["battle_menu"]["skills_background"], self.end_menu_pos)
-            # window.blit(UI["titles"]["victory_title"], self.victory_text_pos)
             self.draw_end_menu()
 
         for button in self.buttons_group:

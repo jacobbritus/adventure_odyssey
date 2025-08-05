@@ -18,6 +18,7 @@ class Player(Entity):
         self.name = "jacob"
 
         # Location
+        self.spawn = spawn_coordinates
         self.x: int = spawn_coordinates[0]
         self.y: int = spawn_coordinates[1]
         self.screen_position = pygame.math.Vector2
@@ -86,6 +87,20 @@ class Player(Entity):
                 self.blocking = True
                 self.block_cooldown_end = pygame.time.get_ticks() + 2000
 
+
+    def hotkeys(self, event, hp_bar):
+
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
+            if not hp_bar.visible:
+                hp_bar.visible = True
+            else:
+                hp_bar.visible = False
+
+
+
+
+
     def controls(self) -> None:
         """Perform actions based on the key pressed"""
         key_pressed = pygame.key.get_pressed()
@@ -136,7 +151,7 @@ class Player(Entity):
 
 
     def exp_gain(self, exp_gained):
-
+        self.hp_bar.display_exp = True
         if self.exp >= self.max_exp:
             self.exp = self.max_exp
             self.exp_track = math.floor(self.exp_track)
@@ -162,6 +177,8 @@ class Player(Entity):
                 self.exp = round(self.exp)
             else:
                 self.leveling = True
+                self.hp_bar.visible = True
+                self.hp_bar.display_exp = True
 
 
 

@@ -27,6 +27,13 @@ class Game:
                     self.level.player.blocking_critical_hotkey(event)
 
 
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
+                    if not self.level.player.hp_bar.visible:
+                        self.level.player.hp_bar.visible = True
+                    else:
+                        self.level.player.hp_bar.visible = False
+
+
             delta_time = self.clock.tick(FPS)
 
             self.level.player.get_dt(delta_time)

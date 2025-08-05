@@ -28,9 +28,11 @@ class BattleLoop:
 
         # === UI setup ===
         self.combat_menu = BattleMenu(performer=heroes[0], functions=[self.get_player_input, self.end_battle])
-        self.player_hp_bar = StatusBar(
+        self.player.hp_bar = StatusBar(
             owner=self.heroes[0],
             y_offset=0)
+        self.player.hp_bar.visible = True
+        self.player.hp_bar.setup_hero_status_bar(0)
 
         self.enemy_hp_bars_test = {}
 
@@ -50,6 +52,7 @@ class BattleLoop:
 
         if self.performer.type == "player":
             self.state = BattleState.PLAYER_TURN
+            self.combat_menu.state = CombatMenuState.MAIN_MENU
 
         else:
             self.state = BattleState.ENEMY_TURN
@@ -178,7 +181,7 @@ class BattleLoop:
             elif self.state == BattleState.ENEMY_TURN:
                 self.enemy_turn()
 
-            elif self.state == BattleState.END_BATTLE:
+            elif self.state == BattleState.END_BATTLE and pygame.time.get_ticks() >= self.delay:
                 self.return_to_overworld = True
                 time = 5000
                 self.player.post_battle_iframes = pygame.time.get_ticks() + time
@@ -191,6 +194,7 @@ class BattleLoop:
 
                 # branch to win_menu and lose_menu
                 self.combat_menu.state = CombatMenuState.END_MENU
+
 
     def screen_messages(self) -> None:
         """Displays and updates screen messages like damage dealt, recovered, critical hits, etc."""
@@ -219,18 +223,21 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        if self.state in [BattleState.END_MENU] and self.winner == self.heroes:
-            self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
-            self.player_hp_bar.draw(self.window, True)
+        if not self.state == BattleState.END_BATTLE:
+            self.player.hp_bar.draw(self.window)
 
-        elif not self.state in [BattleState.END_MENU, BattleState.END_BATTLE]:
-            self.player_hp_bar.draw(self.window, False)
+            if self.winner == self.heroes:
+                self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
 
-        for enemy, hp_bar in self.enemy_hp_bars_test.items():
-            hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+            for enemy, hp_bar in self.enemy_hp_bars_test.items():
+                if enemy.screen_position:
+                    hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
 
-        if self.state == BattleState.PLAYER_TURN:
+
+
+
+        if self.state == BattleState.PLAYER_TURN or self.winner == self.enemies:
             self.combat_menu.visible = True
 
         elif self.state == BattleState.END_MENU and all(not hero.leveling for hero in self.heroes):
@@ -244,6 +251,8 @@ class BattleLoop:
 
     def end_battle(self) -> None:
         """End battle when the player picks run / this function."""
+        self.set_delay(2000)
+
         self.state = BattleState.END_BATTLE
 
     def get_player_input(self, attack) -> None:
@@ -347,6 +356,7 @@ class BattleLoop:
             self.performer.current_attack = None
             self.state = BattleState.END_MENU
 
+
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
         elif performer.animation_state == AnimationState.IDLE:
 
@@ -358,7 +368,11 @@ class BattleLoop:
                 self.battle_queue.rotate(-1)
                 self.performer = self.battle_queue[0]
 
-                if self.performer.type == "player":
+                if self.winner:
+                    self.combat_menu.state = CombatMenuState.END_MENU
+                    self.combat_menu.buttons_group = pygame.sprite.Group()
+
+                elif self.performer.type == "player":
                     # === set an enemy target ===
                     self.target = [enemy for enemy in self.enemies if not enemy.death][0]
                     self.state = BattleState.PLAYER_TURN
@@ -368,9 +382,9 @@ class BattleLoop:
                     self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
 
                 else:
-                    print("check2")
-
                     self.state = BattleState.ENEMY_TURN
+
+
                 self.set_delay(1000)
                 self.battle_text_string = None
 
