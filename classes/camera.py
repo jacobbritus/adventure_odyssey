@@ -51,10 +51,13 @@ class YSortCameraGroup(pygame.sprite.Group):
         """Get all sprites that are visible on the screen."""
         inflated_display_rect = self.display_rect.inflate(200, 300)
         for sprite in self.sprites():
-            if sprite.type == "enemy":
-                sprite.visibility = True
+
             offset_pos = sprite.rect.topleft - self.offset
             if inflated_display_rect.collidepoint(offset_pos):
+
+                if sprite.type == "enemy":
+                    sprite.visibility = True
+
                 yield sprite
 
     def update_camera(self, player):
@@ -271,18 +274,16 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.transition_timer = None
 
     def end_battle(self):
+        heroes = self.battle_participants["heroes"]
         player = self.battle_participants["heroes"][0]
         original_enemy = self.battle_participants["enemies"][0]
         enemies = self.battle_participants["enemies"]
 
-        exp_gained = 0
         for index, enemy in enumerate(enemies):
-            exp_gained += enemy.exp
             if not index == 0: enemy.kill()
 
-        if self.battle_loop.winner == player:
+        if self.battle_loop.winner == heroes:
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
-            player.handle_exp_gain(exp_gained)
 
 
         # === go back to initiate pos ====

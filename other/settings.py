@@ -9,7 +9,7 @@ from other.png_to_sprite import *
 SCALE = 2
 MUSIC_VOLUME = 0.25
 EFFECT_VOLUME = 0.5
-UI_OPACITY = 200
+UI_OPACITY = 150
 
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480

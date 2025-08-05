@@ -22,7 +22,7 @@ class Enemy(Entity):
 
         # Battle related
         self.level = 1
-        self.exp = 500
+        self.exp = 50
         self.hp = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5

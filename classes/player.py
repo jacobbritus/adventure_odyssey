@@ -43,11 +43,14 @@ class Player(Entity):
 
         # Stats
         self.level = 1
-        self.exp_to_level = 50
-        self.leveled_up = True
-        self.stat_points = 5
 
         self.exp = 0
+        self.max_exp = 50
+        self.exp_track = 0
+        self.leveling = True
+        self.stat_points = 5
+        self.level_delay = 0
+
 
         # === core stats ===
         self.core_stats = {
@@ -59,7 +62,7 @@ class Player(Entity):
             "luck": 7,
         }
 
-        self.hp: int = int(1 + 1.5 * self.core_stats["vitality"])
+        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.mana: int = 2
         self.max_mana = 5
@@ -128,42 +131,49 @@ class Player(Entity):
         else:
             self.action = "idle"
 
-
-
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
-    def handle_exp_gain(self, exp_amount):
-        """Handle experience gained from battles."""
-        self.exp += exp_amount
-        self.leveled_up = False
 
-        levels_gained = 0
-        current_exp_to_level = self.exp_to_level
-        remaining_exp = self.exp
+    def exp_gain(self, exp_gained):
 
-        for _ in range(100):
-            if remaining_exp >= current_exp_to_level:
-                remaining_exp -= current_exp_to_level
-                current_exp_to_level *= 2
-                levels_gained += 1
+        if self.exp >= self.max_exp:
+            self.exp = self.max_exp
+            self.exp_track = math.floor(self.exp_track)
+
+            self.level_delay += 0.1
+            if self.level_delay >= 5:
+                self.level += 1
+                self.stat_points += 1
+                self.level_delay = 0
+                self.exp = 0
+                self.max_exp = self.max_exp + 20
+
+        if not self.exp_track >= exp_gained and not self.level_delay:
+            diff = exp_gained - self.exp_track
+            speed = max(diff * 0.010, 0.5)
+
+            self.exp_track += speed
+            self.exp += speed
+
+            if self.exp_track >= exp_gained:
+                self.leveling = False
+                self.exp_track = exp_gained
+                self.exp = round(self.exp)
             else:
-                break
+                self.leveling = True
 
-        if levels_gained > 0:
-            self.level += levels_gained
-            self.stat_points += levels_gained
-            self.exp = remaining_exp
-            self.exp_to_level = current_exp_to_level
-            self.leveled_up = True
+
+
+
+
 
     def level_up_animation(self, offset, window) -> None:
         """Draws an animating shining light on the player upon leveling up."""
-        if self.leveled_up:
-            StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
-            play_sound("gameplay", "level_up", None)
-
-            self.leveled_up = False
+        if self.exp >= self.max_exp:
+            if not self.level_up_visual:
+                StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
+                play_sound("gameplay", "level_up", None)
 
 
 

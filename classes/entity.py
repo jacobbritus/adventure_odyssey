@@ -123,14 +123,17 @@ class Entity(pygame.sprite.Sprite):
         self.delta_time = dt / 1000
 
     def footstep_sounds(self):
-        if not pygame.time.get_ticks() >= self.footstep_delay:
+        if not pygame.time.get_ticks() >= self.footstep_delay and self.visibility:
             return
 
+
         footstep_sound = random.choice(GRASS_FOOTSTEPS)
-        if not self.in_battle and self.type != "player":
-            footstep_sound.set_volume(EFFECT_VOLUME // 2)
-        else:
+
+        if self.type == "player" or self.in_battle:
             footstep_sound.set_volume(EFFECT_VOLUME)
+        else:
+            footstep_sound.set_volume(EFFECT_VOLUME /2)
+
 
         channel = pygame.mixer.find_channel()
         if channel:
@@ -172,7 +175,7 @@ class Entity(pygame.sprite.Sprite):
             self.y -= dy
             self.update_pos()
             return True
-        if self.visibility: self.footstep_sounds()
+        self.footstep_sounds()
 
         return False
 
