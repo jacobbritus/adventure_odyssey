@@ -63,8 +63,8 @@ class Enemy(Entity):
             "luck": 7,
         }
             combat_moves = ["sword_slash"]
-            critical_hit_chance = 0.5
-            blocking_chance = 0.1
+            critical_hit_chance = 0.9
+            blocking_chance = 0.9
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":

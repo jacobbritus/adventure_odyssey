@@ -88,7 +88,13 @@ player_sprites = {
             "left": sprite_converter("sprites/characters/jacob.png", 10, 5, 96, 80, True),
         },
         "sound": "sounds/skeleton_death.wav",
-        "impact_frame": None}
+        "impact_frame": None},
+    "blocking": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/jacob.png", 12, 1, 96, 80, False),
+                "left": sprite_converter("sprites/characters/jacob.png", 12, 1, 96, 80, True),
+        }
+    }
 }
 
 
@@ -130,8 +136,12 @@ skeleton_sprites = {
         },
         "sound": "sounds/skeleton_death.wav",
         "impact_frame": None
-
-    }
+    },
+    "blocking": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 13, 1, 96, 80, False),
+                "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 13, 1, 96, 80, True),
+        }}
 
 }
 
@@ -234,8 +244,15 @@ goblin_sprites = {
             "left": sprite_converter("sprites/characters/goblin.png", 7, 3, 96, 80, True),
         },
         "sound": "sounds/death.wav"
+},
+"blocking": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/goblin.png", 8, 1, 96, 80, False),
+                "left": sprite_converter("sprites/characters/goblin.png", 8, 1, 96, 80, True),
+        }}
 
-}}
+
+}
 
 lightning_sprites = sprite_converter("sprites/particles/lightning.png", 0, 10, 128, 256, False)
 

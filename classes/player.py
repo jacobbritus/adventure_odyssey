@@ -49,15 +49,12 @@ class Player(Entity):
 
         self.exp = 0
         self.max_exp = 50
-        self.exp_track = 0
         self.total_exp = 0
         self.close_hp_bar_time = 0
 
 
         self.leveling = True
-        self.stat_points = 5
-        self.level_delay = 0
-        self.level_end_delay = 0
+        self.stat_points = 1
 
 
         # === core stats ===
@@ -153,7 +150,7 @@ class Player(Entity):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
     def calculate_exp(self):
-        close_time = 1500
+        close_time = 4000
 
         if not self.exp >= self.total_exp and not self.exp == self.max_exp:
             # toggle hp_bar
@@ -166,7 +163,9 @@ class Player(Entity):
             self.close_hp_bar_time = pygame.time.get_ticks() + close_time
 
         if self.exp == self.max_exp:
-            if pygame.time.get_ticks() >= self.close_hp_bar_time - close_time // 3:
+            if pygame.time.get_ticks() >= self.close_hp_bar_time - close_time // 2:
+                self.level += 1
+                self.stat_points += 1
                 self.exp = 0
                 self.total_exp = max(self.total_exp - self.max_exp, 0)
                 self.max_exp += 20
@@ -178,7 +177,7 @@ class Player(Entity):
 
     def level_up_animation(self, offset, window) -> None:
         """Draws an animating shining light on the player upon leveling up."""
-        if self.exp >= self.max_exp:
+        if self.exp == self.max_exp:
             if not self.level_up_visual:
                 StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
                 play_sound("gameplay", "level_up", None)
@@ -203,7 +202,7 @@ class Player(Entity):
 
         self.blocking_mechanics(window, offset)
 
-
+        self.calculate_exp()
         self.controls()
 
         self.update_animations()

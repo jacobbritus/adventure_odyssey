@@ -48,6 +48,9 @@ class StatusBar:
         self.exp_text_surface = None
         self.exp_text_pos = None
 
+        self.level_surface = None
+        self.level_pos = None
+
         self.normal_speed = None
         self.delayed_speed = None
         self.bg_bar = None
@@ -58,7 +61,7 @@ class StatusBar:
         self.setup_small_hp_bar()
         self.stats = ["hp"]
 
-        self.opacity = UI_OPACITY
+        self.opacity = 0
         self.visible = False
         self.press_delay = 0
         self.x_offset = UI["status_bar"]["background"].get_width() - 32
@@ -94,7 +97,7 @@ class StatusBar:
         # === bar positions ===
         self.hp_bar_pos = self.background_box_pos + (165, 12)
         self.mana_bar_pos = self.background_box_pos + (257, 12)
-        self.exp_bar_pos = self.background_box_pos + (165, 12)
+        self.exp_bar_pos = self.background_box_pos + (188, 12)
 
         # === hp ===
         self.hp_icon = self.font.render("HP", True, (217, 87, 99))
@@ -111,13 +114,15 @@ class StatusBar:
         self.mana_text_pos = self.mana_bar_pos + (ui["hp_box"].get_width() - self.mana_text_surface.get_width(), -14)
 
         # === exp ===
-        self.exp_icon = self.font.render("EXP", True, (153, 229, 80))
+        self.exp_icon = self.font.render("EXP", True, (255, 215, 0))
         self.exp_icon_pos = self.exp_bar_pos + pygame.Vector2(-24, -7)
 
         self.exp = self.owner.exp
         self.exp_text_surface = self.font.render(f"{self.owner.exp}/{self.owner.max_exp}", True, (255, 255, 255))
         self.exp_text_pos = self.exp_bar_pos + (ui["exp_box"].get_width() - self.exp_text_surface.get_width(), -14)
 
+        self.level_surface = self.font.render(str(self.owner.level), True, (255, 215, 0))
+        self.level_pos = self.background_box_pos + (10, 2)
 
     def setup_status_bars(self) -> None:
         self.normal_speed = 2
@@ -199,10 +204,14 @@ class StatusBar:
         ]
 
         if self.display_exp:
+            self.char_icon_pos += (23, 0)
+            self.name_pos += (23,0)
+
             additional_elements = [
                 (UI["status_bar"]["exp_box"], self.exp_bar_pos),
                 (self.bars["exp"]["bar"], self.exp_bar_pos),
                 (self.exp_text_surface, self.exp_text_pos),
+                (self.level_surface, self.level_pos),
 
                 (self.exp_icon, self.exp_icon_pos),
 
@@ -210,12 +219,14 @@ class StatusBar:
             ]
             elements += additional_elements
 
-            additional_text_bgs = [
+            text_bgs = [
+                *text_bg_effect(str(self.owner.level), self.font, self.level_pos, None),
+
+                *text_bg_effect(self.owner.name.upper(), self.font, self.name_pos, None),
                 *text_bg_effect(f"EXP", self.font, self.exp_icon_pos, None),
 
                  *text_bg_effect(f"{int(self.exp)}/{self.owner.max_exp}", self.font, self.exp_text_pos, None),
             ]
-            text_bgs += additional_text_bgs
 
         else:
             additional_elements = [
@@ -301,15 +312,39 @@ class StatusBar:
         if self.display_exp:
             # if round(self.bars["exp"]["current_width"]) == round(self.bars["exp"]["target_width"]):
             if self.owner.exp == self.owner.max_exp:
-                mask = pygame.mask.from_surface(self.bars["exp"]["bar"]).to_surface(setcolor=(170, 250, 170, min(self.opacity, 250)),
+                self.opacity = min(self.opacity + 5, 225)
+
+                for element, pos in elements:
+
+                    mask = pygame.mask.from_surface(element).to_surface(setcolor=(255, 255, 255, self.opacity),
                                                                  unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, self.exp_bar_pos)
-                self.opacity += 10
 
+                    window.blit(mask, pos)
 
+                    if self.opacity >= 150:
+                        print("check")
+                    self.level_up_text(window)
 
             else:
                 self.opacity = 0
+
+    def level_up_text(self, window):
+        text = "L    E    V    E    L        U    P"
+        # text2 = strin
+
+        level_up_text = self.font.render(text, True, (255, 215, 0))
+        level_up_text.set_alpha(self.opacity)
+        level_up_text_pos = self.exp_icon_pos - (72, 4)
+
+        bg = text_bg_effect(text, self.font, level_up_text_pos, None)
+
+        for text, bg_pos in bg:
+            text.set_alpha(self.opacity)
+            window.blit(text, bg_pos)
+
+        window.blit(level_up_text, level_up_text_pos)
+
+
 
     def mouse_interactions(self) -> None: # will be used for a feature (status effects?)
         mouse_pos = pygame.mouse.get_pos()
@@ -573,7 +608,7 @@ class Button(pygame.sprite.Sprite):
     def draw(self, window, opacity):
         window.blit(self.image, self.pos)
 
-        if self.text_surface:
+        if not self.button_type == "no_text":
             color = (99, 61, 76) if not self.hovering else (236, 226, 196)
             text = self.text_string[0] if self.button_type == "item_button" else self.text_string
             self.text_surface = self.font.render(text, True, color)
@@ -720,7 +755,7 @@ class BattleMenu:
                     self.state = None
                     self.buttons_group = pygame.sprite.Group()
 
-                elif button in self.inventory_buttons:
+                elif self.inventory_buttons and button in self.inventory_buttons:
                     self.state = None
                     self.buttons_group = pygame.sprite.Group()
 

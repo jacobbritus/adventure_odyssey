@@ -99,7 +99,15 @@ class Entity(pygame.sprite.Sprite):
 
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
+            # if not self.action == "blocking":
+            #     # self.action = "blocking"
+            #     self.frame = 0
+
             if self.animation_state in [AnimationState.IDLE, AnimationState.DEATH, AnimationState.HURT]:
+
+                self.image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 255),
+                                                                                 unsetcolor=(0, 0, 0, 0))
+
                 self.block_shield.direction = self.direction
                 if self.direction == "right":
                     shield_offset = (8, -36)
@@ -112,6 +120,8 @@ class Entity(pygame.sprite.Sprite):
 
             if pygame.time.get_ticks() >= self.block_duration:
                 self.blocking = False
+                self.action = "idle"
+
         else:
             self.block_duration = pygame.time.get_ticks() + 300
 
@@ -314,6 +324,7 @@ class Entity(pygame.sprite.Sprite):
                 self.handle_attack_impact(target)
 
                 if target.blocking:
+                    pygame.time.wait(50)
                     self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
                     target.blocked = True
                     push_back = -16 if self.direction == "right" else 16
@@ -327,9 +338,9 @@ class Entity(pygame.sprite.Sprite):
                 self.action = "idle"
                 self.frame = 0
 
+
             if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
                 self.hit_landed = False
-
                 # ___if critical hit___
                 if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
                     if target.blocked:
@@ -489,8 +500,15 @@ class Entity(pygame.sprite.Sprite):
                 mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 50),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+
             else:
                 self.hurt_mask_opacity = 0
+
+            if self.blocking:
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 150),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+
 
 
 

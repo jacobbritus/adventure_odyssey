@@ -44,8 +44,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.shake_duration = 0
         self.shake_intensity = 2
         self.shake_offset = pygame.Vector2(0, 0)
-
-
+        self.active_shake = False
 
     def get_visible_sprites(self):
         """Get all sprites that are visible on the screen."""
@@ -85,9 +84,21 @@ class YSortCameraGroup(pygame.sprite.Group):
             attack_target = self.battle_loop.target
 
             # === camera shake trigger ===
-            # if not self.shake_duration and performer.hit_landed and MOVES[performer.current_attack]["shake"]:
-            #     self.shake_duration = 200
-            #     self.shake_intensity = 1
+            if not self.active_shake :
+                self.active_shake = True
+
+                if performer.hit_landed and attack_target.blocking:# and MOVES[performer.current_attack]["shake"]:
+                    self.shake_duration = 2000
+
+                    self.shake_intensity = 1
+
+                if performer.hit_landed:
+                    self.shake_duration = 2000
+                    self.shake_intensity = 1
+
+
+
+
 
             if performer.spells:
                 if performer.animation_state in [AnimationState.BUFF, AnimationState.WAIT]:
@@ -107,6 +118,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_duration -= 100
             else:
+                self.active_shake = False
                 self.shake_offset = pygame.Vector2(0, 0)
 
             # === move offset to target by camera speed amount increments ===
