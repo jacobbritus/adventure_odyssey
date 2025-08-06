@@ -27,10 +27,8 @@ class BattleLoop:
         self.winner = None
 
         # === UI setup ===
-        self.combat_menu = BattleMenu(performer=heroes[0], functions=[self.get_player_input, self.end_battle])
-        self.player.hp_bar = StatusBar(
-            owner=self.heroes[0],
-            y_offset=0)
+        self.combat_menu = BattleMenu(self.player, performer=heroes[0], functions=[self.get_player_input, self.end_battle])
+
         self.player.hp_bar.visible = True
         self.player.hp_bar.setup_hero_status_bar(0)
 
@@ -133,37 +131,44 @@ class BattleLoop:
     def get_mouse_input(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
-        self.battle_text_string = "SELECT A TARGET"
-        self.battle_text_bg = UI["battle_message_box"]["small_background"]
 
-        for enemy in self.enemies:
-            pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
-            rect = pygame.Rect(pos.x, pos.y, 32, 32)
-            if rect.collidepoint(mouse_pos):
-                if press and not enemy.death:
-                    if not self.click_sound_played:
-                        play_sound("ui", "press", None)
-                    self.click_sound_played = True
+        if self.battle_text_bg_pos:
+            rect = UI["battle_message_box"]["small_background"].get_rect(topleft = self.battle_text_bg_pos)
 
-                    for other in self.enemies:
-                        other.selected = True
-                    self.target = enemy
-                    self.player_turn()
+            if rect.collidepoint(mouse_pos) and press:
+                print("oi mate")
 
-                    break
+        if self.state == BattleState.PLAYER_TURN and self.performer.current_attack:
+            self.battle_text_string = "SELECT A TARGET"
+            self.battle_text_bg = UI["battle_message_box"]["small_background"]
+            for enemy in self.enemies:
+                pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
+                rect = pygame.Rect(pos.x, pos.y, 32, 32)
+                if rect.collidepoint(mouse_pos):
+                    if press and not enemy.death:
+                        if not self.click_sound_played:
+                            play_sound("ui", "press", None)
+                        self.click_sound_played = True
+
+                        for other in self.enemies:
+                            other.selected = True
+                        self.target = enemy
+                        self.player_turn()
+
+                        break
+                    else:
+                        self.battle_text_string = enemy.name.upper()
+
+                        if not self.hover_sound_played:
+                            play_sound("ui", "hover", None)
+                            self.hover_sound_played = True
+                        enemy.selected = True
                 else:
-                    self.battle_text_string = enemy.name.upper()
+                    enemy.selected = False
 
-                    if not self.hover_sound_played:
-                        play_sound("ui", "hover", None)
-                        self.hover_sound_played = True
-                    enemy.selected = True
-            else:
-                enemy.selected = False
-
-        if all(not enemy.selected for enemy in self.enemies):
-            self.hover_sound_played = False
-            self.click_sound_played = False
+            if all(not enemy.selected for enemy in self.enemies):
+                self.hover_sound_played = False
+                self.click_sound_played = False
 
     def run(self) -> None:
         """The main loop."""
@@ -172,19 +177,21 @@ class BattleLoop:
 
         self.draw_ui()
 
+        self.get_mouse_input()
+
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
-                if self.performer.current_attack:
-                    self.get_mouse_input()
-
+                pass
 
             elif self.state == BattleState.ENEMY_TURN:
                 self.enemy_turn()
 
-            elif self.state == BattleState.END_BATTLE and pygame.time.get_ticks() >= self.delay:
-                self.return_to_overworld = True
-                time = 5000
+            elif self.state == BattleState.END_BATTLE:
+
+                time = 3000
                 self.player.post_battle_iframes = pygame.time.get_ticks() + time
+                self.return_to_overworld = True
+
 
             elif self.state == self.state.END_MENU:
                 if self.winner == self.heroes:
@@ -223,27 +230,44 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        if not self.state == BattleState.END_BATTLE:
-            self.player.hp_bar.draw(self.window)
+        self.player.hp_bar.draw(self.window)
 
-            if self.winner == self.heroes:
-                self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
+        if self.winner == self.heroes:
+            for hero in self.heroes:
+                hero.calculate_exp()
 
-            for enemy, hp_bar in self.enemy_hp_bars_test.items():
-                if enemy.screen_position:
-                    hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+            if not all(hero.leveling for hero in self.heroes):
+                self.state = BattleState.END_BATTLE
+            #
+            # if not self.player.level_end_delay:self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
+            # self.player.hp_bar.display_exp = True
+            #
+            # if not self.player.leveling:
+            #     print(self.player.leveling)
+            #     print(self.player.hp_bar.visible)
+            #     print(self.player.hp_bar.display_exp)
+            #     print(self.player.exp_track)
+            #     self.player.exp_track = 0
+            #     self.player.level_end_delay = 0
+            #
+            #     self.state = BattleState.END_BATTLE
 
 
 
+        for enemy, hp_bar in self.enemy_hp_bars_test.items():
+            if enemy.screen_position:
+                hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
 
         if self.state == BattleState.PLAYER_TURN or self.winner == self.enemies:
             self.combat_menu.visible = True
 
-        elif self.state == BattleState.END_MENU and all(not hero.leveling for hero in self.heroes):
-            self.combat_menu.visible = True
+        # elif self.state == BattleState.END_MENU and all(not hero.leveling for hero in self.heroes):
+        #     self.combat_menu.visible = True
         else:
-            self.combat_menu.opacity = False
+            self.combat_menu.visible = False
+
+
 
         self.combat_menu.draw(self.window, self.performer)
 
@@ -251,7 +275,7 @@ class BattleLoop:
 
     def end_battle(self) -> None:
         """End battle when the player picks run / this function."""
-        self.set_delay(2000)
+
 
         self.state = BattleState.END_BATTLE
 
@@ -347,10 +371,11 @@ class BattleLoop:
         elif all(enemy.hp <= 0 for enemy in self.enemies) or all(hero.hp <= 0 for hero in self.heroes):
             if all(enemy.hp <= 0 for enemy in self.enemies):
                 self.winner = self.heroes
-
                 for hero in self.heroes:
-                    hero.exp_track = 0
+                    hero.total_exp += sum(enemy.exp for enemy in self.enemies)
+
             else:
+                self.player.hp_bar.visible = True
                 self.winner = self.enemies
 
             self.performer.current_attack = None

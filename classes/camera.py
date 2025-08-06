@@ -304,6 +304,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_loop = None
         self.battle_participants = None
         self.state = LevelState.OVERWORLD
+        player.hp_bar.display_exp = False
 
 
 

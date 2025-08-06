@@ -236,7 +236,7 @@ class Level:
                     pygame.mixer.music.set_volume(MUSIC_VOLUME)
                     pygame.mixer.music.play(-1)
                     self.current_music = "battle"
-            elif self.player in self.visible_sprites.battle_loop.winner:
+            elif self.visible_sprites.battle_loop.winner and self.player in self.visible_sprites.battle_loop.winner:
                 if not self.current_music == "victory":
                     pygame.mixer.music.stop()
                     pygame.mixer.music.load(random.choice(VICTORY_MUSIC))

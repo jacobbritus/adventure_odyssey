@@ -204,7 +204,7 @@ class Enemy(Entity):
         if not self.death:
             if not self.detected_player and not self.in_battle: self.random_movement()
 
-            if not player.in_battle:
+            if not player.in_battle and pygame.time.get_ticks() >= player.post_battle_iframes:
                 self.chase_player(player)
 
             self.update_animations()

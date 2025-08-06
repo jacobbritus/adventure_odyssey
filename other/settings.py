@@ -3,12 +3,13 @@ import os
 import pygame.mixer
 
 pygame.mixer.init()
+pygame.mixer.set_num_channels(32)
 
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.25
-EFFECT_VOLUME = 0.5
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0.0
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -72,6 +73,16 @@ MOVES = {
         "mana": 5,
         "sound": [get_file_location("sounds/effects/lightning_strike.mp3")],
         "description": "A surge of lightning that deals magic damage to one enemy."}
+}
+
+# === items ===
+# types = consumable,
+ITEMS = {
+    "potion": {
+        "type": "consumable",
+        "stat": "hp",
+        "effect": +5 # get attr(player, stat) += effect
+    }
 }
 
 # === maps ===

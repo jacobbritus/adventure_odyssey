@@ -3,6 +3,7 @@ import math
 import pygame.image
 
 from classes.entity import Entity, BlockShield
+from classes.inventory import Inventory
 from classes.spells import ProjectileSpell, StationarySpell
 from classes.states import AnimationState
 from other.play_sound import play_sound
@@ -16,6 +17,7 @@ class Player(Entity):
         # General
         self.type = "player"
         self.name = "jacob"
+        self.inventory = Inventory()
 
         # Location
         self.spawn = spawn_coordinates
@@ -48,9 +50,14 @@ class Player(Entity):
         self.exp = 0
         self.max_exp = 50
         self.exp_track = 0
+        self.total_exp = 0
+        self.close_hp_bar_time = 0
+
+
         self.leveling = True
         self.stat_points = 5
         self.level_delay = 0
+        self.level_end_delay = 0
 
 
         # === core stats ===
@@ -87,7 +94,6 @@ class Player(Entity):
                 self.blocking = True
                 self.block_cooldown_end = pygame.time.get_ticks() + 2000
 
-
     def hotkeys(self, event, hp_bar):
 
 
@@ -96,9 +102,6 @@ class Player(Entity):
                 hp_bar.visible = True
             else:
                 hp_bar.visible = False
-
-
-
 
 
     def controls(self) -> None:
@@ -149,40 +152,28 @@ class Player(Entity):
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
+    def calculate_exp(self):
+        close_time = 1500
 
-    def exp_gain(self, exp_gained):
-        self.hp_bar.display_exp = True
-        if self.exp >= self.max_exp:
-            self.exp = self.max_exp
-            self.exp_track = math.floor(self.exp_track)
+        if not self.exp >= self.total_exp and not self.exp == self.max_exp:
+            # toggle hp_bar
+            self.leveling = True
+            self.hp_bar.visible = True
+            self.hp_bar.display_exp = True
 
-            self.level_delay += 0.1
-            if self.level_delay >= 5:
-                self.level += 1
-                self.stat_points += 1
-                self.level_delay = 0
+            speed = max(abs(self.exp - self.total_exp) * 0.025, 0.025)
+            self.exp = min(self.exp + speed, self.max_exp)
+            self.close_hp_bar_time = pygame.time.get_ticks() + close_time
+
+        if self.exp == self.max_exp:
+            if pygame.time.get_ticks() >= self.close_hp_bar_time - close_time // 3:
                 self.exp = 0
-                self.max_exp = self.max_exp + 20
+                self.total_exp = max(self.total_exp - self.max_exp, 0)
+                self.max_exp += 20
 
-        if not self.exp_track >= exp_gained and not self.level_delay:
-            diff = exp_gained - self.exp_track
-            speed = max(diff * 0.010, 0.5)
-
-            self.exp_track += speed
-            self.exp += speed
-
-            if self.exp_track >= exp_gained:
-                self.leveling = False
-                self.exp_track = exp_gained
-                self.exp = round(self.exp)
-            else:
-                self.leveling = True
-                self.hp_bar.visible = True
-                self.hp_bar.display_exp = True
-
-
-
-
+        if pygame.time.get_ticks() >= self.close_hp_bar_time and self.leveling:
+            self.leveling = False
+            self.hp_bar.visible = False
 
 
     def level_up_animation(self, offset, window) -> None:

@@ -42,6 +42,7 @@ class CombatMenuState(Enum):
     MAIN_MENU = auto()
     SKILLS_MENU = auto()
     END_MENU = auto()
+    INVENTORY_MENU = auto()
 
 
 class ButtonVariant(Enum):
@@ -53,3 +54,8 @@ class AttackType(Enum):
     PHYSICAL = "physical"
     SPECIAL = "special"
     BUFF = "buff"
+
+class StatusBarState(Enum):
+    OPENED = auto()
+    CLOSED = auto()
+
