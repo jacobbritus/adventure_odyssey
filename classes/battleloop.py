@@ -90,16 +90,26 @@ class BattleLoop:
     def top_screen_description(self, window):
         if self.state == BattleState.PLAYER_TURN:
             for button in self.combat_menu.buttons_group:
-                internal_name = button.text_string.replace(" ", "_").lower()
-                if internal_name in MOVES.keys():
-                    # === display the hovered attack's description ===
-                    if button.hovering:
-                        self.battle_text_bg = UI["battle_message_box"]["large_background"]
-                        self.battle_text_string = MOVES[internal_name]["description"].upper()
 
-                    # === display nothing ===
-                    elif all(not button.hovering for button in self.combat_menu.buttons_group):
-                        self.battle_text_string = None
+                if button.text_string in self.combat_menu.formatted_skills:
+                    internal_name = button.text_string.replace(" ", "_").lower()
+                    data = MOVES
+                elif button.text_string[0].replace(" ", "_").lower() in self.player.inventory.items.keys():
+                    internal_name = button.text_string[0].replace(" ", "_").lower()
+                    data = ITEMS
+                else:
+                    internal_name = None
+                    data = None
+
+                # === display the hovered attack's description ===
+                if button.hovering and internal_name:
+                    self.battle_text_bg = UI["battle_message_box"]["large_background"]
+                    self.battle_text_string = data[internal_name]["description"].upper()
+
+                # === display nothing ===
+                elif all(not button.hovering for button in self.combat_menu.buttons_group):
+                    self.battle_text_string = None
+
 
         # === display the performed attack's name ===
         elif self.state in [BattleState.ENEMY_TURN, BattleState.ENEMY_ANIMATION, BattleState.PLAYER_ANIMATION]:
@@ -281,22 +291,41 @@ class BattleLoop:
 
     def get_player_input(self, attack) -> None:
         """Takes in the picked attack from the combat menu."""
-        internal_attack = attack.replace(" ", "_").lower()
-        self.performer.current_attack = internal_attack
 
-        enemy_count = len([enemy for enemy in self.enemies if enemy in self.battle_queue])
+        if attack in self.combat_menu.formatted_skills:
+            internal_attack = attack.replace(" ", "_").lower()
+            self.performer.current_attack = internal_attack
 
-        if MOVES[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
-            self.target = [enemy for enemy in self.battle_queue if enemy.type == "enemy"][0]
-            self.player_turn()
+            enemy_count = len([enemy for enemy in self.enemies if enemy in self.battle_queue])
+
+            if MOVES[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
+                self.target = [enemy for enemy in self.battle_queue if enemy.type == "enemy"][0]
+
+        else:
+            internal_item = attack[0].replace(" ", "_").lower()
+            self.performer.current_attack = internal_item
+            self.player.inventory.items[internal_item] -= 1
+
+        self.player_turn()
+
 
     def player_turn(self) -> None:
-        self.state = BattleState.PLAYER_ANIMATION
-        self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
-        self.handle_attack()
+
+        if self.performer.current_attack in MOVES.keys() and self.target:
+            self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
+            self.handle_attack()
+            self.state = BattleState.PLAYER_ANIMATION
+
+
+        elif self.performer.current_attack in ITEMS.keys():
+            self.performer.animation_state = AnimationState.ITEM
+            self.target = self.performer
+            self.set_delay(2000)
+            self.state = BattleState.PLAYER_ANIMATION
 
     def handle_attack(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
+
         if MOVES[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
             self.performer.animation_state = AnimationState.APPROACH
         elif MOVES[self.performer.current_attack]["type"] == AttackType.BUFF.value:
@@ -310,7 +339,7 @@ class BattleLoop:
     def enemy_turn(self) -> None:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
-        self.performer.current_attack = random.choice(self.performer.moves)
+        self.performer.current_attack = random.choice(self.performer.skills)
         self.target = random.choice(self.heroes)
 
         self.handle_attack()
@@ -322,6 +351,15 @@ class BattleLoop:
             performer.approach_animation(target)
             delay_time = 1000 if performer.type == "player" else random.randint(500, 3000)
             self.set_delay(delay_time)
+
+        if performer.animation_state == AnimationState.ITEM:
+            performer.item_animation()
+            if pygame.time.get_ticks() >= self.delay:
+                performer.animation_state = AnimationState.IDLE
+                performer.used_item = False
+                performer.item = None
+
+
 
         # === HURT ===
         if target.animation_state == AnimationState.HURT:
@@ -389,6 +427,7 @@ class BattleLoop:
             if self.current_time >= self.delay:
 
                 self.performer.current_attack = None
+                self.target = None
 
                 self.battle_queue.rotate(-1)
                 self.performer = self.battle_queue[0]
@@ -399,7 +438,6 @@ class BattleLoop:
 
                 elif self.performer.type == "player":
                     # === set an enemy target ===
-                    self.target = [enemy for enemy in self.enemies if not enemy.death][0]
                     self.state = BattleState.PLAYER_TURN
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()

@@ -19,6 +19,7 @@ class AnimationState(Enum):
     RETURN = auto()
     DEATH = auto()
     HURT = auto()
+    ITEM = auto()
 
 class BattleState(Enum):
     PLAYER_TURN = auto()

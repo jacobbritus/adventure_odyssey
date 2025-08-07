@@ -688,11 +688,13 @@ class BattleMenu:
 
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
+        print(self.opacity)
         if self.visible:
             self.opacity = min(self.opacity + 10, UI_OPACITY)
-
         else:
             self.opacity = 0
+            self.main_menu_bg.set_alpha(0)
+            self.skills_menu_bg.set_alpha(0)
 
         self.main_menu_bg.set_alpha(self.opacity)
         self.skills_menu_bg.set_alpha(self.opacity)

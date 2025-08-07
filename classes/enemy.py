@@ -3,6 +3,7 @@ import random
 import pygame.mixer
 
 from classes.entity import Entity, BlockShield
+from classes.inventory import Item
 from other.settings import *
 import math
 
@@ -17,7 +18,7 @@ class Enemy(Entity):
         self.type = "enemy"
         self.obstacle_sprites = obstacle_sprites
         self.detected_player = False
-        self.sprite_dict, self.core_stats, self.moves, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
+        self.sprite_dict, self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
 
 
         # Battle related
@@ -43,13 +44,18 @@ class Enemy(Entity):
 
         self.screen_position = None
 
-        self.respawn_time = pygame.time.get_ticks() + 0
+        self.respawn_time = pygame.time.get_ticks() + 600000 #
+
         self.moving_randomly = False
 
         self.random_target = None
         self.random_target_reached = True
         self.move_delay = pygame.time.get_ticks() + 0
         self.reached_bounds = False
+
+
+        self.item_drop = Item(self.item_sprites, "potion", 1, (0,0))
+
 
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
@@ -63,8 +69,8 @@ class Enemy(Entity):
             "luck": 7,
         }
             combat_moves = ["sword_slash"]
-            critical_hit_chance = 0.9
-            blocking_chance = 0.9
+            critical_hit_chance = 0.25
+            blocking_chance = 0.24
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -201,6 +207,7 @@ class Enemy(Entity):
                                            self.screen_position.y)
         self.mask(window, offset)
 
+
         if not self.death:
             if not self.detected_player and not self.in_battle: self.random_movement()
 
@@ -208,6 +215,20 @@ class Enemy(Entity):
                 self.chase_player(player)
 
             self.update_animations()
+        else:
+            if self.item_drop and not self.in_battle:
+                for item in self.item_sprites:
+                    item.draw(window, self.hitbox.topleft - offset, False)
+
+        #
+        # self.action = "right"
+        # self.death = True
+
+
+
+
+
+
 
 
 

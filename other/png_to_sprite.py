@@ -94,6 +94,15 @@ player_sprites = {
             "right": sprite_converter("sprites/characters/jacob.png", 12, 1, 96, 80, False),
                 "left": sprite_converter("sprites/characters/jacob.png", 12, 1, 96, 80, True),
         }
+    },
+    "item_use":{
+        "sprites": {
+"down": sprite_converter("sprites/characters/jacob.png", 13, 1, 96, 80, False),
+                "right": sprite_converter("sprites/characters/jacob.png", 14, 1, 96, 80, False),
+            "left": sprite_converter("sprites/characters/jacob.png", 14, 1, 96, 80, True),
+            "up": sprite_converter("sprites/characters/jacob.png", 15, 1, 96, 80, True),
+
+        }
     }
 }
 

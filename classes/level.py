@@ -3,6 +3,8 @@ import random
 import pygame.time
 import pytmx
 
+from classes.OverworldUI import OverworldUI
+from classes.inventory import Item
 from other.play_sound import play_sound
 from other.settings import *
 from datetime import datetime
@@ -25,6 +27,8 @@ class Level:
         self.enemies: pygame.sprite.Group = pygame.sprite.Group()
         self.visible_sprites = YSortCameraGroup()
         self.action_sprites: pygame.sprite.Group = pygame.sprite.Group()
+
+        self.overworld_ui = OverworldUI()
 
         self.player = None
         self.enemy_sprites = None
@@ -127,7 +131,7 @@ class Level:
 
     def battle_transition(self):
         if not self.visible_sprites.battle_participants:
-            self.visible_sprites.enemy_collision(self.player)
+            self.enemy_collision(self.player)
         else:
             if not self.visible_sprites.delay or pygame.time.get_ticks() >= self.visible_sprites.delay:
                 self.visible_sprites.start_battle()
@@ -142,21 +146,27 @@ class Level:
 
 
     def overworld(self) -> None:
-        self.battle_transition()
 
         # if not self.menu.running:
 
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
+        self.battle_transition()
+
+
+
 
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
+
 
         self.update_day_cycle()
         self.player.hp_bar.draw(self.display_surface)
 
         self.visible_sprites.transition_screen()
         self.menu.draw(self.display_surface, )
+
+
 
     def update_day_cycle(self):
         day_phases = {
@@ -214,6 +224,44 @@ class Level:
             self.player.level_up_visual.update(self.player.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x),
                                                        int(self.visible_sprites.offset.y)) - (0, 232))
 
+
+
+
+
+    def enemy_collision(self, player):
+        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "enemy"]
+
+        # checks all battle spots instead of just the visible ones
+        for enemy in self.enemy_sprites:
+            if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
+                if enemy.death:
+
+
+                    if enemy.item_drop:
+                        self.overworld_ui.show_pickup_prompt(self.display_surface)
+                        if not player.item_sprites and self.overworld_ui.picked_up_item:
+                            Item(self.player.item_sprites, enemy.item_drop.name, 1, self.player.screen_position)
+                            player.inventory.add(enemy.item_drop)
+                            self.overworld_ui.picked_up_item = False
+                            enemy.item_drop = None
+
+
+                else:
+                    self.visible_sprites.battle_participants = {
+                        "heroes": [player],
+                        "enemies": [enemy]
+                    }
+
+                    # self.battle_participants = [player, enemy, enemy.clone((enemy.x, enemy.y))]
+                    self.visible_sprites.transition_timer = pygame.time.get_ticks()
+                    self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
+                    for group in self.visible_sprites.battle_participants.values():
+                        for participant in group:
+                            participant.in_battle = True
+                            participant.action = "idle"
+                break
+            else:
+                self.overworld_ui.opacity = 0
 
 
 

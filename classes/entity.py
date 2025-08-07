@@ -3,6 +3,7 @@ import random
 
 import pygame.mixer
 
+from classes.inventory import Item
 from classes.states import AnimationState
 from classes.spells import ProjectileSpell, StationarySpell
 from other.play_sound import play_sound
@@ -62,6 +63,12 @@ class Entity(pygame.sprite.Sprite):
         self.hurt_time = pygame.time.get_ticks() + 200
         self.hurt_mask_opacity = 50
 
+        self.shake_screen = False
+
+        self.used_item = False
+        self.item = None
+
+
         # === blocking ===
         self.blocked = False
         self.block_shield = BlockShield("left")
@@ -78,12 +85,14 @@ class Entity(pygame.sprite.Sprite):
         self.dmg_position = None
         self.screen_messages = []
 
-
         # === spells ===
         self.spawn_projectile = False
         self.projectiles = pygame.sprite.Group()
         self.stationary_spells = pygame.sprite.Group()
         self.spells = pygame.sprite.Group()
+
+        # === items ===
+        self.item_sprites = pygame.sprite.Group()
 
         # === vital stats ===
         self.hp = None
@@ -105,23 +114,26 @@ class Entity(pygame.sprite.Sprite):
 
             if self.animation_state in [AnimationState.IDLE, AnimationState.DEATH, AnimationState.HURT]:
 
-                self.image = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 0, 0, 255),
-                                                                                 unsetcolor=(0, 0, 0, 0))
-
                 self.block_shield.direction = self.direction
                 if self.direction == "right":
+                    block_jump = 16
                     shield_offset = (8, -36)
                 else:
-                   shield_offset = (-34, -36)
+                    block_jump = -16
+                    shield_offset = (-34, -36)
 
+                pos = pygame.Vector2(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
 
-                pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+                if self.blocked:
+                    pos += (block_jump, 0)
+                else:
+                    pos = pygame.Vector2(
+                        self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+
                 self.block_shield.draw(window, pos)
 
             if pygame.time.get_ticks() >= self.block_duration:
                 self.blocking = False
-                self.action = "idle"
-
         else:
             self.block_duration = pygame.time.get_ticks() + 300
 
@@ -245,6 +257,24 @@ class Entity(pygame.sprite.Sprite):
         """Idle before attacking."""
         self.action = "idle"
 
+    def item_animation(self):
+        item = self.current_attack
+
+        if not self.item_sprites:
+            Item(self.item_sprites, item, None, self.screen_position)
+
+        if ITEMS[item]["type"] == "healing" and not self.used_item:
+            self.hp += ITEMS[item]["effect"]
+            self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
+            self.used_item = True
+
+        self.action = "item_use"
+
+    # def show_item(self, window):
+    #     item = ITEMS(self.current_attack, None)
+
+
+
     def buff_animation(self):
         """Stationary battle actions"""
         if not self.spawn_projectile:
@@ -318,43 +348,52 @@ class Entity(pygame.sprite.Sprite):
         if self.sprite_dict[self.action]["impact_frame"] and not self.hit_landed:
             impact_frame = self.sprite_dict[self.action]["impact_frame"]
             if self.frame > impact_frame and not self.hit_landed and not target.death:
+                if not self.shake_screen:
+                    self.shake_screen = 1000
                 self.hit_landed = True
+
                 play_sound("moves", self.current_attack, None)
 
                 self.handle_attack_impact(target)
 
                 if target.blocking:
-                    pygame.time.wait(50)
+                    if not self.shake_screen:
+                        self.shake_screen = 1000
+                    pygame.time.wait(20)
                     self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
                     target.blocked = True
                     push_back = -16 if self.direction == "right" else 16
                     self.x += push_back
+                else:
+                    pygame.time.wait(20)
 
-
-
-        # ___hit ends____
+        # === wait for a bit ===
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1 or target.hp <= 0:
             if self.action != "idle":
                 self.action = "idle"
                 self.frame = 0
 
-
+            # ___hit ends____
             if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
                 self.hit_landed = False
+
                 # ___if critical hit___
                 if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
                     if target.blocked:
                         pull_close = 16 if self.direction == "right" else -16
                         self.x += pull_close
                     self.critical_hit_is_done = True
+                    target.blocked = False
+
+
 
 
                 # ___end attack sequence___
                 else:
+                    target.blocked = False
                     self.animation_state = AnimationState.RETURN
                     self.critical_hit_is_done = False
                     self.critical_hit = False
-                    target.blocked = False
 
     def hurt_animation(self):
         if self.action != "death":
@@ -424,7 +463,7 @@ class Entity(pygame.sprite.Sprite):
 
         if not target.hp <= 0 and not target.blocking:
             target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255),
-                                                                         unsetcolor=(0, 0, 0, 0))
+                                                                             unsetcolor=(0, 0, 0, 0))
             target.animation_state = AnimationState.HURT
         elif target.hp <= 0:
             target.animation_state = AnimationState.DEATH
@@ -469,9 +508,9 @@ class Entity(pygame.sprite.Sprite):
     def update_animations(self) -> None:
 
         if self.action == "cast":
-            cast_frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2
+            last_frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 2
 
-            if self.frame >= cast_frame:
+            if self.frame >= last_frame:
                 self.action = "idle"
 
 
@@ -503,11 +542,16 @@ class Entity(pygame.sprite.Sprite):
 
             else:
                 self.hurt_mask_opacity = 0
+            #
+            # if self.blocking:
+            #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 150),
+            #                                                            unsetcolor=(0, 0, 0, 0))
+            #     window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
 
-            if self.blocking:
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 150),
-                                                                       unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            # if self.used_item and ITEMS[self.current_attack]["type"] == "healing":
+            #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 255, 0, 150),
+            #                                                                unsetcolor=(0, 0, 0, 0))
+            #     window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
 
 
 
@@ -518,10 +562,11 @@ class BlockShield:
         self.frame = 0
         self.direction = direction
         self.image = self.sprites["sprites"][self.direction][int(self.frame)]
+        self.offset = 0
 
     def draw(self, window, pos):
         self.update()
-        window.blit(self.image, pos)
+        window.blit(self.image, pos + (self.offset, 0))
 
     def update(self):
         self.frame += 0.2

@@ -84,23 +84,17 @@ class YSortCameraGroup(pygame.sprite.Group):
             attack_target = self.battle_loop.target
 
             # === camera shake trigger ===
-            if not self.active_shake :
-                self.active_shake = True
-
-                if performer.hit_landed and attack_target.blocking:# and MOVES[performer.current_attack]["shake"]:
+            if performer.hit_landed and attack_target.blocking:# and MOVES[performer.current_attack]["shake"]:
                     self.shake_duration = 2000
-
                     self.shake_intensity = 1
 
-                if performer.hit_landed:
+            if performer.shake_screen:
                     self.shake_duration = 2000
                     self.shake_intensity = 1
 
 
 
-
-
-            if performer.spells:
+            if performer.current_attack and performer.current_attack in performer.skills and MOVES[performer.current_attack]["type"] == "special":
                 if performer.animation_state in [AnimationState.BUFF, AnimationState.WAIT]:
                     performer.stationary_spells.update((performer.hitbox.center - self.offset))
                     target = performer.rect.center
@@ -113,12 +107,11 @@ class YSortCameraGroup(pygame.sprite.Group):
                 target = performer.rect.center
 
             # === apply camera shake ===
-            if self.shake_duration > 0:
+            if performer.shake_screen or attack_target and attack_target.shake_screen > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
-                self.shake_duration -= 100
+                performer.shake_screen -= 100
             else:
-                self.active_shake = False
                 self.shake_offset = pygame.Vector2(0, 0)
 
             # === move offset to target by camera speed amount increments ===
@@ -177,6 +170,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 enemy.hp = enemy.max_hp
                 enemy.action = "idle"
                 enemy.death = False
+
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
@@ -245,28 +239,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
             self.battle_loop = BattleLoop(heroes, enemies, self.display_surface, self.offset)
 
-    def enemy_collision(self, player):
-        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
-        # checks all battle spots instead of just the visible ones
-        for enemy in self.enemy_sprites:
-            if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
-                if enemy.death:
-                    pass
-                else:
-                    self.battle_participants = {
-                        "heroes": [player],
-                        "enemies": [enemy]
-                    }
-
-                    # self.battle_participants = [player, enemy, enemy.clone((enemy.x, enemy.y))]
-                    self.transition_timer = pygame.time.get_ticks()
-                    self.delay = pygame.time.get_ticks() + self.delay_time
-                    for group in self.battle_participants.values():
-                        for participant in group:
-                            participant.in_battle = True
-                            participant.action = "idle"
-                break
 
     def transition_screen(self):
         if self.transition_timer:
@@ -299,9 +272,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         else:
             player.hp = player.max_hp
+            player.mana = player.max_mana
             player.death = False
             player.x, player.y = player.spawn
             player.rect.topleft = player.spawn
+
+            for enemy in enemies:
+                enemy.death = False
+                enemy.hp = enemy.max_hp
 
 
         # === go back to initiate pos ====

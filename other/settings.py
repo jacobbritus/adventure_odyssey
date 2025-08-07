@@ -8,8 +8,8 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.25
-EFFECT_VOLUME = 0.5
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0.0
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -66,7 +66,7 @@ MOVES = {
         "description": "A restoring spell that replenishes HP for one ally."
     },
     "lightning_strike": {
-        "base_damage": 7,
+        "base_damage": 60,
         "multiplier": 0.25,
         "stat": "strength",
         "type": "special",
@@ -79,11 +79,15 @@ MOVES = {
 # types = consumable,
 ITEMS = {
     "potion": {
-        "type": "consumable",
+        "type": "healing",
+        "image": pygame.image.load(get_file_location("sprites/items/small_health_potion.png")),
         "stat": "hp",
-        "effect": +5 # get attr(player, stat) += effect
+        "effect": +5, # get attr(player, stat) += effect
+        "description": "A basic potion that restores a small amount of health.",
     }
 }
+
+ITEM_SHADOW = pygame.image.load(get_file_location("sprites/items/shadow.png"))
 
 # === maps ===
 FOREST_MAP = get_file_location("tmx/untitled.tmx")

@@ -69,8 +69,8 @@ class Player(Entity):
 
         self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 2
-        self.max_mana = 5
+        self.mana: int = 10
+        self.max_mana = 10
 
 
         # Other
@@ -83,6 +83,8 @@ class Player(Entity):
         self.skills = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
         self.post_battle_iframes = pygame.time.get_ticks() + 0
         self.block_cooldown_end = pygame.time.get_ticks() + 0
+
+        self.item_sprites = pygame.sprite.Group()
 
     def blocking_critical_hotkey(self, event) -> None:
         """The player's block | crit hotkey with its delay."""
@@ -173,6 +175,7 @@ class Player(Entity):
         if pygame.time.get_ticks() >= self.close_hp_bar_time and self.leveling:
             self.leveling = False
             self.hp_bar.visible = False
+            self.exp = round(self.exp)
 
 
     def level_up_animation(self, offset, window) -> None:
@@ -200,10 +203,19 @@ class Player(Entity):
 
         self.mask(window, offset)
 
+
+        if self.item_sprites:
+            if not self.in_battle: self.action = "item_use"
+            if not self.in_battle: self.direction = "down"
+            for item in self.item_sprites:
+                item.draw(window, self.screen_position + (32, -16), "life_time")
+
+        else:
+            self.controls()
+
         self.blocking_mechanics(window, offset)
 
         self.calculate_exp()
-        self.controls()
 
         self.update_animations()
         self.level_up_animation(offset, window)

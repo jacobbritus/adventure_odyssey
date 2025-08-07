@@ -20,8 +20,10 @@ class Game:
                     pygame.quit()
                     exit()
 
+
                 if not self.level.visible_sprites.battle_loop:
                     self.level.menu.keybinds(event)
+                    self.level.overworld_ui.hotkeys(event)
 
                 if self.level.player.in_battle:
                     self.level.player.blocking_critical_hotkey(event)
