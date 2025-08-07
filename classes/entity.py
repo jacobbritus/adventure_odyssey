@@ -62,6 +62,8 @@ class Entity(pygame.sprite.Sprite):
         self.hurt_time = pygame.time.get_ticks() + 200
         self.hurt_mask_opacity = 50
 
+        self.shake_screen = False
+
         # === blocking ===
         self.blocked = False
         self.block_shield = BlockShield("left")
@@ -77,7 +79,6 @@ class Entity(pygame.sprite.Sprite):
         # === screen messages ===
         self.dmg_position = None
         self.screen_messages = []
-
 
         # === spells ===
         self.spawn_projectile = False
@@ -110,12 +111,22 @@ class Entity(pygame.sprite.Sprite):
 
                 self.block_shield.direction = self.direction
                 if self.direction == "right":
+                    block_jump = 16
                     shield_offset = (8, -36)
                 else:
-                   shield_offset = (-34, -36)
+                    block_jump = -16
+                    shield_offset = (-34, -36)
 
 
-                pos = (self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+
+                pos = pygame.Vector2(self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+
+                if self.blocked:
+                    pos += (block_jump, 0)
+                else:
+                    pos = pygame.Vector2(
+                        self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)) + shield_offset, offset)
+
                 self.block_shield.draw(window, pos)
 
             if pygame.time.get_ticks() >= self.block_duration:
@@ -318,43 +329,49 @@ class Entity(pygame.sprite.Sprite):
         if self.sprite_dict[self.action]["impact_frame"] and not self.hit_landed:
             impact_frame = self.sprite_dict[self.action]["impact_frame"]
             if self.frame > impact_frame and not self.hit_landed and not target.death:
+                if not self.shake_screen:
+                    self.shake_screen = 1000
                 self.hit_landed = True
                 play_sound("moves", self.current_attack, None)
 
                 self.handle_attack_impact(target)
 
                 if target.blocking:
+                    if not self.shake_screen:
+                        self.shake_screen = 1000
                     pygame.time.wait(50)
                     self.frame = len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1
                     target.blocked = True
                     push_back = -16 if self.direction == "right" else 16
                     self.x += push_back
 
-
-
-        # ___hit ends____
+        # === wait for a bit ===
         if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1 or target.hp <= 0:
             if self.action != "idle":
                 self.action = "idle"
                 self.frame = 0
 
-
+            # ___hit ends____
             if self.frame >= len(self.sprite_dict[self.action]["sprites"][self.direction]) - 1:
                 self.hit_landed = False
+
                 # ___if critical hit___
                 if self.critical_hit and not self.critical_hit_is_done and not target.hp <= 0:
                     if target.blocked:
                         pull_close = 16 if self.direction == "right" else -16
                         self.x += pull_close
                     self.critical_hit_is_done = True
+                    target.blocked = False
+
+
 
 
                 # ___end attack sequence___
                 else:
+                    target.blocked = False
                     self.animation_state = AnimationState.RETURN
                     self.critical_hit_is_done = False
                     self.critical_hit = False
-                    target.blocked = False
 
     def hurt_animation(self):
         if self.action != "death":
@@ -518,10 +535,11 @@ class BlockShield:
         self.frame = 0
         self.direction = direction
         self.image = self.sprites["sprites"][self.direction][int(self.frame)]
+        self.offset = 0
 
     def draw(self, window, pos):
         self.update()
-        window.blit(self.image, pos)
+        window.blit(self.image, pos + (self.offset, 0))
 
     def update(self):
         self.frame += 0.2

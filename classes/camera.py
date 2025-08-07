@@ -84,15 +84,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             attack_target = self.battle_loop.target
 
             # === camera shake trigger ===
-            if not self.active_shake :
-                self.active_shake = True
-
-                if performer.hit_landed and attack_target.blocking:# and MOVES[performer.current_attack]["shake"]:
+            if performer.hit_landed and attack_target.blocking:# and MOVES[performer.current_attack]["shake"]:
                     self.shake_duration = 2000
-
                     self.shake_intensity = 1
 
-                if performer.hit_landed:
+            if performer.shake_screen:
                     self.shake_duration = 2000
                     self.shake_intensity = 1
 
@@ -113,12 +109,11 @@ class YSortCameraGroup(pygame.sprite.Group):
                 target = performer.rect.center
 
             # === apply camera shake ===
-            if self.shake_duration > 0:
+            if performer.shake_screen or attack_target and attack_target.shake_screen > 0:
                 self.shake_offset.x = random.randint(-self.shake_intensity, self.shake_intensity)
                 self.shake_offset.y = random.randint(-self.shake_intensity, self.shake_intensity)
-                self.shake_duration -= 100
+                performer.shake_screen -= 100
             else:
-                self.active_shake = False
                 self.shake_offset = pygame.Vector2(0, 0)
 
             # === move offset to target by camera speed amount increments ===
@@ -299,9 +294,13 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         else:
             player.hp = player.max_hp
+            player.mana = player.max_mana
             player.death = False
             player.x, player.y = player.spawn
             player.rect.topleft = player.spawn
+
+            for enemy in enemies:
+                enemy.death = False
 
 
         # === go back to initiate pos ====

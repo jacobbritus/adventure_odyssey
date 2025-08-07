@@ -172,6 +172,9 @@ class BattleLoop:
 
     def run(self) -> None:
         """The main loop."""
+
+
+
         self.current_time = pygame.time.get_ticks()
         self.animations()
 
@@ -297,6 +300,7 @@ class BattleLoop:
 
     def handle_attack(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
+
         if MOVES[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
             self.performer.animation_state = AnimationState.APPROACH
         elif MOVES[self.performer.current_attack]["type"] == AttackType.BUFF.value:

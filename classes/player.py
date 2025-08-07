@@ -69,8 +69,8 @@ class Player(Entity):
 
         self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 2
-        self.max_mana = 5
+        self.mana: int = 10
+        self.max_mana = 10
 
 
         # Other
