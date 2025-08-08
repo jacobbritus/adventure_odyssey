@@ -182,6 +182,9 @@ class BattleLoop:
 
     def run(self) -> None:
         """The main loop."""
+
+
+
         self.current_time = pygame.time.get_ticks()
         self.animations()
 
