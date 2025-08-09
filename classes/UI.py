@@ -456,7 +456,7 @@ class EnemyStatusBar(StatusBar):
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, group, parameter, function, text: str, variant, pos: pygame.Vector2, disabled: bool):
+    def __init__(self, group, parameter, function, text: str or tuple, variant, pos: pygame.Vector2, disabled: bool):
         super().__init__(group)
 
         # === image ===
@@ -852,7 +852,8 @@ class MenuBook:
             BookState.CLOSE_BOOK: {"sprites": "close_book", "offset": self.pos + pygame.Vector2(0, -160)}
         }
 
-        self.content = [{"title": UI["titles"]["info_title"], "content": self.info_page}]
+        self.content = [{"title": UI["titles"]["info_title"], "content": self.info_page},
+                        {"title": UI["titles"]["skills_title"], "content": None}]
         self.current_page = 0
         self.buttons_group = pygame.sprite.Group()
 
@@ -897,7 +898,8 @@ class MenuBook:
 
     def contents(self, window):
         title = self.content[self.current_page]["title"]
-        self.content[self.current_page]["content"](window)
+        if self.content[self.current_page]["content"]:
+            self.content[self.current_page]["content"](window)
 
         container_width = 100
         title_pos = self.base_pos + (container_width - title.get_width() // 2, 28)

@@ -185,6 +185,11 @@ class Player(Entity):
                 StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
                 play_sound("gameplay", "level_up", None)
 
+    def item_pickup_animation(self, window):
+        if not self.in_battle: self.action = "item_use"
+        if not self.in_battle: self.direction = "down"
+        for item in self.item_sprites:
+            item.draw(window, self.screen_position + (32, -16), "life_time")
 
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
@@ -205,13 +210,10 @@ class Player(Entity):
 
 
         if self.item_sprites:
-            if not self.in_battle: self.action = "item_use"
-            if not self.in_battle: self.direction = "down"
-            for item in self.item_sprites:
-                item.draw(window, self.screen_position + (32, -16), "life_time")
-
+            self.item_pickup_animation(window)
         else:
-            self.controls()
+
+         self.controls()
 
         self.blocking_mechanics(window, offset)
 

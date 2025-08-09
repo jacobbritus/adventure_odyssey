@@ -54,7 +54,7 @@ class Enemy(Entity):
         self.reached_bounds = False
 
 
-        self.item_drop = Item(self.item_sprites, "potion", 1, (0,0))
+        self.item_drop = "potion"
 
 
     def initialize_enemy(self) -> list or None:
@@ -215,14 +215,16 @@ class Enemy(Entity):
                 self.chase_player(player)
 
             self.update_animations()
-        else:
-            if self.item_drop and not self.in_battle:
-                for item in self.item_sprites:
-                    item.draw(window, self.hitbox.topleft - offset, False)
+        # else:
+        #     if self.item_drop and not self.in_battle:
+        #         for item in self.item_sprites:
+        #             item.draw(window, self.hitbox.topleft - offset, False)
 
-        #
-        # self.action = "right"
-        # self.death = True
+        if self.name == "Skeleton":
+            self.action = "death"
+            self.direction = "right"
+            self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
+            self.death = True
 
 
 

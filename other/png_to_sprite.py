@@ -271,8 +271,12 @@ book_sprites = {
     "close_book": sprite_converter("sprites/UI/book/close_book.png", 0, 8, 512, 480, False),
     "next_page": sprite_converter("sprites/UI/book/next_page.png", 0, 8, 512, 352, False),
     "previous_page": sprite_converter("sprites/UI/book/previous_page.png", 0, 8, 512, 352, False),
-
 }
+
+for images in book_sprites.values():
+    for image in images:
+        image.set_alpha(200)
+
 
 level_up_sprites = sprite_converter("sprites/particles/level_up.png", 0, 16, 96, 514, False)
 

@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from classes.inventory import Item
 from classes.states import BattleState, LevelState, AnimationState
 from other.settings import *
 from classes.battleloop import BattleLoop
@@ -45,6 +46,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.shake_intensity = 2
         self.shake_offset = pygame.Vector2(0, 0)
         self.active_shake = False
+
+        self.item_sprites = None
 
     def get_visible_sprites(self):
         """Get all sprites that are visible on the screen."""
@@ -150,6 +153,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 # === draw player not using rect as that uses int ===
                 if sprite.type == "player":
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
+
                 else:
                     offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
                 self.display_surface.blit(sprite.image, offset_pos)
@@ -159,6 +163,13 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.display_surface.blit(self.battle_loop.performer.image, offset_pos)
 
         self.offset += self.shake_offset
+
+
+        self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
+        for item in self.item_sprites:
+            offset_pos = item.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
+
+            self.display_surface.blit(item.image, offset_pos)
 
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
@@ -170,6 +181,10 @@ class YSortCameraGroup(pygame.sprite.Group):
                 enemy.hp = enemy.max_hp
                 enemy.action = "idle"
                 enemy.death = False
+            if enemy.death and enemy.item_drop and not enemy.in_battle:
+                Item(self, enemy.item_drop, 1, enemy.hitbox.topleft)
+                enemy.item_drop = None
+
 
 
     def start_battle(self):

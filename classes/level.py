@@ -153,11 +153,9 @@ class Level:
         self.visible_sprites.draw_sprites()
         self.battle_transition()
 
-
-
-
         self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
+        self.item_collision()
 
 
         self.update_day_cycle()
@@ -225,7 +223,16 @@ class Level:
                                                        int(self.visible_sprites.offset.y)) - (0, 232))
 
 
-
+    def item_collision(self):
+        for item in self.visible_sprites.item_sprites:
+            if self.player.hitbox.colliderect(item.rect):
+                self.overworld_ui.show_pickup_prompt(self.display_surface)
+                if not self.player.item_sprites and self.overworld_ui.picked_up_item:
+                    self.player.inventory.add(item)
+                    item.fade_time = pygame.time.get_ticks() + 2000
+                    self.player.item_sprites.add(item)
+                    self.overworld_ui.picked_up_item = False
+                    self.visible_sprites.remove(item)
 
 
     def enemy_collision(self, player):
@@ -235,15 +242,15 @@ class Level:
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
                 if enemy.death:
+                    ...
 
-
-                    if enemy.item_drop:
-                        self.overworld_ui.show_pickup_prompt(self.display_surface)
-                        if not player.item_sprites and self.overworld_ui.picked_up_item:
-                            Item(self.player.item_sprites, enemy.item_drop.name, 1, self.player.screen_position)
-                            player.inventory.add(enemy.item_drop)
-                            self.overworld_ui.picked_up_item = False
-                            enemy.item_drop = None
+                    # if enemy.item_drop:
+                    #     self.overworld_ui.show_pickup_prompt(self.display_surface)
+                    #     if not player.item_sprites and self.overworld_ui.picked_up_item:
+                    #         Item(self.player.item_sprites, enemy.item_drop.name, 1, self.player.screen_position)
+                    #         player.inventory.add(enemy.item_drop)
+                    #         self.overworld_ui.picked_up_item = False
+                    #         enemy.item_drop = None
 
 
                 else:
@@ -260,8 +267,7 @@ class Level:
                             participant.in_battle = True
                             participant.action = "idle"
                 break
-            else:
-                self.overworld_ui.opacity = 0
+
 
 
 

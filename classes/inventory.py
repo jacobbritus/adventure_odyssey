@@ -14,8 +14,8 @@ class Item(pygame.sprite.Sprite):
         super().__init__(group)
 
         self.name = name
+        self.type = "item"
         self.image = ITEMS[name]["image"].copy()
-        self.image.set_alpha(0)
         self.quantity = quantity
 
         if pos:
@@ -25,10 +25,17 @@ class Item(pygame.sprite.Sprite):
 
             self.life_time = pygame.time.get_ticks() + 5000
             self.fade_time = pygame.time.get_ticks() + 1500
-            self.opacity = 0
 
             self.shadow = ITEM_SHADOW
 
+    def update(self):
+        float_offset = math.sin(self.t) * 1  # 5 pixels up/down
+
+        y = round(self.rect.y - float_offset)
+
+        self.t += 0.1
+
+        self.rect.topleft = (self.rect.x, y)
 
 
     def draw(self, window, pos, cycle):
@@ -37,27 +44,21 @@ class Item(pygame.sprite.Sprite):
 
         y = self.pos.y + float_offset
 
-        self.t += 0.05
+        self.t += 0.1
         window.blit(self.image, (self.pos.x, y))
 
         if cycle:
             self.handle_life_time()
         else:
             window.blit(self.shadow, self.pos + (0, 16))
-            self.opacity = 255
-            self.image.set_alpha(self.opacity)
 
 
     def handle_life_time(self):
 
-        if pygame.time.get_ticks() >= self.fade_time and self.opacity == 0:
+        if pygame.time.get_ticks() >= self.fade_time:
+            print("check")
             self.kill()
-        elif pygame.time.get_ticks() >= self.fade_time:
-            self.opacity = max(self.opacity - 10, 0)
-            self.image.set_alpha(self.opacity)
-        else:
-            self.opacity = min(self.opacity + 10, 255)
-            self.image.set_alpha(self.opacity)
+
 
 
 

@@ -17,17 +17,11 @@ class OverworldUI:
                                               self.bg_bar_pos.y + self.bg_bar.get_height() // 2 - self.pickup_text.get_height() // 2,)
 
 
-        self.opacity = 0
-        self.bg_bar.set_alpha(self.opacity)
-        self.pickup_text.set_alpha(self.opacity)
-
 
 
 
     def show_pickup_prompt(self,  window):
-        self.opacity = min(self.opacity + 15, 255)
-        self.bg_bar.set_alpha(self.opacity)
-        self.pickup_text.set_alpha(self.opacity)
+
 
         window.blit(self.bg_bar, self.bg_bar_pos)
         window.blit(self.pickup_text, self.pickup_text_pos)
@@ -36,7 +30,6 @@ class OverworldUI:
     def hotkeys(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
             self.picked_up_item = True
-            print("yes")
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.picked_up_item = True
