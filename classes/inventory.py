@@ -15,13 +15,17 @@ class Item(pygame.sprite.Sprite):
 
         self.name = name
         self.type = "item"
-        self.image = ITEMS[name]["image"].copy()
+        self.frame = 0
+        self.images = item_drop
+        self.image = item_drop[self.frame]
+        self.item_image = ITEMS[name]["image"].copy()
         self.quantity = quantity
 
         if pos:
             self.pos = pos
             self.rect = self.image.get_rect(topleft = pos)
             self.t = 0
+            self.y = self.rect.y
 
             self.life_time = pygame.time.get_ticks() + 5000
             self.fade_time = pygame.time.get_ticks() + 1500
@@ -29,13 +33,21 @@ class Item(pygame.sprite.Sprite):
             self.shadow = ITEM_SHADOW
 
     def update(self):
-        float_offset = math.sin(self.t) * 1  # 5 pixels up/down
+        # float_offset = math.sin(self.t) * 0.5  # 5 pixels up/down
+        # # print(float_offset)
+        #
+        # self.y -= float_offset
+        #
+        #
+        # self.t += 0.1
+        #
+        # self.rect.topleft = (self.rect.x, self.y)
 
-        y = round(self.rect.y - float_offset)
+        self.frame += 0.1
+        if self.frame >= len(self.images): self.frame = 0
+        self.image = self.images[int(self.frame)]
 
-        self.t += 0.1
 
-        self.rect.topleft = (self.rect.x, y)
 
 
     def draw(self, window, pos, cycle):

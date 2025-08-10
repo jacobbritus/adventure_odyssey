@@ -289,3 +289,5 @@ block_shield_sprites = {
 
 }}
 
+item_drop = sprite_converter("sprites/items/item_drop.png", 0, 4, 32, 32, False)
+

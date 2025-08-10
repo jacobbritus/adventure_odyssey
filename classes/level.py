@@ -153,16 +153,19 @@ class Level:
         self.visible_sprites.draw_sprites()
         self.battle_transition()
 
-        self.visible_sprites.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
-        self.item_collision()
+        self.update_enemies(self.player)
 
 
         self.update_day_cycle()
+
+        self.item_collision()
+
         self.player.hp_bar.draw(self.display_surface)
 
         self.visible_sprites.transition_screen()
         self.menu.draw(self.display_surface, )
+
 
 
 
@@ -199,7 +202,7 @@ class Level:
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
 
-        self.visible_sprites.update_enemies(self.player)
+        self.update_enemies(self.player)
         self.visible_sprites.update_camera(self.player)
 
 
@@ -224,15 +227,35 @@ class Level:
 
 
     def item_collision(self):
+        self.overworld_ui.item_message(self.display_surface)
+
+
         for item in self.visible_sprites.item_sprites:
             if self.player.hitbox.colliderect(item.rect):
-                self.overworld_ui.show_pickup_prompt(self.display_surface)
-                if not self.player.item_sprites and self.overworld_ui.picked_up_item:
+                self.overworld_ui.show_pickup_prompt(self.display_surface, item)
+
+                if self.overworld_ui.picked_up_item:
                     self.player.inventory.add(item)
                     item.fade_time = pygame.time.get_ticks() + 2000
                     self.player.item_sprites.add(item)
                     self.overworld_ui.picked_up_item = False
                     self.visible_sprites.remove(item)
+
+
+    def update_enemies(self, player):
+        """Updates all the enemy sprites based on the player's position."""
+
+
+        for enemy in self.visible_sprites.enemy_sprites:
+            enemy.update_enemy(player, self.display_surface, self.visible_sprites.offset)
+            if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
+                enemy.hp = enemy.max_hp
+                enemy.action = "idle"
+                enemy.death = False
+            if enemy.death and enemy.item_drop and not enemy.in_battle:
+                item_pos = pygame.Vector2(enemy.hitbox.topleft) + (8, 10)
+                Item(self.visible_sprites, enemy.item_drop, 1, item_pos)
+                enemy.item_drop = None
 
 
     def enemy_collision(self, player):

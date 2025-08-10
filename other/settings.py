@@ -9,7 +9,7 @@ from other.png_to_sprite import *
 
 SCALE = 2
 MUSIC_VOLUME = 0.25
-EFFECT_VOLUME = 0.25
+EFFECT_VOLUME = 0.5
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -26,6 +26,8 @@ player_sprites = player_sprites
 sprite_dust = sprite_dust
 skeleton_sprites = skeleton_sprites
 block_shield_sprites = block_shield_sprites
+
+item_drop = item_drop
 
 # === moves info ===
 MOVES = {
@@ -78,7 +80,7 @@ MOVES = {
 # === items ===
 # types = consumable,
 ITEMS = {
-    "potion": {
+    "small_health_potion": {
         "type": "healing",
         "image": pygame.image.load(get_file_location("sprites/items/small_health_potion.png")),
         "stat": "hp",

@@ -558,8 +558,8 @@ class Button(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()[0]
 
-        if self.rect.collidepoint(mouse_pos):
-            if mouse_pressed:
+        if self.rect.collidepoint(mouse_pos) or self.clicked:
+            if mouse_pressed or self.clicked:
                 self.image = self.image_pressed
 
                 if not self.disabled:

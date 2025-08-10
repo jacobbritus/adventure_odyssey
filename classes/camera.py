@@ -136,7 +136,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
         overlapping_sprites = [sprite for sprite in visible_sprites
-                         if sprite.type in ["player", "tree", "enemy"]]
+                         if sprite.type in ["player", "tree", "enemy", "item"]]
 
         # === draw the battle performer last ===
         draw_performer_last = self.battle_loop
@@ -164,26 +164,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.offset += self.shake_offset
 
-
-        self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
-        for item in self.item_sprites:
-            offset_pos = item.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
-
-            self.display_surface.blit(item.image, offset_pos)
-
-    def update_enemies(self, player):
-        """Updates all the enemy sprites based on the player's position."""
         self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
 
-        for enemy in self.enemy_sprites:
-            enemy.update_enemy(player, self.display_surface, self.offset)
-            if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
-                enemy.hp = enemy.max_hp
-                enemy.action = "idle"
-                enemy.death = False
-            if enemy.death and enemy.item_drop and not enemy.in_battle:
-                Item(self, enemy.item_drop, 1, enemy.hitbox.topleft)
-                enemy.item_drop = None
+
+        self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
+        # for item in self.item_sprites:
+        #     offset_pos = item.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
+        #
+        #     self.display_surface.blit(item.image, offset_pos)
 
 
 
