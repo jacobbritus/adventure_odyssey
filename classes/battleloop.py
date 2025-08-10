@@ -280,9 +280,8 @@ class BattleLoop:
         else:
             self.combat_menu.visible = False
 
-
-
-        self.combat_menu.draw(self.window, self.performer)
+        if not self.winner == self.heroes:
+            self.combat_menu.draw(self.window, self.performer)
 
         self.screen_messages()
 

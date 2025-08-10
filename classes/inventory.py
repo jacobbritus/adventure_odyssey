@@ -81,7 +81,11 @@ class Item(pygame.sprite.Sprite):
 
 class Inventory:
     def __init__(self):
-        self.items = {}
+        self.items = {
+            "small_health_potion": 1,
+            "small_mana_potion": 1
+
+        }
 
     def add(self, item):
         if item.name in self.items.keys():

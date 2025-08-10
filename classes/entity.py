@@ -263,8 +263,10 @@ class Entity(pygame.sprite.Sprite):
         if not self.item_sprites:
             Item(self.item_sprites, item, None, self.screen_position)
 
-        if ITEMS[item]["type"] == "healing" and not self.used_item:
-            self.hp += ITEMS[item]["effect"]
+        if ITEMS[item]["type"] == "consumable" and not self.used_item:
+            value = getattr(self, ITEMS[item]["stat"])
+            value += ITEMS[item]["effect"]
+
             self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
             self.used_item = True
 

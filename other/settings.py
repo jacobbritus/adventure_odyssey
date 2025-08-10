@@ -10,7 +10,7 @@ from other.png_to_sprite import *
 SCALE = 2
 MUSIC_VOLUME = 0.25
 EFFECT_VOLUME = 0.5
-UI_OPACITY = 200
+UI_OPACITY = 225
 
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 360
@@ -81,12 +81,22 @@ MOVES = {
 # types = consumable,
 ITEMS = {
     "small_health_potion": {
-        "type": "healing",
+        "type": "consumable",
         "image": pygame.image.load(get_file_location("sprites/items/small_health_potion.png")),
         "stat": "hp",
         "effect": +5, # get attr(player, stat) += effect
         "description": "A basic potion that restores a small amount of health.",
-    }
+        "inventory_desc": "Restores 5 HP"
+    },
+"small_mana_potion": {
+        "type": "consumable",
+        "image": pygame.image.load(get_file_location("sprites/items/small_mana_potion.png")),
+        "stat": "mana",
+        "effect": +5, # get attr(player, stat) += effect
+        "description": "A basic potion that restores a small amount of health.",
+        "inventory_desc": "Restores 5 SP"
+
+}
 }
 
 ITEM_SHADOW = pygame.image.load(get_file_location("sprites/items/shadow.png"))

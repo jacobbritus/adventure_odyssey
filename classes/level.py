@@ -253,7 +253,7 @@ class Level:
                 enemy.action = "idle"
                 enemy.death = False
             if enemy.death and enemy.item_drop and not enemy.in_battle:
-                item_pos = pygame.Vector2(enemy.hitbox.topleft) + (8, 10)
+                item_pos = pygame.Vector2(enemy.hitbox.topleft) + (8, 0)
                 Item(self.visible_sprites, enemy.item_drop, 1, item_pos)
                 enemy.item_drop = None
 

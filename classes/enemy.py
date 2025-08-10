@@ -216,6 +216,11 @@ class Enemy(Entity):
 
             self.update_animations()
 
+        if self.name == "Goblin":
+            self.action = "death"
+            self.direction = "right"
+            self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
+            self.death = True
 
 
 

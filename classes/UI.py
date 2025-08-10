@@ -500,7 +500,6 @@ class Button(pygame.sprite.Sprite):
             elif type(text) == tuple:
                 self.button_type = "item_button"
 
-                text_ = text[0]
                 self.text_surface = self.font.render(self.text_string[0], True, color)
                 self.text_size = self.text_surface.get_size()
                 self.text_position = pygame.Vector2(self.rect.left + 5, self.rect.centery - self.text_size[1] // 2)
@@ -538,13 +537,13 @@ class Button(pygame.sprite.Sprite):
         root = UI["buttons"]
         statuses = ["unselected", "pressed", "selected"]
         if variant == ButtonVariant.MEDIUM:
-            buttons = [root[variant.value + "_" + status] for status in statuses]
+            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
 
         elif variant == ButtonVariant.WIDE:
-            buttons = [root[variant.value + "_" + status] for status in statuses]
+            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
 
         elif variant == ButtonVariant.SMALL:
-            buttons = [root[variant.value + "_" + status] for status in statuses]
+            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
 
 
         else:
@@ -605,14 +604,13 @@ class Button(pygame.sprite.Sprite):
         else:
             pass
 
-    def draw(self, window, opacity):
+    def draw(self, window):
         window.blit(self.image, self.pos)
 
         if not self.button_type == "no_text":
             color = (99, 61, 76) if not self.hovering else (236, 226, 196)
             text = self.text_string[0] if self.button_type == "item_button" else self.text_string
             self.text_surface = self.font.render(text, True, color)
-            self.text_surface.set_alpha(opacity)
             window.blit(self.text_surface, self.text_position)
 
         if self.button_type == "skill_button":
@@ -678,26 +676,15 @@ class BattleMenu:
 
         # === enum states ===
         self.state = None
-        self.opacity = 0
         self.visible = True
         self.main_menu_bg = UI["battle_menu"]["main_background"]
         self.skills_menu_bg = UI["battle_menu"]["skills_background"]
-        self.main_menu_bg.set_alpha(self.opacity)
-        self.skills_menu_bg.set_alpha(self.opacity)
+
 
 
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
-        print(self.opacity)
-        if self.visible:
-            self.opacity = min(self.opacity + 10, UI_OPACITY)
-        else:
-            self.opacity = 0
-            self.main_menu_bg.set_alpha(0)
-            self.skills_menu_bg.set_alpha(0)
 
-        self.main_menu_bg.set_alpha(self.opacity)
-        self.skills_menu_bg.set_alpha(self.opacity)
 
         self.update()
         self.performer = performer
@@ -716,12 +703,11 @@ class BattleMenu:
             window.blit(self.skills_menu_bg, self.skills_bg_pos)
 
         for button in self.buttons_group:
-            button.draw(window, self.opacity)
+            button.draw(window)
 
     def update(self) -> None:
         """Update the state based on the button clicked."""
         for button in self.buttons_group:
-            button.image.set_alpha(self.opacity)
             if button.delete:
 
                 # === main menu flow ===
@@ -853,9 +839,11 @@ class MenuBook:
         }
 
         self.content = [{"title": UI["titles"]["info_title"], "content": self.info_page},
-                        {"title": UI["titles"]["skills_title"], "content": None}]
-        self.current_page = 0
+                        {"title": UI["titles"]["inventory_title"], "content": self.inventory_page}]
+        self.current_page = 1
         self.buttons_group = pygame.sprite.Group()
+        self.font = pygame.font.Font(FONT_ONE, 16)
+        self.selected_item = None
 
     def draw(self, window):
         self.update()
@@ -901,10 +889,9 @@ class MenuBook:
         if self.content[self.current_page]["content"]:
             self.content[self.current_page]["content"](window)
 
-        container_width = 100
-        title_pos = self.base_pos + (container_width - title.get_width() // 2, 28)
+        title_pos = pygame.Vector2(self.base_pos.x + 64 , 48)
         divider = UI["book"]["divider"]
-        divider_pos = title_pos + (title.get_width() // 2 - divider.get_width() // 2 + 16, 8)
+        divider_pos = title_pos + (0, 8)
         window.blit(divider, divider_pos)
         window.blit(title, title_pos)
 
@@ -967,7 +954,88 @@ class MenuBook:
                     Button(self.buttons_group, None, self.level_up, "", ButtonVariant.SMALL, position, False)
 
             for button in self.buttons_group:
-                button.draw(window, UI_OPACITY)
+                button.draw(window)
+
+    def inventory_page(self, window):
+        base_x = 54
+        base_y = 64
+        distance = 32
+        items = []
+        hover_surface = pygame.Surface((192, 32))
+        hover_surface.set_alpha(50)
+        hover_surface.fill((255, 255, 255))
+
+        for index, item in enumerate(self.player.inventory.items.keys()):
+            # if self.player.inventory.items[item] <= 0:
+            #     continue
+
+            # === item select rect ===
+            rect_pos = self.base_pos + (base_x, base_y + distance * index)
+
+            item_rect = pygame.Rect(rect_pos.x, rect_pos.y, 192, 32)
+
+
+
+            items.append((item_rect, item))
+
+
+            # === item slot ===
+            item_slot = UI["book"]["item_slot"]
+            window.blit(item_slot, rect_pos)
+
+            # === item image ===
+            item_image = ITEMS[item]["image"]
+            item_image.set_alpha(UI_OPACITY)
+            item_image_pos = rect_pos
+            window.blit(item_image, item_image_pos)
+
+            # === item quantity ===
+            item_quantity = self.player.inventory.items[item]
+            quantity_surface = self.font.render(str(item_quantity), True, (255, 255, 255))
+            quantity_pos = item_image_pos + (24, 16)
+            window.blit(quantity_surface, quantity_pos)
+
+            # === item name ===
+            item_name_pos = rect_pos + (36, 0)
+            item_name = item.replace("_", " ").upper()
+            item_name_surface = self.font.render(item_name, True, (255, 255, 255))
+            window.blit(item_name_surface, item_name_pos)
+
+            # === item description ===
+            item_desc = ITEMS[item]["inventory_desc"].upper()
+            item_desc_surface = self.font.render(item_desc, True, (164, 125, 114))
+            item_desc_pos = item_name_pos + (0, 12)
+            window.blit(item_desc_surface, item_desc_pos)
+
+
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_press = pygame.mouse.get_pressed()[0]
+
+        for rect, item in items:
+            if rect.collidepoint(mouse_pos):
+                if mouse_press and pygame.time.get_ticks() >= self.player.item_use_delay\
+                        and not self.player.inventory.items[item] <= 0:
+
+                    # print(item)
+
+                    self.selected_item = (rect, item)
+
+                    # self.player.use_item(item)
+
+        print(self.selected_item)
+
+        if self.selected_item:
+            rect, item = self.selected_item
+            window.blit(hover_surface, rect.topleft)
+        else:
+            self.selected_item = items[0]
+
+            # === buttons and stuff ===
+
+
+
+
+
 
     def level_up(self):
         for button in self.buttons_group:
