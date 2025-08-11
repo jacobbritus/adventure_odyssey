@@ -206,15 +206,15 @@ class Level:
         self.visible_sprites.update_camera(self.player)
 
 
+        self.visible_sprites.battle_loop.run()
 
         self.update_day_cycle()
 
-
+        self.visible_sprites.battle_loop.draw_ui()
         self.visible_sprites.battle_loop.top_screen_description(self.display_surface)
         # use this smart ass
-        self.visible_sprites.battle_loop.run()
         # here to be drawn on top of the overlay
-        self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface, )
+        self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
 
         # end battle
         self.overworld_transition()

@@ -55,17 +55,23 @@ class OverworldUI:
 
             message_box_pos = pygame.Vector2(self.message_box_pos_x, self.message_box_pos.y)
             message_name_pos = message_box_pos + (8, 6)
-            message_item_pos = message_box_pos + (186, -1)
-            message_quantity_pos = message_item_pos + (32, 6)
 
             window.blit(self.message_box, message_box_pos)
-            window.blit(self.font.render(self.item_to_display.name.upper().replace("_", " "), True, (255,255,255)), message_name_pos)
 
-            window.blit(self.item_to_display.item_image, message_item_pos)
+            item_name_surface = self.font.render(self.item_to_display.name.upper().replace("_", " "), True, (236, 226, 196))
+            window.blit(item_name_surface, message_name_pos)
+
+            message_quantity_pos = message_box_pos + (item_name_surface.get_width() + 32, 6)
+
             window.blit(
-                self.font.render("x" + str(self.item_to_display.quantity), True,(255, 255, 255)),
+                self.font.render("x" + str(self.item_to_display.quantity), True,(236, 226, 196)),
                 message_quantity_pos
             )
+
+            message_item_pos = message_quantity_pos + (16, -7)
+
+            window.blit(self.item_to_display.item_image, message_item_pos)
+
 
 
 

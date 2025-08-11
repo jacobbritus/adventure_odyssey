@@ -3,7 +3,7 @@ import random
 import pygame.mixer
 
 from classes.entity import Entity, BlockShield
-from classes.inventory import Item
+from classes.inventory import Item, Inventory
 from other.settings import *
 import math
 
@@ -55,6 +55,7 @@ class Enemy(Entity):
 
 
         self.item_drop = "small_health_potion"
+        self.inventory = Inventory()
 
 
     def initialize_enemy(self) -> list or None:
@@ -196,15 +197,18 @@ class Enemy(Entity):
     def clone(self, name):
         return Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
+    def item_use_logic(self):
+        """Make the enemy use an item depending on certain circumstances."""
+        if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
+            self.current_attack = "small_health_potion"
+
+
 
     def update_enemy(self, player, window, offset) -> None:
-        self.screen_position = pygame.Vector2(self.x - offset.x,
-                                              self.y - offset.y)
+        self.update_pos(offset = offset)
+
         self.blocking_mechanics(window, offset)
-        self.update_pos()
-        dmg_offset = 32
-        self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
-                                           self.screen_position.y)
+
         self.mask(window, offset)
 
 

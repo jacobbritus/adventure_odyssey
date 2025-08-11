@@ -50,6 +50,7 @@ class ButtonVariant(Enum):
     SMALL = "small"
     MEDIUM = "medium"
     WIDE = "large"
+    EXIT = "exit"
 
 class AttackType(Enum):
     PHYSICAL = "physical"

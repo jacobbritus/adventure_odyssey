@@ -69,7 +69,7 @@ class Player(Entity):
 
         self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 0
+        self.mana: int = 5
         self.max_mana = 10
 
 
@@ -193,28 +193,7 @@ class Player(Entity):
         for item in self.item_sprites:
             item.draw(window, self.screen_position + (32, -16), "life_time")
 
-    def use_item(self, item):
-        if ITEMS[item]["type"] == "consumable" and pygame.time.get_ticks() > self.item_use_delay:
 
-            # === access stats ====
-            stat_name = ITEMS[item]["stat"]
-            current_value = getattr(self, stat_name)
-            max_value = getattr(self, f"max_{stat_name}")
-            item_effect = ITEMS[item]["effect"]
-
-
-            # === don't use item if no effect ===
-            if current_value == max_value:
-                return
-
-            # === update stat
-            setattr(self, stat_name, min(current_value + item_effect, max_value))
-
-            self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
-            self.item_use_delay = pygame.time.get_ticks() + 3000
-            self.inventory.items[item] -= 1
-
-            self.used_item = False
 
 
     def update_player(self, offset: pygame.Vector2, window) -> None:
@@ -222,16 +201,11 @@ class Player(Entity):
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
         # debug_surface.fill((255, 0, 0, 100))  # RGBA: red with 100 alpha
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
-        self.update_pos()
-        self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
-                                                   int(self.y) - offset.y)
-
-        dmg_offset = 32
-        self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
-                                           self.screen_position.y)
-
+        self.update_pos(offset = offset)
 
         self.mask(window, offset)
+
+
 
 
         self.controls()
@@ -242,6 +216,8 @@ class Player(Entity):
 
         self.update_animations()
         self.level_up_animation(offset, window)
+
+
 
 
 

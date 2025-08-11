@@ -322,8 +322,7 @@ class StatusBar:
                     window.blit(mask, pos)
 
                     if self.opacity >= 150:
-                        print("check")
-                    self.level_up_text(window)
+                        self.level_up_text(window)
 
             else:
                 self.opacity = 0
@@ -446,7 +445,7 @@ class EnemyStatusBar(StatusBar):
 
 
         for surface, pos in elements:
-            if self.owner.death and self.bars["hp"]["bg_width"] == 0:
+            if self.owner.death and self.bars["hp"]["bg_width"] <= 5:
                 self.opacity -= 20
                 surface.set_alpha(max(0, self.opacity))
 
@@ -536,18 +535,8 @@ class Button(pygame.sprite.Sprite):
         """Return button images based on the variant parameter"""
         root = UI["buttons"]
         statuses = ["unselected", "pressed", "selected"]
-        if variant == ButtonVariant.MEDIUM:
-            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
+        buttons = [root[variant.value + "_" + status].copy() for status in statuses]
 
-        elif variant == ButtonVariant.WIDE:
-            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
-
-        elif variant == ButtonVariant.SMALL:
-            buttons = [root[variant.value + "_" + status].copy() for status in statuses]
-
-
-        else:
-            buttons = None
 
 
         return buttons
@@ -844,6 +833,7 @@ class MenuBook:
         self.buttons_group = pygame.sprite.Group()
         self.font = pygame.font.Font(FONT_ONE, 16)
         self.selected_item = None
+        self.click_delay = pygame.time.get_ticks()
 
     def draw(self, window):
         self.update()
@@ -870,6 +860,8 @@ class MenuBook:
 
     def update(self):
         if self.state:
+            # === reset the buttons ===
+            self.buttons_group = pygame.sprite.Group()
             if self.frame >= len(book_sprites[self.animations[self.state]["sprites"]]) - 1:
                 if self.state == BookState.CLOSE_BOOK: self.running = False
                 self.state = None
@@ -889,7 +881,7 @@ class MenuBook:
         if self.content[self.current_page]["content"]:
             self.content[self.current_page]["content"](window)
 
-        title_pos = pygame.Vector2(self.base_pos.x + 64 , 48)
+        title_pos = self.base_pos + (58, 30)
         divider = UI["book"]["divider"]
         divider_pos = title_pos + (0, 8)
         window.blit(divider, divider_pos)
@@ -959,24 +951,21 @@ class MenuBook:
     def inventory_page(self, window):
         base_x = 54
         base_y = 64
-        distance = 32
+        distance = 42
         items = []
         hover_surface = pygame.Surface((192, 32))
-        hover_surface.set_alpha(50)
+        hover_surface.set_alpha(100)
         hover_surface.fill((255, 255, 255))
 
         for index, item in enumerate(self.player.inventory.items.keys()):
-            # if self.player.inventory.items[item] <= 0:
-            #     continue
 
             # === item select rect ===
             rect_pos = self.base_pos + (base_x, base_y + distance * index)
 
             item_rect = pygame.Rect(rect_pos.x, rect_pos.y, 192, 32)
-
-
-
             items.append((item_rect, item))
+
+            window.blit(UI["book"]["divider"], rect_pos + (2 ,18))
 
 
             # === item slot ===
@@ -1008,31 +997,51 @@ class MenuBook:
             window.blit(item_desc_surface, item_desc_pos)
 
 
-        mouse_pos = pygame.mouse.get_pos()
-        mouse_press = pygame.mouse.get_pressed()[0]
+        mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+        mouse_press = pygame.mouse.get_pressed()[2]
 
         for rect, item in items:
             if rect.collidepoint(mouse_pos):
-                if mouse_press and pygame.time.get_ticks() >= self.player.item_use_delay\
-                        and not self.player.inventory.items[item] <= 0:
-
-                    # print(item)
+                if mouse_press and not self.player.inventory.items[item] <= 0:
+                    self.buttons_group = pygame.sprite.Group()
 
                     self.selected_item = (rect, item)
 
-                    # self.player.use_item(item)
-
-        print(self.selected_item)
+                if not self.selected_item:
+                    window.blit(hover_surface, rect.topleft)
 
         if self.selected_item:
             rect, item = self.selected_item
             window.blit(hover_surface, rect.topleft)
-        else:
-            self.selected_item = items[0]
+            window.blit(UI["battle_menu"]["skills_background"], pygame.Vector2(rect.topleft) + (0, 32))
 
             # === buttons and stuff ===
+            if not self.buttons_group:
+                pos = pygame.Vector2(self.selected_item[0].topleft)
+                Button(self.buttons_group, None, None, "USE", ButtonVariant.WIDE, pos + (6,56), False)
+                Button(self.buttons_group, None, None, None, ButtonVariant.EXIT, pos + (160, 28), False)
 
 
+        for button in self.buttons_group:
+            button.draw(window)
+
+            if button.clicked and not button.text_string:
+                self.selected_item = None
+                self.buttons_group = pygame.sprite.Group()
+                break
+
+            elif button.clicked and button.text_string == "USE":
+                item = self.selected_item[1]
+                if pygame.time.get_ticks() >= self.click_delay:
+                    self.player.use_item(item)
+                    self.click_delay = pygame.time.get_ticks() + 500
+
+                if self.player.inventory.items[item] <= 0:
+                    self.selected_item = None
+                    button.kill()
+                else:
+                    button.clicked = False
+                    button.delete = False
 
 
 

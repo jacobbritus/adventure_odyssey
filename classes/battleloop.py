@@ -21,6 +21,7 @@ class BattleLoop:
         self.original_enemy = enemies[0]
         self.window: pygame.Surface = window
         self.offset = offset
+        self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
         # === end battle toggle ===
         self.return_to_overworld: bool = False
@@ -110,7 +111,6 @@ class BattleLoop:
                 elif all(not button.hovering for button in self.combat_menu.buttons_group):
                     self.battle_text_string = None
 
-
         # === display the performed attack's name ===
         elif self.state in [BattleState.ENEMY_TURN, BattleState.ENEMY_ANIMATION, BattleState.PLAYER_ANIMATION]:
             if self.performer.current_attack:
@@ -122,7 +122,7 @@ class BattleLoop:
         if self.battle_text_string and not self.state in [BattleState.END_BATTLE]:
             self.battle_text_bg_pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.battle_text_bg.get_width() // 2,
                                                      32)
-            self.battle_text_surface = self.font.render(self.battle_text_string, True, (255, 255, 255))
+            self.battle_text_surface = self.font.render(self.battle_text_string, True, (236, 226, 196))
             self.battle_text_pos = self.battle_text_bg_pos + (
                 self.battle_text_bg.get_width() // 2 - self.battle_text_surface.get_width() // 2,
                 6)
@@ -145,6 +145,7 @@ class BattleLoop:
         if self.battle_text_bg_pos:
             rect = UI["battle_message_box"]["small_background"].get_rect(topleft = self.battle_text_bg_pos)
 
+            # I could potentially hide it
             if rect.collidepoint(mouse_pos) and press:
                 print("oi mate")
 
@@ -182,13 +183,8 @@ class BattleLoop:
 
     def run(self) -> None:
         """The main loop."""
-
-
-
         self.current_time = pygame.time.get_ticks()
         self.animations()
-
-        self.draw_ui()
 
         self.get_mouse_input()
 
@@ -314,7 +310,8 @@ class BattleLoop:
     def player_turn(self) -> None:
 
         if self.performer.current_attack in MOVES.keys() and self.target:
-            self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
+            if self.performer.type == "player":
+                self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
             self.handle_attack()
             self.state = BattleState.PLAYER_ANIMATION
 
@@ -342,9 +339,13 @@ class BattleLoop:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
         self.performer.current_attack = random.choice(self.performer.skills)
+
+        self.performer.item_use_logic()
+
         self.target = random.choice(self.heroes)
 
-        self.handle_attack()
+        self.player_turn()
+
 
     def animation_phases(self, performer, target) -> None:
         """Handles the different animation phases and their delays."""
@@ -355,7 +356,7 @@ class BattleLoop:
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:
-            performer.item_animation()
+            performer.item_animation(self.display_surface)
             if pygame.time.get_ticks() >= self.delay:
                 performer.animation_state = AnimationState.IDLE
                 performer.used_item = False
@@ -455,10 +456,5 @@ class BattleLoop:
 
     def animations(self) -> None:
         """Runs the player and enemy animation phases."""
-        if self.state == BattleState.PLAYER_ANIMATION:
-
-            self.animation_phases(self.performer, self.target)
-
-        elif self.state == BattleState.ENEMY_ANIMATION:
-
+        if self.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]:
             self.animation_phases(self.performer, self.target)

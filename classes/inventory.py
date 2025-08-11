@@ -57,7 +57,7 @@ class Item(pygame.sprite.Sprite):
         y = self.pos.y + float_offset
 
         self.t += 0.1
-        window.blit(self.image, (self.pos.x, y))
+        window.blit(self.item_image, (self.pos.x, y))
 
         if cycle:
             self.handle_life_time()
@@ -68,7 +68,6 @@ class Item(pygame.sprite.Sprite):
     def handle_life_time(self):
 
         if pygame.time.get_ticks() >= self.fade_time:
-            print("check")
             self.kill()
 
 
@@ -82,8 +81,7 @@ class Item(pygame.sprite.Sprite):
 class Inventory:
     def __init__(self):
         self.items = {
-            "small_health_potion": 1,
-            "small_mana_potion": 1
+            "small_health_potion": 1
 
         }
 

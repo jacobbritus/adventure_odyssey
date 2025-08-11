@@ -94,6 +94,9 @@ class Entity(pygame.sprite.Sprite):
         # === items ===
         self.item_sprites = pygame.sprite.Group()
 
+        self.item_use_delay = None
+        self.inventory = None
+
         # === vital stats ===
         self.hp = None
         self.max_hp = None
@@ -138,9 +141,21 @@ class Entity(pygame.sprite.Sprite):
             self.block_duration = pygame.time.get_ticks() + 300
 
 
-    def update_pos(self) -> None:
+    def update_pos(self, **kw) -> None:
         self.rect.topleft = (round(self.x), round(self.y))  # update rect
         self.hitbox.center = self.rect.center
+
+        offset = kw.get("offset")
+
+        if offset:
+
+            self.screen_position = pygame.math.Vector2(int(self.x) - offset.x,
+                                                   int(self.y) - offset.y)
+
+            dmg_offset = 32
+            self.dmg_position = pygame.Vector2(self.screen_position.x + dmg_offset + self.hitbox.width // 2,
+                                           self.screen_position.y)
+
 
     def get_dt(self, dt):
         self.delta_time = dt / 1000
@@ -257,23 +272,46 @@ class Entity(pygame.sprite.Sprite):
         """Idle before attacking."""
         self.action = "idle"
 
-    def item_animation(self):
+    def item_animation(self, window):
         item = self.current_attack
 
-        if not self.item_sprites:
+        if not self.used_item:
             Item(self.item_sprites, item, None, self.screen_position)
-
-        if ITEMS[item]["type"] == "consumable" and not self.used_item:
-            value = getattr(self, ITEMS[item]["stat"])
-            value += ITEMS[item]["effect"]
-
-            self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
+            self.use_item(item)
             self.used_item = True
 
-        self.action = "item_use"
+        self.action = "idle"
 
-    # def show_item(self, window):
-    #     item = ITEMS(self.current_attack, None)
+        if self.item_sprites:
+            for item in self.item_sprites:
+                item.draw(window, self.dmg_position + (-16, 28), True)
+
+    def use_item(self, item):
+        if ITEMS[item]["type"] == "consumable":
+            # self.hp_bar.visible = True
+
+            # === access stats ====
+            stat_name = ITEMS[item]["stat"]
+            current_value = getattr(self, stat_name)
+            max_value = getattr(self, f"max_{stat_name}")
+            item_effect = ITEMS[item]["effect"]
+
+            # === don't use item if no effect ===
+            if current_value == max_value:
+                return
+
+            # === update stat
+            setattr(self, stat_name, min(current_value + item_effect, max_value))
+
+            self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
+            self.item_use_delay = pygame.time.get_ticks() + 3000
+            self.inventory.items[item] -= 1
+
+            self.used_item = False
+
+
+
+
 
 
 
