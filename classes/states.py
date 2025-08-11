@@ -61,3 +61,18 @@ class StatusBarState(Enum):
     OPENED = auto()
     CLOSED = auto()
 
+class StatusEffects(Enum):
+    POISONED = {
+        "name": "POISONED",
+        "damage": 1,
+        "turns": 6,
+        "color": (102, 205, 170)
+    }
+
+    BURNED = {
+        "name": "BURNED",
+        "damage": 2,
+        "turns": 2,
+        "color": (255, 87, 34)
+    }
+

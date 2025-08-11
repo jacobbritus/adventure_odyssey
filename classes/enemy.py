@@ -71,7 +71,7 @@ class Enemy(Entity):
         }
             combat_moves = ["sword_slash"]
             critical_hit_chance = 0.25
-            blocking_chance = 0.24
+            blocking_chance = 0.0
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -84,7 +84,7 @@ class Enemy(Entity):
                 "luck": 7,
             }
 
-            combat_moves = ["sword_slash"]
+            combat_moves = ["poison_stab", "sword_slash"]
             critical_hit_chance = 1
             blocking_chance = 0.25
             return goblin_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
@@ -199,8 +199,9 @@ class Enemy(Entity):
 
     def item_use_logic(self):
         """Make the enemy use an item depending on certain circumstances."""
-        if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
-            self.current_attack = "small_health_potion"
+        # if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
+        #     self.current_attack = "small_health_potion"
+        pass
 
 
 
@@ -220,11 +221,11 @@ class Enemy(Entity):
 
             self.update_animations()
 
-        if self.name == "Goblin":
-            self.action = "death"
-            self.direction = "right"
-            self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
-            self.death = True
+        # if self.name == "Goblin":
+        #     self.action = "death"
+        #     self.direction = "right"
+        #     self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
+        #     self.death = True
 
 
 

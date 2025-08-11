@@ -56,7 +56,7 @@
     },
     "frame.defaultDuration": 300,
     "last.externalTilesetPath": "/Users/jacobbritus/Downloads/adventure_odyssey/tsx",
-    "last.imagePath": "/Users/jacobbritus/Downloads/adventure_odyssey/sprites/characters",
+    "last.imagePath": "/Users/jacobbritus/Downloads/adventure_odyssey/sprites/items",
     "map.height": 40,
     "map.lastUsedFormat": "tmx",
     "map.width": 60,
@@ -65,5 +65,7 @@
     "project": "overworld.tiled-project",
     "recentFiles": [
     ],
-    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.type": 1
 }

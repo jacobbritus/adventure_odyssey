@@ -253,6 +253,15 @@ goblin_sprites = {
             "left": sprite_converter("sprites/characters/goblin.png", 7, 3, 96, 80, True),
         },
         "sound": "sounds/death.wav"
+    },
+    "poison_stab": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/goblin.png", 9, 3, 96, 80, False),
+            "left": sprite_converter("sprites/characters/goblin.png", 9, 3, 96, 80, True),
+        },
+        "sound": get_file_location("sounds/sword_slash.wav"),
+        "impact_frame": 2
+
 },
 "blocking": {
         "sprites": {

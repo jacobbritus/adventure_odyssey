@@ -109,6 +109,10 @@ class Entity(pygame.sprite.Sprite):
 
         self.footstep_delay = 500
 
+        # === status effects ===
+        self.status_effect = None
+        self.status_effect_count = 0
+
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
             # if not self.action == "blocking":
@@ -315,6 +319,8 @@ class Entity(pygame.sprite.Sprite):
 
 
 
+
+
     def buff_animation(self):
         """Stationary battle actions"""
         if not self.spawn_projectile:
@@ -502,20 +508,50 @@ class Entity(pygame.sprite.Sprite):
         target.screen_messages.append(("hp_dealt", "-" + str(damage), (217, 87, 99)))
 
         if not target.hp <= 0 and not target.blocking:
-            target.image = pygame.mask.from_surface(target.image).to_surface(setcolor=(255, 0, 0, 255),
-                                                                             unsetcolor=(0, 0, 0, 0))
+
+            # === afflict the status effect if applicable
+            status_effect = MOVES[self.current_attack].get("status_effect")
+            if status_effect and not target.status_effect:
+                target.status_effect = status_effect
+                status_effect_name = status_effect.value["name"]
+                color = status_effect.value["color"]
+
+
+
+                target.screen_messages.append(("perfect_block", status_effect_name, color))
+
+
             target.animation_state = AnimationState.HURT
         elif target.hp <= 0:
             target.animation_state = AnimationState.DEATH
 
+    def handle_status_effect(self):
+        if self.status_effect:
+
+            if self.status_effect == StatusEffects.BURNED:
+                damage = 2
+                self.hp -= damage
+                self.screen_messages.append(("hp_dealt", "-" + str(damage), (255, 87, 34)))
+                self.status_effect_count += 1
+
+            elif self.status_effect == StatusEffects.POISONED:
+                damage = 1
+                self.hp -= 1
+                self.screen_messages.append(("hp_dealt", "-" + str(damage), (102, 205, 170)))
+                self.status_effect_count += 1
+
+            if self.status_effect_count >= StatusEffects.BURNED.value["turns"]:
+                self.status_effect = None
+
+
 
     def death_animation(self) -> None:
         # === reset action to death once when called ===
+        print(self.action)
         if self.action != "death":
             self.frame = 0
             self.action = "death"
             self.hurt_time = pygame.time.get_ticks() + 500
-
 
         death_frame = len(self.sprite_dict["death"]["sprites"][self.direction]) - 1
         if self.frame >= death_frame:
@@ -579,6 +615,20 @@ class Entity(pygame.sprite.Sprite):
                 mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 50),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+
+            elif self.status_effect == StatusEffects.BURNED:
+
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 87, 34, 100),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+
+            elif self.status_effect == StatusEffects.POISONED:
+
+                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(102, 205, 170, 100),
+                                                                       unsetcolor=(0, 0, 0, 0))
+                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+
+
 
             else:
                 self.hurt_mask_opacity = 0

@@ -2,6 +2,8 @@ import os
 
 import pygame.mixer
 
+from classes.states import StatusEffects
+
 pygame.mixer.init()
 pygame.mixer.set_num_channels(32)
 
@@ -9,7 +11,7 @@ from other.png_to_sprite import *
 
 SCALE = 2
 MUSIC_VOLUME = 0.0
-EFFECT_VOLUME = 0.0
+EFFECT_VOLUME = 0.5
 UI_OPACITY = 225
 
 WINDOW_WIDTH = 1280
@@ -32,16 +34,18 @@ item_drop = item_drop
 # === moves info ===
 MOVES = {
     "fire_ball": {
-        "base_damage": 10,
+        "base_damage": 6,
         "multiplier": 0.5,
         "stat": "magic",
         "type": "special",
         "mana": 3,
+        "status_effect": StatusEffects.BURNED,
+
         "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")],
         "description": "A conjured flame hurled to deal magic damage to one enemy."
     },
     "sword_slash": {
-        "base_damage": 3,
+        "base_damage": 2,
         "multiplier": 0.25,
         "stat": "strength",
         "type": "physical",
@@ -52,7 +56,7 @@ MOVES = {
 
     },
     "punch": {
-        "base_damage": 50,
+        "base_damage": 1,
         "multiplier": 0.25,
         "stat": "strength",
         "type": "physical",
@@ -74,7 +78,17 @@ MOVES = {
         "type": "special",
         "mana": 5,
         "sound": [get_file_location("sounds/effects/lightning_strike.mp3")],
-        "description": "A surge of lightning that deals magic damage to one enemy."}
+        "description": "A surge of lightning that deals magic damage to one enemy."
+    },
+    "poison_stab": {
+            "base_damage": 2,
+            "multiplier": 0.25,
+            "stat": "strength",
+            "type": "physical",
+            "mana": 0,
+            "status_effect": StatusEffects.POISONED,
+            "sound": [get_file_location("sounds/effects/sword_slash.mp3")],
+            "description": "A close-range blow that deals physical damage to one enemy."}
 }
 
 # === items ===

@@ -380,6 +380,11 @@ class BattleLoop:
             if target in self.battle_queue:
                 self.battle_queue.remove(target)
 
+        if performer.animation_state == AnimationState.DEATH:
+            performer.death_animation()
+
+
+
         # === APPROACH or NONE > [ WAIT ] > ATTACK ===
         elif performer.animation_state == AnimationState.WAIT:
             performer.wait()
@@ -424,10 +429,18 @@ class BattleLoop:
 
 
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
-        elif performer.animation_state == AnimationState.IDLE:
+        elif performer.animation_state in [AnimationState.IDLE, None]:
+            self.performer.handle_status_effect()
 
-            if not target.hp <= 0: target.action = "idle"  # change to animation state enemy hurt in entity
-            if self.current_time >= self.delay:
+            if self.performer.hp <= 0 and not self.performer.death:
+                self.performer.animation_state = AnimationState.DEATH
+                return
+
+
+            # if not target.hp <= 0: target.action = "idle"  # change to animation state enemy hurt in entity
+            elif self.current_time >= self.delay:
+
+
 
                 self.performer.current_attack = None
                 self.target = None

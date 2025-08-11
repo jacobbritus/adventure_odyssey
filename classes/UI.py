@@ -801,7 +801,13 @@ class BattleMenu:
                 padding = (6, 6)
                 pos = self.skills_bg_pos + padding + y_offset
 
-                Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function, (item.upper(), str(self.player.inventory.items[item])),
+                # === disable item usage ===
+                if self.player.inventory.items[item] <= 0:
+                    Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function,
+                           (item.upper(), str(self.player.inventory.items[item])),
+                           ButtonVariant.WIDE, pos, True)
+                else:
+                    Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function, (item.upper(), str(self.player.inventory.items[item])),
                        ButtonVariant.WIDE, pos, False)
 
 
