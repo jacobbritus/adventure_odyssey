@@ -10,7 +10,7 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.0
+MUSIC_VOLUME = 0.25
 EFFECT_VOLUME = 0.5
 UI_OPACITY = 225
 
@@ -46,7 +46,7 @@ MOVES = {
     },
     "sword_slash": {
         "base_damage": 2,
-        "multiplier": 0.25,
+        "multiplier": 0.5,
         "stat": "strength",
         "type": "physical",
         "mana": 1,
@@ -151,7 +151,10 @@ SOUND_EFFECTS = {
         "level_up": pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3")),
         "victory": [pygame.mixer.Sound(get_file_location("sounds/background/victory1.wav")),
         pygame.mixer.Sound(get_file_location("sounds/background/victory2.wav")),
-        pygame.mixer.Sound(get_file_location("sounds/background/victory3.wav")),]
+        pygame.mixer.Sound(get_file_location("sounds/background/victory3.wav")),],
+        "poisoned": pygame.mixer.Sound(get_file_location("sounds/effects/poisoned.mp3")),
+        "burned": pygame.mixer.Sound(get_file_location("sounds/effects/burned.mp3"))
+
     }
 }
 

@@ -2,6 +2,7 @@ import random
 
 import pygame.mixer
 
+from archive.corruption_test import apply_dark_purple_tint
 from classes.entity import Entity, BlockShield
 from classes.inventory import Item, Inventory
 from other.settings import *
@@ -23,7 +24,7 @@ class Enemy(Entity):
 
         # Battle related
         self.level = 1
-        self.exp = 50
+        self.exp_given = 50
         self.hp = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5
@@ -57,6 +58,26 @@ class Enemy(Entity):
         self.item_drop = "small_health_potion"
         self.inventory = Inventory()
 
+        # === corrupted ===
+        self.corrupted = random.choices(population=[True, False], weights=[0.1, 0.9], k=1)[0]
+
+        if self.corrupted:
+            for key in self.core_stats.keys():
+                self.core_stats[key] *= 2
+            self.corrupt_images()
+            self.exp_given *= 2
+
+
+
+    def corrupt_images(self):
+        self.sprite_dict = self.sprite_dict.copy()
+
+        for key in self.sprite_dict.keys():
+            for action, images in self.sprite_dict[key]["sprites"].items():
+                for i in range(len(images.copy())):
+                    images[i] = apply_dark_purple_tint(images[i])
+
+
 
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
@@ -71,7 +92,7 @@ class Enemy(Entity):
         }
             combat_moves = ["sword_slash"]
             critical_hit_chance = 0.25
-            blocking_chance = 0.0
+            blocking_chance = 0.75
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -85,7 +106,7 @@ class Enemy(Entity):
             }
 
             combat_moves = ["poison_stab", "sword_slash"]
-            critical_hit_chance = 1
+            critical_hit_chance = 0.75
             blocking_chance = 0.25
             return goblin_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
         else:
@@ -199,18 +220,15 @@ class Enemy(Entity):
 
     def item_use_logic(self):
         """Make the enemy use an item depending on certain circumstances."""
-        # if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
-        #     self.current_attack = "small_health_potion"
-        pass
+        if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
+            self.current_attack = "small_health_potion"
 
 
 
     def update_enemy(self, player, window, offset) -> None:
-        self.update_pos(offset = offset)
 
         self.blocking_mechanics(window, offset)
 
-        self.mask(window, offset)
 
 
         if not self.death:
@@ -218,6 +236,9 @@ class Enemy(Entity):
 
             if not player.in_battle and pygame.time.get_ticks() >= player.post_battle_iframes:
                 self.chase_player(player)
+
+            self.mask(window, offset)
+            self.update_pos(offset=offset)
 
             self.update_animations()
 

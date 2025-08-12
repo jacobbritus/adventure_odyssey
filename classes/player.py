@@ -59,12 +59,12 @@ class Player(Entity):
 
         # === core stats ===
         self.core_stats = {
-            "vitality": 10,
-            "defense": 10,
-            "strength": 10,
-            "magic": 7,
-            "speed": 9,
-            "luck": 7,
+            "vitality": 5,
+            "defense": 5,
+            "strength": 5,
+            "magic": 5,
+            "speed": 5,
+            "luck": 5,
         }
 
         self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])

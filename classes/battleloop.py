@@ -418,7 +418,7 @@ class BattleLoop:
             if all(enemy.hp <= 0 for enemy in self.enemies):
                 self.winner = self.heroes
                 for hero in self.heroes:
-                    hero.total_exp += sum(enemy.exp for enemy in self.enemies)
+                    hero.total_exp += sum(enemy.exp_given for enemy in self.enemies)
 
             else:
                 self.player.hp_bar.visible = True
@@ -430,16 +430,16 @@ class BattleLoop:
 
         # RETURN, ATTACK OR BUFF > [ IDLE ] > END TURN
         elif performer.animation_state in [AnimationState.IDLE, None]:
-            self.performer.handle_status_effect()
 
-            if self.performer.hp <= 0 and not self.performer.death:
-                self.performer.animation_state = AnimationState.DEATH
-                return
 
 
             # if not target.hp <= 0: target.action = "idle"  # change to animation state enemy hurt in entity
-            elif self.current_time >= self.delay:
+            if self.current_time >= self.delay:
+                self.performer.handle_status_effect()
 
+                if self.performer.hp <= 0 and not self.performer.death:
+                    self.performer.animation_state = AnimationState.DEATH
+                    return
 
 
                 self.performer.current_attack = None

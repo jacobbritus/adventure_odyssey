@@ -1044,7 +1044,8 @@ class MenuBook:
 
                 if self.player.inventory.items[item] <= 0:
                     self.selected_item = None
-                    button.kill()
+                    self.buttons_group = pygame.sprite.Group()
+                    break
                 else:
                     button.clicked = False
                     button.delete = False

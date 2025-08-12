@@ -3,6 +3,7 @@ import random
 
 import pygame.mixer
 
+from archive.corruption_test import apply_dark_purple_tint
 from classes.inventory import Item
 from classes.states import AnimationState
 from classes.spells import ProjectileSpell, StationarySpell
@@ -112,6 +113,9 @@ class Entity(pygame.sprite.Sprite):
         # === status effects ===
         self.status_effect = None
         self.status_effect_count = 0
+
+        # === corruption ===
+        self.corrupted = False
 
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
@@ -516,8 +520,6 @@ class Entity(pygame.sprite.Sprite):
                 status_effect_name = status_effect.value["name"]
                 color = status_effect.value["color"]
 
-
-
                 target.screen_messages.append(("perfect_block", status_effect_name, color))
 
 
@@ -527,6 +529,7 @@ class Entity(pygame.sprite.Sprite):
 
     def handle_status_effect(self):
         if self.status_effect:
+            play_sound("gameplay", self.status_effect.value["name"].lower(), None)
 
             if self.status_effect == StatusEffects.BURNED:
                 damage = 2
@@ -540,7 +543,7 @@ class Entity(pygame.sprite.Sprite):
                 self.screen_messages.append(("hp_dealt", "-" + str(damage), (102, 205, 170)))
                 self.status_effect_count += 1
 
-            if self.status_effect_count >= StatusEffects.BURNED.value["turns"]:
+            if self.status_effect_count > StatusEffects.BURNED.value["turns"]:
                 self.status_effect = None
 
 
@@ -597,7 +600,16 @@ class Entity(pygame.sprite.Sprite):
             self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
 
     def mask(self, window, offset):
-        if self.in_battle:
+            if self.type == "enemy" and self.corrupted:
+                self.image = apply_dark_purple_tint(self.image)
+                #
+                # mask = pygame.mask.from_surface(self.image).to_surface(
+                #     setcolor=(48, 25, 52, 150),
+                #     unsetcolor=(0, 0, 0, 0))
+                # window.blit(mask, pygame.Vector2(self.x, self.y) - offset)
+
+
+
             if self.animation_state in (AnimationState.HURT, AnimationState.DEATH):
                 if not pygame.time.get_ticks() >= self.hurt_time - 250:
                     self.hurt_mask_opacity += 25
