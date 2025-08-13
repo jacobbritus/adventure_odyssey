@@ -9,7 +9,13 @@ from other.text_bg_effect import text_bg_effect
 class StatusBar:
     def __init__(self, owner, y_offset):
         self.owner = owner
-        self.has_mana = hasattr(owner, "mana")
+
+        if owner.type == "player":
+            self.has_mana = True
+        else:
+            self.has_mana = False
+
+
         self.font = pygame.font.Font(FONT_ONE, 16)
         self.opacity = 0
 
@@ -673,10 +679,10 @@ class BattleMenu:
 
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
-
-
         self.update()
         self.performer = performer
+        self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in self.performer.skills]
+
         if not self.state == CombatMenuState.END_MENU and self.state:
             window.blit(self.main_menu_bg, self.main_menu_bg_pos)
             self.draw_main_menu()

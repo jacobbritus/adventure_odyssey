@@ -49,10 +49,9 @@ class BattleLoop:
         self.performer = self.battle_queue[0]
         self.target = None
 
-        if self.performer.type == "player":
+        if self.performer in self.heroes:
             self.state = BattleState.PLAYER_TURN
             self.combat_menu.state = CombatMenuState.MAIN_MENU
-
         else:
             self.state = BattleState.ENEMY_TURN
 
@@ -63,7 +62,7 @@ class BattleLoop:
         for other in self.enemies:
             other.selected = True
 
-        # === state / animation phase delay and the player turn clock ===
+        # === state / animation phase delay ===
         self.current_time: pygame.time = pygame.time.get_ticks()
 
         start_delay = 1000 if self.state == BattleState.PLAYER_TURN else 2000
@@ -81,7 +80,7 @@ class BattleLoop:
         self.battle_text_opacity = 0
         self.font = pygame.font.Font(FONT_ONE, 16)
 
-        # === sound ===
+        # === sound for selecting target ===
         self.click_sound_played = False
         self.hover_sound_played = False
 
@@ -247,19 +246,7 @@ class BattleLoop:
 
             if not all(hero.leveling for hero in self.heroes):
                 self.state = BattleState.END_BATTLE
-            #
-            # if not self.player.level_end_delay:self.player.exp_gain(sum(enemy.exp for enemy in self.enemies))
-            # self.player.hp_bar.display_exp = True
-            #
-            # if not self.player.leveling:
-            #     print(self.player.leveling)
-            #     print(self.player.hp_bar.visible)
-            #     print(self.player.hp_bar.display_exp)
-            #     print(self.player.exp_track)
-            #     self.player.exp_track = 0
-            #     self.player.level_end_delay = 0
-            #
-            #     self.state = BattleState.END_BATTLE
+
 
 
 
@@ -289,7 +276,6 @@ class BattleLoop:
 
     def get_player_input(self, attack) -> None:
         """Takes in the picked attack from the combat menu."""
-
         if attack in self.combat_menu.formatted_skills:
             internal_attack = attack.replace(" ", "_").lower()
             self.performer.current_attack = internal_attack
@@ -297,7 +283,8 @@ class BattleLoop:
             enemy_count = len([enemy for enemy in self.enemies if enemy in self.battle_queue])
 
             if MOVES[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
-                self.target = [enemy for enemy in self.battle_queue if enemy.type == "enemy"][0]
+                self.target = [enemy for enemy in self.enemies if not enemy.death][0]
+                print(self.target.name)
 
         else:
             internal_item = attack[0].replace(" ", "_").lower()
@@ -308,12 +295,11 @@ class BattleLoop:
 
 
     def player_turn(self) -> None:
-
         if self.performer.current_attack in MOVES.keys() and self.target:
-            if self.performer.type == "player":
+            if self.performer in self.heroes:
                 self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
-            self.handle_attack()
             self.state = BattleState.PLAYER_ANIMATION
+            self.handle_attack()
 
 
         elif self.performer.current_attack in ITEMS.keys():
@@ -352,7 +338,7 @@ class BattleLoop:
         # === [ APPROACH ] > WAIT > ATTACK ===
         if performer.animation_state == AnimationState.APPROACH:
             performer.approach_animation(target)
-            delay_time = 1000 if performer.type == "player" else random.randint(500, 3000)
+            delay_time = 1000 if performer in self.heroes else random.randint(500, 3000)
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:
@@ -446,19 +432,22 @@ class BattleLoop:
                 self.target = None
 
                 self.battle_queue.rotate(-1)
+
+                self.performer.mana += 1
+                self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
                 self.performer = self.battle_queue[0]
+
 
                 if self.winner:
                     self.combat_menu.state = CombatMenuState.END_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()
 
-                elif self.performer.type == "player":
+                elif self.performer in self.heroes:
                     # === set an enemy target ===
                     self.state = BattleState.PLAYER_TURN
                     self.combat_menu.state = CombatMenuState.MAIN_MENU
                     self.combat_menu.buttons_group = pygame.sprite.Group()
-                    self.performer.mana += 1
-                    self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
+
 
                 else:
                     self.state = BattleState.ENEMY_TURN

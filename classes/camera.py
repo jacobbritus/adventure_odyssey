@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from classes.UI import StatusBar
 from classes.inventory import Item
 from classes.states import BattleState, LevelState, AnimationState
 from other.settings import *
@@ -183,6 +184,30 @@ class YSortCameraGroup(pygame.sprite.Group):
         second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
         if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
 
+        heroes.append(enemies[0].clone("Goblin"))
+
+        # for i, hero in enumerate(heroes):
+        #
+        #     if hero == player:
+        #         continue
+        #
+        #     hero.mana = 5
+        #
+        #     setattr(hero, "mana", 5)
+        #     setattr(hero, "max_mana", 5)
+        #
+        #     setattr(hero, "exp", 5)
+        #     setattr(hero, "max_exp", 5)
+        #
+        #     hero.hp_bar = StatusBar(
+        #     owner=hero,
+        #     y_offset= i * 32)
+
+
+
+
+
+
 
         for participant in [*enemies, *heroes]:
             participant.in_battle = True
@@ -198,14 +223,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                 y = rect.centery
                 return [pygame.Vector2(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
-            positions = get_positions_in_rect(spots2, 2)
-            player.pre_battle_pos = (player.x, player.y)
-
-
-            player.x, player.y = positions[0]
-            player.rect.topleft = (int(player.x), int(player.y))
-            player.battle_pos = pygame.Vector2(player.x - player.width, player.y)
-
             def enemy_battle_spots(pos, n):
                 spacing = 80
                 positions = []
@@ -219,7 +236,20 @@ class YSortCameraGroup(pygame.sprite.Group):
 
                 return positions
 
-            enemy_positions = enemy_battle_spots(positions[1], len(self.battle_participants["enemies"]))
+
+            positions = get_positions_in_rect(spots2, 2)
+
+            player_positions = enemy_battle_spots(positions[0], len(heroes))
+            enemy_positions = enemy_battle_spots(positions[1], len(enemies))
+
+
+            for index, hero in enumerate(heroes):
+                hero.pre_battle_pos = (hero.x, hero.y)
+
+                hero.x, hero.y = player_positions[index]
+                hero.rect.topleft = (int(hero.x), int(hero.y))
+                hero.battle_pos = pygame.Vector2(hero.x - 64, hero.y)
+
 
             for index, enemy in enumerate(enemies):
                 enemy.pre_battle_pos = (enemy.x, enemy.y)
@@ -231,13 +261,21 @@ class YSortCameraGroup(pygame.sprite.Group):
                 enemy.face_target(player)
                 enemy.sprinting = False
 
-            player.face_target(enemies[0])
 
-            player.sprinting = False
+            for hero in heroes:
+                hero.face_target(enemies[0])
+                hero.sprinting = False
 
 
             battle_center_x = (player.rect.centerx + enemies[0].rect.centerx) // 2
-            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + 16 * len(list(enemies))
+
+            if len(heroes) > 1:
+                y_offset = 16 * len(list(heroes))
+            else:
+                y_offset = 16 * len(list(enemies))
+
+
+            battle_center_y = (player.rect.centery + enemies[0].rect.centery) // 2 + y_offset
             self.battle_position.update(battle_center_x, battle_center_y)
 
             self.battle_loop = BattleLoop(heroes, enemies, self.display_surface, self.offset)

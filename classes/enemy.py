@@ -58,6 +58,9 @@ class Enemy(Entity):
         self.item_drop = "small_health_potion"
         self.inventory = Inventory()
 
+        self.mana = 5
+        self.max_mana = 5
+
         # === corrupted ===
         self.corrupted = random.choices(population=[True, False], weights=[0.1, 0.9], k=1)[0]
 
@@ -91,8 +94,8 @@ class Enemy(Entity):
             "luck": 7,
         }
             combat_moves = ["sword_slash"]
-            critical_hit_chance = 0.25
-            blocking_chance = 0.75
+            critical_hit_chance = 0.1
+            blocking_chance = 0.25
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
         elif self.name == "Goblin":
@@ -106,7 +109,7 @@ class Enemy(Entity):
             }
 
             combat_moves = ["poison_stab", "sword_slash"]
-            critical_hit_chance = 0.75
+            critical_hit_chance = 0.1
             blocking_chance = 0.25
             return goblin_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
         else:

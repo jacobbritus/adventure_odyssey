@@ -2,6 +2,7 @@ import math
 
 import pygame.image
 
+from classes.UI import StatusBar
 from classes.entity import Entity, BlockShield
 from classes.inventory import Inventory
 from classes.spells import ProjectileSpell, StationarySpell
@@ -88,6 +89,10 @@ class Player(Entity):
 
         self.item_use_delay = pygame.time.get_ticks() + 0
 
+        self.hp_bar = StatusBar(
+            owner=self,
+            y_offset=0)
+
     def blocking_critical_hotkey(self, event) -> None:
         """The player's block | crit hotkey with its delay."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
@@ -96,8 +101,6 @@ class Player(Entity):
                 self.block_cooldown_end = pygame.time.get_ticks() + 2000
 
     def hotkeys(self, event, hp_bar):
-
-
         if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
             if not hp_bar.visible:
                 hp_bar.visible = True
@@ -196,6 +199,8 @@ class Player(Entity):
 
 
 
+
+
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)
@@ -270,6 +275,7 @@ class DustParticle(pygame.sprite.Sprite):
             return [pygame.transform.flip(img, True, False) for img in self.original_images]
 
         return None
+
 
 
     def update(self) -> None:

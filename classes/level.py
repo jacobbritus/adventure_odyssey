@@ -39,9 +39,6 @@ class Level:
         self.day_cycle_overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.create_map()
 
-        self.player.hp_bar = StatusBar(
-            owner=self.player,
-            y_offset=0)
 
 
     def create_map(self):
