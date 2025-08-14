@@ -8,19 +8,18 @@ from classes.inventory import Item, Inventory
 from other.settings import *
 import math
 
+
 class Enemy(Entity):
     def __init__(self, name, surf, pos, group, obstacle_sprites):
         super().__init__(group)
         self.name = name
         self.group = group
 
-
         # General
-        self.type = "enemy"
+        self.type = "npc"
         self.obstacle_sprites = obstacle_sprites
         self.detected_player = False
         self.sprite_dict, self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
-
 
         # Battle related
         self.level = 1
@@ -29,12 +28,10 @@ class Enemy(Entity):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5
 
-
         # Location and Movement
         self.spawn = pygame.Vector2(pos)
         self.x, self.y = pygame.Vector2(pos)
         self.sprint_speed = 150
-
 
         # Image
         self.image = surf
@@ -45,7 +42,7 @@ class Enemy(Entity):
 
         self.screen_position = None
 
-        self.respawn_time = pygame.time.get_ticks() + 600000 #
+        self.respawn_time = pygame.time.get_ticks() + 600000  #
 
         self.moving_randomly = False
 
@@ -54,23 +51,26 @@ class Enemy(Entity):
         self.move_delay = pygame.time.get_ticks() + 0
         self.reached_bounds = False
 
-
         self.item_drop = "small_health_potion"
         self.inventory = Inventory()
 
         self.mana = 5
         self.max_mana = 5
 
+        self.exp = 0
+        self.max_exp = 50
+
         # === corrupted ===
         self.corrupted = random.choices(population=[True, False], weights=[0.1, 0.9], k=1)[0]
+
+        self.icon = UI["icons"]["jacob"]
+
 
         if self.corrupted:
             for key in self.core_stats.keys():
                 self.core_stats[key] *= 2
             self.corrupt_images()
             self.exp_given *= 2
-
-
 
     def corrupt_images(self):
         self.sprite_dict = self.sprite_dict.copy()
@@ -80,19 +80,17 @@ class Enemy(Entity):
                 for i in range(len(images.copy())):
                     images[i] = apply_dark_purple_tint(images[i])
 
-
-
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
         if self.name == "Skeleton":
             core_stats = {
-            "vitality": 7,
-            "defense": 7,
-            "strength": 7,
-            "magic": 0,
-            "speed": 7,
-            "luck": 7,
-        }
+                "vitality": 7,
+                "defense": 7,
+                "strength": 7,
+                "magic": 0,
+                "speed": 7,
+                "luck": 7,
+            }
             combat_moves = ["sword_slash"]
             critical_hit_chance = 0.1
             blocking_chance = 0.25
@@ -119,14 +117,13 @@ class Enemy(Entity):
         # Calculate distances between enemy and player
         x_distance = player.x - self.x  # Positive if player is to the right
         y_distance = player.y - self.y  # Positive if player is below
-        
+
         # Calculate total distance using Pythagorean theorem
         distance = math.hypot(x_distance, y_distance)
 
         # Define detection radius (how far the enemy can see)
         detection_radius = 200  # Adjust this value as needed
 
-        
         if distance <= detection_radius and not self.reached_bounds:
             # Enemy sees player - start chasing
             self.action = "running"
@@ -134,7 +131,6 @@ class Enemy(Entity):
 
             if not self.detected_player:
                 pygame.mixer.Channel(1).play(SOUND_EFFECTS["gameplay"]["enemy_alert"])
-
 
             self.detected_player = True
 
@@ -144,16 +140,17 @@ class Enemy(Entity):
                 if x_distance > 0:
                     self.direction = "right"  # Player is to the right
                 else:
-                    self.direction = "left"   # Player is to the left
+                    self.direction = "left"  # Player is to the left
             else:
                 # Vertical distance is larger
                 if y_distance > 0:
-                    self.direction = "down"   # Player is below
+                    self.direction = "down"  # Player is below
                 else:
-                    self.direction = "up"     # Player is above
-        
+                    self.direction = "up"  # Player is above
+
             # Normalize movement vector for consistent speed
-            if distance > 0 and not abs(self.spawn.y - self.y) > 300 and not abs(self.spawn.x - self.x) > 300: # Prevent division by zero
+            if distance > 0 and not abs(self.spawn.y - self.y) > 300 and not abs(
+                    self.spawn.x - self.x) > 300:  # Prevent division by zero
                 dx = x_distance / distance  # Creates value between -1 and 1
                 dy = y_distance / distance  # Creates value between -1 and 1
                 self.move((dx, dy))
@@ -164,7 +161,6 @@ class Enemy(Entity):
             # Player is too far - enemy stops
             self.detected_player = False
             self.sprinting = False
-
 
             if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
                 self.reached_bounds = False
@@ -182,7 +178,6 @@ class Enemy(Entity):
             self.random_target_reached = False  # Start moving again
             self.moving_randomly = True
 
-
         # 2. If target not reached → move toward it
         if not self.random_target_reached:
             self.action = "running"
@@ -196,7 +191,6 @@ class Enemy(Entity):
                 self.direction = "right" if x_distance > 0 else "left"
             else:
                 self.direction = "down" if y_distance > 0 else "up"
-
 
             # Move
             if distance > 1:
@@ -221,18 +215,26 @@ class Enemy(Entity):
     def clone(self, name):
         return Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
+    def recruit(self, name):
+        new_recruit = Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
+        new_recruit.type = "npc"
+        new_recruit.occupation = "hero"
+        new_recruit.mana = 5
+        new_recruit.max_mana = 5
+
+        new_recruit.exp = 0
+        new_recruit.max_exp = 50
+
+        return new_recruit
+
     def item_use_logic(self):
         """Make the enemy use an item depending on certain circumstances."""
         if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
             self.current_attack = "small_health_potion"
 
-
-
     def update_enemy(self, player, window, offset) -> None:
 
         self.blocking_mechanics(window, offset)
-
-
 
         if not self.death:
             if not self.detected_player and not self.in_battle: self.random_movement()

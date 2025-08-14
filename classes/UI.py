@@ -9,8 +9,9 @@ from other.text_bg_effect import text_bg_effect
 class StatusBar:
     def __init__(self, owner, y_offset):
         self.owner = owner
+        self.y_offset = y_offset
 
-        if owner.type == "player":
+        if owner.type == "player" or owner.occupation == "hero":
             self.has_mana = True
         else:
             self.has_mana = False
@@ -72,7 +73,7 @@ class StatusBar:
         self.press_delay = 0
         self.x_offset = UI["status_bar"]["background"].get_width() - 32
 
-        if self.owner.type == "player":
+        if self.owner.type == "player" or self.owner.occupation == "hero":
             self.stats.extend(["mana", "exp"])
 
             self.setup_hero_status_bar(y_offset, )
@@ -91,7 +92,7 @@ class StatusBar:
 
         self.bg_bar = UI["status_bar"]["background"]
 
-        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - bg_width + self.x_offset, WINDOW_HEIGHT - menu_height + y_offset)
+        self.background_box_pos = pygame.Vector2(WINDOW_WIDTH - bg_width + self.x_offset, WINDOW_HEIGHT - menu_height + self.y_offset)
         self.name_surface = self.font.render(str(self.owner.name).upper(), True, (255, 255, 255))
         self.name_pos = self.background_box_pos + pygame.Vector2(36, 2)
 

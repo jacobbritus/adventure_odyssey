@@ -58,7 +58,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             offset_pos = sprite.rect.topleft - self.offset
             if inflated_display_rect.collidepoint(offset_pos):
 
-                if sprite.type == "enemy":
+                if sprite.type == "npc":
                     sprite.visibility = True
 
                 yield sprite
@@ -137,7 +137,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
         overlapping_sprites = [sprite for sprite in visible_sprites
-                         if sprite.type in ["player", "tree", "enemy", "item"]]
+                         if sprite.type in ["player", "tree", "npc", "item"]]
 
         # === draw the battle performer last ===
         draw_performer_last = self.battle_loop
@@ -152,7 +152,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
-                if sprite.type == "player":
+                if sprite.type in ["player", "npc"]:
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
 
                 else:
@@ -165,7 +165,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.offset += self.shake_offset
 
-        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "enemy"]
+        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "npc"]
 
 
         self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
@@ -184,7 +184,9 @@ class YSortCameraGroup(pygame.sprite.Group):
         second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
         if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
 
-        heroes.append(enemies[0].clone("Goblin"))
+        heroes.append(enemies[0].recruit("Goblin"))
+
+        heroes[1].hp_bar = StatusBar(heroes[1], 64)
 
         # for i, hero in enumerate(heroes):
         #

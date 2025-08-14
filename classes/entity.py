@@ -16,6 +16,7 @@ class Entity(pygame.sprite.Sprite):
         super().__init__(group)
         # General
         self.type = None
+        self.occupation = None
         self.group = group
 
         # Position related.
@@ -101,6 +102,11 @@ class Entity(pygame.sprite.Sprite):
         # === vital stats ===
         self.hp = None
         self.max_hp = None
+
+        self.mana = None
+        self.max_mana = None
+        self.exp = None
+        self.max_exp = None
 
         # === core stats ===
         self.core_stats = None

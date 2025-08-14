@@ -240,6 +240,8 @@ class BattleLoop:
 
         self.player.hp_bar.draw(self.window)
 
+        self.heroes[1].hp_bar.draw(self.window)
+
         if self.winner == self.heroes:
             for hero in self.heroes:
                 hero.calculate_exp()

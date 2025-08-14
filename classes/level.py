@@ -262,7 +262,7 @@ class Level:
 
 
     def enemy_collision(self, player):
-        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "enemy"]
+        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
