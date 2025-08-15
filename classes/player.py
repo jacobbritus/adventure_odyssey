@@ -17,6 +17,7 @@ class Player(Entity):
 
         # General
         self.type = "player"
+        self.occupation = "hero"
         self.name = "jacob"
         self.inventory = Inventory()
 
@@ -64,7 +65,7 @@ class Player(Entity):
             "defense": 5,
             "strength": 5,
             "magic": 5,
-            "speed": 5,
+            "speed": 15,
             "luck": 5,
         }
 
@@ -72,6 +73,10 @@ class Player(Entity):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.mana: int = 5
         self.max_mana = 10
+
+        # === allies ===
+        self.current_allies = []
+        self.all_allies = []
 
 
         # Other
@@ -85,8 +90,8 @@ class Player(Entity):
         self.post_battle_iframes = pygame.time.get_ticks() + 0
         self.block_cooldown_end = pygame.time.get_ticks() + 0
 
+        # === items ===
         self.item_sprites = pygame.sprite.Group()
-
         self.item_use_delay = pygame.time.get_ticks() + 0
 
         self.hp_bar = StatusBar(
@@ -156,31 +161,7 @@ class Player(Entity):
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
-    def calculate_exp(self):
-        close_time = 4000
 
-        if not self.exp >= self.total_exp and not self.exp == self.max_exp:
-            # toggle hp_bar
-            self.leveling = True
-            self.hp_bar.visible = True
-            self.hp_bar.display_exp = True
-
-            speed = max(abs(self.exp - self.total_exp) * 0.025, 0.025)
-            self.exp = min(self.exp + speed, self.max_exp)
-            self.close_hp_bar_time = pygame.time.get_ticks() + close_time
-
-        if self.exp == self.max_exp:
-            if pygame.time.get_ticks() >= self.close_hp_bar_time - close_time // 2:
-                self.level += 1
-                self.stat_points += 1
-                self.exp = 0
-                self.total_exp = max(self.total_exp - self.max_exp, 0)
-                self.max_exp += 20
-
-        if pygame.time.get_ticks() >= self.close_hp_bar_time and self.leveling:
-            self.leveling = False
-            self.hp_bar.visible = False
-            self.exp = round(self.exp)
 
 
     def level_up_animation(self, offset, window) -> None:

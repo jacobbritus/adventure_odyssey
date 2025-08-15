@@ -21,12 +21,14 @@ class Enemy(Entity):
         self.detected_player = False
         self.sprite_dict, self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy()
 
-        # Battle related
+        # Battle related (will be moved to initialize and changed depending on the area of spawning)
         self.level = 1
         self.exp_given = 50
         self.hp = int(10 + 1.5 * self.core_stats["vitality"])
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.dmg = 5
+        self.mana = 0
+        self.max_mana = 5
 
         # Location and Movement
         self.spawn = pygame.Vector2(pos)
@@ -54,16 +56,12 @@ class Enemy(Entity):
         self.item_drop = "small_health_potion"
         self.inventory = Inventory()
 
-        self.mana = 5
-        self.max_mana = 5
 
-        self.exp = 0
-        self.max_exp = 50
 
         # === corrupted ===
         self.corrupted = random.choices(population=[True, False], weights=[0.1, 0.9], k=1)[0]
 
-        self.icon = UI["icons"]["jacob"]
+        self.icon = UI["icons"]["goblin"]
 
 
         if self.corrupted:
@@ -113,6 +111,58 @@ class Enemy(Entity):
         else:
             return None
 
+    def follow_player(self, player):
+        # Calculate distances between enemy and player
+        x_distance = player.x - self.x  # Positive if player is to the right
+        y_distance = player.y - self.y  # Positive if player is below
+
+        # Calculate total distance using Pythagorean theorem
+        distance = math.hypot(x_distance, y_distance)
+        if distance > 500:
+            self.x, self.y = player.x, player.y
+            self.update_pos()
+            print("yes")
+
+        # Define detection radius (how far the enemy can see)
+        detection_radius = 500  # Adjust this value as needed
+
+        if distance <= detection_radius:
+            # Enemy sees player - start chasing
+            self.action = "running"
+
+            if not self.detected_player:
+                pygame.mixer.Channel(1).play(SOUND_EFFECTS["gameplay"]["enemy_alert"])
+
+            self.detected_player = True
+
+            # Determine primary direction based on largest distance
+            if abs(x_distance) > abs(y_distance):
+                # Horizontal distance is larger
+                if x_distance > 0:
+                    self.direction = "right"  # Player is to the right
+                else:
+                    self.direction = "left"  # Player is to the left
+            else:
+                # Vertical distance is larger
+                if y_distance > 0:
+                    self.direction = "down"  # Player is below
+                else:
+                    self.direction = "up"  # Player is above
+
+            # Normalize movement vector for consistent speed
+            if distance > 48:  # Prevent division by zero
+                dx = x_distance / distance  # Creates value between -1 and 1
+                dy = y_distance / distance  # Creates value between -1 and 1
+                self.move((dx, dy))
+            else:
+                self.action = "idle"
+
+        else:
+            # Player is too far - enemy stops
+            self.detected_player = False
+
+
+
     def chase_player(self, player) -> None:
         # Calculate distances between enemy and player
         x_distance = player.x - self.x  # Positive if player is to the right
@@ -123,6 +173,8 @@ class Enemy(Entity):
 
         # Define detection radius (how far the enemy can see)
         detection_radius = 200  # Adjust this value as needed
+
+
 
         if distance <= detection_radius and not self.reached_bounds:
             # Enemy sees player - start chasing
@@ -164,6 +216,11 @@ class Enemy(Entity):
 
             if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
                 self.reached_bounds = False
+
+
+
+
+
 
     def random_movement(self):
         current_time = pygame.time.get_ticks()
@@ -215,13 +272,15 @@ class Enemy(Entity):
     def clone(self, name):
         return Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
-    def recruit(self, name):
-        new_recruit = Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
-        new_recruit.type = "npc"
+    def recruit(self):
+        new_recruit = Enemy(self.name, self.image, self.spawn, self.group, self.obstacle_sprites)
         new_recruit.occupation = "hero"
-        new_recruit.mana = 5
-        new_recruit.max_mana = 5
+        new_recruit.selected = True
 
+        new_recruit.sprint_speed = 200
+
+
+        # use the original's level
         new_recruit.exp = 0
         new_recruit.max_exp = 50
 
@@ -237,10 +296,15 @@ class Enemy(Entity):
         self.blocking_mechanics(window, offset)
 
         if not self.death:
-            if not self.detected_player and not self.in_battle: self.random_movement()
+            if not self.detected_player and not self.in_battle and not self.occupation == "hero":
+                self.random_movement()
 
-            if not player.in_battle and pygame.time.get_ticks() >= player.post_battle_iframes:
-                self.chase_player(player)
+            if not player.in_battle:
+                if self.occupation == "hero":
+                    self.sprinting = player.sprinting
+                    self.follow_player(player)
+                elif pygame.time.get_ticks() >= player.post_battle_iframes:
+                    self.chase_player(player)
 
             self.mask(window, offset)
             self.update_pos(offset=offset)

@@ -98,7 +98,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
 
-            if performer.current_attack and performer.current_attack in performer.skills and MOVES[performer.current_attack]["type"] == "special":
+            if performer.current_attack and performer.current_attack in performer.skills and SKILLS[performer.current_attack]["type"] == "special":
                 if performer.animation_state in [AnimationState.BUFF, AnimationState.WAIT]:
                     performer.stationary_spells.update((performer.hitbox.center - self.offset))
                     target = performer.rect.center
@@ -181,34 +181,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
+        second_enemy = random.choices([True, False], k=1, weights = [0.9, 0.1])[0]
         if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
-
-        heroes.append(enemies[0].recruit("Goblin"))
-
-        heroes[1].hp_bar = StatusBar(heroes[1], 64)
-
-        # for i, hero in enumerate(heroes):
-        #
-        #     if hero == player:
-        #         continue
-        #
-        #     hero.mana = 5
-        #
-        #     setattr(hero, "mana", 5)
-        #     setattr(hero, "max_mana", 5)
-        #
-        #     setattr(hero, "exp", 5)
-        #     setattr(hero, "max_exp", 5)
-        #
-        #     hero.hp_bar = StatusBar(
-        #     owner=hero,
-        #     y_offset= i * 32)
-
-
-
-
-
 
 
         for participant in [*enemies, *heroes]:
@@ -302,7 +276,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.transition_timer = None
 
     def end_battle(self):
-        heroes = self.battle_participants["heroes"]
         player = self.battle_participants["heroes"][0]
         original_enemy = self.battle_participants["enemies"][0]
         enemies = self.battle_participants["enemies"]
@@ -310,15 +283,15 @@ class YSortCameraGroup(pygame.sprite.Group):
         for index, enemy in enumerate(enemies):
             if not index == 0: enemy.kill()
 
-        if self.battle_loop.winner == heroes:
+        if self.battle_loop.winner == self.battle_loop.heroes:
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
-
         else:
-            player.hp = player.max_hp
-            player.mana = player.max_mana
-            player.death = False
-            player.x, player.y = player.spawn
-            player.rect.topleft = player.spawn
+            for hero in self.battle_loop.heroes:
+                hero.hp = hero.max_hp
+                hero.mana = 0
+                hero.death = False
+                player.x, player.y = player.spawn
+                player.rect.topleft = player.spawn
 
             for enemy in enemies:
                 enemy.death = False
@@ -326,13 +299,15 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
         # === go back to initiate pos ====
-        for participant in [player, original_enemy]:
+        for participant in [player, original_enemy, *player.current_allies]:
             if participant == player and self.battle_loop.winner == enemies:
                 participant.in_battle = False
                 continue
-            participant.in_battle = False
             participant.rect.topleft = participant.pre_battle_pos
             participant.x, participant.y = participant.pre_battle_pos
+            participant.update_pos()
+            participant.in_battle = False
+
 
         self.battle_loop = None
         self.battle_participants = None

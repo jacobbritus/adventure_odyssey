@@ -118,6 +118,8 @@ class Level:
                     self.menu = MenuBook(self.player)
 
 
+
+
                 # enemy.name in the future
 
                 # seperate this too
@@ -162,7 +164,9 @@ class Level:
 
         self.item_collision()
 
-        self.player.hp_bar.draw(self.display_surface)
+        for ally in self.player.current_allies:
+            ally.hp_bar.draw(self.display_surface)
+            self.player.hp_bar.draw(self.display_surface)
 
         self.visible_sprites.transition_screen()
         self.menu.draw(self.display_surface, )
@@ -247,8 +251,6 @@ class Level:
 
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
-
-
         for enemy in self.visible_sprites.enemy_sprites:
             enemy.update_enemy(player, self.display_surface, self.visible_sprites.offset)
             if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
@@ -260,6 +262,14 @@ class Level:
                 Item(self.visible_sprites, enemy.item_drop, 1, item_pos)
                 enemy.item_drop = None
 
+            # test
+            if not self.player.current_allies:
+                self.player.current_allies.append(enemy.recruit())
+                self.player.current_allies[0].hp_bar = StatusBar(self.player.current_allies[0], 28)
+
+
+
+
 
     def enemy_collision(self, player):
         self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
@@ -267,21 +277,12 @@ class Level:
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
-                if enemy.death:
-                    ...
-
-                    # if enemy.item_drop:
-                    #     self.overworld_ui.show_pickup_prompt(self.display_surface)
-                    #     if not player.item_sprites and self.overworld_ui.picked_up_item:
-                    #         Item(self.player.item_sprites, enemy.item_drop.name, 1, self.player.screen_position)
-                    #         player.inventory.add(enemy.item_drop)
-                    #         self.overworld_ui.picked_up_item = False
-                    #         enemy.item_drop = None
-
+                if enemy.occupation == "hero" or enemy.death:
+                    continue
 
                 else:
                     self.visible_sprites.battle_participants = {
-                        "heroes": [player],
+                        "heroes": [player] + player.current_allies,
                         "enemies": [enemy]
                     }
 

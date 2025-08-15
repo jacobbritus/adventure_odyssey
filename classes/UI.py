@@ -487,14 +487,14 @@ class Button(pygame.sprite.Sprite):
 
         # change these into parameters please
         if text:
-            if text in MOVES.keys():
+            if text in SKILLS.keys():
                 self.button_type = "skill_button"
                 self.text_string = text.replace("_", " ").upper()
                 self.text_surface = self.font.render(self.text_string, True, color)
                 self.text_size = self.text_surface.get_size()
                 self.text_position = pygame.Vector2(self.rect.left + 5, self.rect.centery - self.text_size[1] // 2)
 
-                self.mana_cost = str(MOVES[text]["mana"])
+                self.mana_cost = str(SKILLS[text]["mana"])
                 self.mana_cost_surface = self.font.render(self.mana_cost, True, color)
                 self.mana_cost_position = pygame.Vector2(self.rect.right - 32,
                                                          self.rect.centery - self.mana_cost_surface.get_height() // 2 - 1)
@@ -782,7 +782,7 @@ class BattleMenu:
 
         def can_use_skill(name, mana_amount) -> bool:
             """check if the player has enough mana"""
-            cost = MOVES[name]["mana"]
+            cost = SKILLS[name]["mana"]
             return mana_amount >= cost
 
         if not self.skills_buttons:

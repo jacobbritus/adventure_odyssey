@@ -30,8 +30,9 @@ class BattleLoop:
         # === UI setup ===
         self.combat_menu = BattleMenu(self.player, performer=heroes[0], functions=[self.get_player_input, self.end_battle])
 
-        self.player.hp_bar.visible = True
-        self.player.hp_bar.setup_hero_status_bar(0)
+        for hero in self.heroes:
+            hero.hp_bar.visible = True
+            # hero.hp_bar.setup_hero_status_bar(0)
 
         self.enemy_hp_bars_test = {}
 
@@ -93,7 +94,7 @@ class BattleLoop:
 
                 if button.text_string in self.combat_menu.formatted_skills:
                     internal_name = button.text_string.replace(" ", "_").lower()
-                    data = MOVES
+                    data = SKILLS
                 elif button.text_string[0].replace(" ", "_").lower() in self.player.inventory.items.keys():
                     internal_name = button.text_string[0].replace(" ", "_").lower()
                     data = ITEMS
@@ -144,9 +145,12 @@ class BattleLoop:
         if self.battle_text_bg_pos:
             rect = UI["battle_message_box"]["small_background"].get_rect(topleft = self.battle_text_bg_pos)
 
-            # I could potentially hide it
+            # === cancel attack ===
             if rect.collidepoint(mouse_pos) and press:
-                print("oi mate")
+                self.performer.current_attack = None
+                self.combat_menu.state = CombatMenuState.MAIN_MENU
+                for enemy in self.enemies:
+                    enemy.selected = True
 
         if self.state == BattleState.PLAYER_TURN and self.performer.current_attack:
             self.battle_text_string = "SELECT A TARGET"
@@ -195,7 +199,6 @@ class BattleLoop:
                 self.enemy_turn()
 
             elif self.state == BattleState.END_BATTLE:
-
                 time = 3000
                 self.player.post_battle_iframes = pygame.time.get_ticks() + time
                 self.return_to_overworld = True
@@ -238,9 +241,8 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
-        self.player.hp_bar.draw(self.window)
-
-        self.heroes[1].hp_bar.draw(self.window)
+        for hero in self.heroes:
+            hero.hp_bar.draw(self.window)
 
         if self.winner == self.heroes:
             for hero in self.heroes:
@@ -284,7 +286,7 @@ class BattleLoop:
 
             enemy_count = len([enemy for enemy in self.enemies if enemy in self.battle_queue])
 
-            if MOVES[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
+            if SKILLS[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
                 self.target = [enemy for enemy in self.enemies if not enemy.death][0]
                 print(self.target.name)
 
@@ -297,9 +299,9 @@ class BattleLoop:
 
 
     def player_turn(self) -> None:
-        if self.performer.current_attack in MOVES.keys() and self.target:
+        if self.performer.current_attack in SKILLS.keys() and self.target:
             if self.performer in self.heroes:
-                self.performer.mana -= MOVES[self.performer.current_attack]["mana"]
+                self.performer.mana -= SKILLS[self.performer.current_attack]["mana"]
             self.state = BattleState.PLAYER_ANIMATION
             self.handle_attack()
 
@@ -313,12 +315,12 @@ class BattleLoop:
     def handle_attack(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
 
-        if MOVES[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
+        if SKILLS[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
             self.performer.animation_state = AnimationState.APPROACH
-        elif MOVES[self.performer.current_attack]["type"] == AttackType.BUFF.value:
+        elif SKILLS[self.performer.current_attack]["type"] == AttackType.BUFF.value:
             self.performer.spawn_projectile = False
             self.performer.animation_state = AnimationState.BUFF
-        elif MOVES[self.performer.current_attack]["type"] == AttackType.SPECIAL.value:
+        elif SKILLS[self.performer.current_attack]["type"] == AttackType.SPECIAL.value:
             self.performer.spawn_projectile = False
             self.set_delay(1000)
             self.performer.animation_state = AnimationState.WAIT
@@ -326,7 +328,9 @@ class BattleLoop:
     def enemy_turn(self) -> None:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
-        self.performer.current_attack = random.choice(self.performer.skills)
+
+        options = [skill for skill in self.performer.skills if self.performer.mana >= SKILLS[skill]["mana"]]
+        self.performer.current_attack = random.choice(options)
 
         self.performer.item_use_logic()
 
@@ -377,7 +381,7 @@ class BattleLoop:
         elif performer.animation_state == AnimationState.WAIT:
             performer.wait()
             if self.current_time >= self.delay:
-                if MOVES[performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
+                if SKILLS[performer.current_attack]["type"] in [AttackType.PHYSICAL.value, AttackType.SPECIAL.value]:
                     performer.animation_state = AnimationState.ATTACK
                 else:
                     performer.animation_state = AnimationState.IDLE

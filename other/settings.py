@@ -10,8 +10,8 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.0
-EFFECT_VOLUME = 0.0
+MUSIC_VOLUME = 0.5
+EFFECT_VOLUME = 0.5
 UI_OPACITY = 225
 
 WINDOW_WIDTH = 640
@@ -32,7 +32,7 @@ block_shield_sprites = block_shield_sprites
 item_drop = item_drop
 
 # === moves info ===
-MOVES = {
+SKILLS = {
     "fire_ball": {
         "base_damage": 6,
         "multiplier": 0.5,
@@ -85,7 +85,7 @@ MOVES = {
             "multiplier": 0.25,
             "stat": "strength",
             "type": "physical",
-            "mana": 0,
+            "mana": 2,
             "status_effect": StatusEffects.POISONED,
             "sound": [get_file_location("sounds/effects/sword_slash.mp3")],
             "description": "A close-range blow that deals physical damage to one enemy."}
@@ -188,7 +188,8 @@ for directory in UI_directories:
     for image in os.listdir(get_file_location(os.path.join(UI_directory, directory))):
         png_image = pygame.image.load(get_file_location(os.path.join(UI_directory, directory, image)))
         png_image.set_alpha(UI_OPACITY)
-        images_dict[image.strip(".png")] = png_image
+        key_name = image[:-4]
+        images_dict[key_name] = png_image
 
     UI[directory] = images_dict
 
