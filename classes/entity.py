@@ -156,6 +156,10 @@ class Entity(pygame.sprite.Sprite):
             self.hp_bar.visible = False
             self.exp = round(self.exp)
 
+    def recalculate_stats(self):
+        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.hp = self.max_hp
+
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
             # if not self.action == "blocking":
@@ -520,7 +524,7 @@ class Entity(pygame.sprite.Sprite):
                     damage *= 2
 
 
-            if self.type == "enemy" and not self.critical_hit_is_done:
+            if self.type == "npc" and not self.critical_hit_is_done:
                 bools = [True, False]
                 weights = [self.critical_hit_chance, 1 - self.critical_hit_chance]
                 self.critical_hit = random.choices(bools, k=1, weights = weights)[0]
@@ -534,7 +538,7 @@ class Entity(pygame.sprite.Sprite):
                     damage *= 2
 
         # player attacks, enemy block chance
-        if target.type == "enemy":
+        if target.type == "npc":
             bools = [True, False]
             weights = [target.blocking_chance, 1 - target.blocking_chance]
             target.blocking = random.choices(bools, k=1, weights=weights)[0]

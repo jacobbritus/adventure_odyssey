@@ -158,8 +158,6 @@ class Player(Entity):
         else:
             self.action = "idle"
 
-    def recalculate_stats(self):
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
 
 
 

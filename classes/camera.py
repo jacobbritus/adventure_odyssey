@@ -152,7 +152,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
-                if sprite.type in ["player", "npc"]:
+                if sprite.type in ["player"]:
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
 
                 else:

@@ -180,7 +180,7 @@ class Level:
             8: {"color": (255, 250, 240), "opacity": 75},
             12: {"color": (255, 255, 255), "opacity": 0},
             16: {"color": (255, 238, 131), "opacity": 75},
-            18: {"color": (255, 174, 66), "opacity": 100},
+            18: {"color": (255, 174, 66), "opacity": 125},
             20: {"color": (34, 0, 51), "opacity": 150},
             22: {"color": (0, 0, 0), "opacity": 150},
             0: {"color": (0, 0, 0), "opacity": 150},
@@ -193,7 +193,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[16]
+        current_phase = day_phases[5]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -264,7 +264,7 @@ class Level:
 
             # test
             if not self.player.current_allies:
-                self.player.current_allies.append(enemy.recruit())
+                self.player.current_allies.append(enemy.recruit("Goblin"))
                 self.player.current_allies[0].hp_bar = StatusBar(self.player.current_allies[0], 28)
 
 

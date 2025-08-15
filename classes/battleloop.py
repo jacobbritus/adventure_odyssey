@@ -334,7 +334,7 @@ class BattleLoop:
 
         self.performer.item_use_logic()
 
-        self.target = random.choice(self.heroes)
+        self.target = random.choice([hero for hero in self.heroes if not hero.death])
 
         self.player_turn()
 
@@ -390,7 +390,7 @@ class BattleLoop:
         elif performer.animation_state == AnimationState.ATTACK:
 
             performer.attack_animation(target, performer.current_attack)
-            # self.set_delay(500)
+            self.set_delay(1000)
 
         # === [ BUFF ] > IDLE ====
         elif performer.animation_state == AnimationState.BUFF:

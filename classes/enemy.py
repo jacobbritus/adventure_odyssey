@@ -59,24 +59,34 @@ class Enemy(Entity):
 
 
         # === corrupted ===
-        self.corrupted = random.choices(population=[True, False], weights=[0.1, 0.9], k=1)[0]
+        self.corrupted = random.choices(population=[True, False], weights=[0.5, 0.5], k=1)[0]
 
-        self.icon = UI["icons"]["goblin"]
-
+        self.icon = UI["icons"][name.lower()]
 
         if self.corrupted:
-            for key in self.core_stats.keys():
-                self.core_stats[key] *= 2
-            self.corrupt_images()
-            self.exp_given *= 2
+            self.initialize_corrupted_enemy()
 
-    def corrupt_images(self):
-        self.sprite_dict = self.sprite_dict.copy()
+    def initialize_corrupted_enemy(self):
+        new_sprite_dict = {}
 
-        for key in self.sprite_dict.keys():
-            for action, images in self.sprite_dict[key]["sprites"].items():
-                for i in range(len(images.copy())):
-                    images[i] = apply_dark_purple_tint(images[i])
+        for key, data in self.sprite_dict.items():
+            new_sprite_dict[key] = {
+                "sprites": {
+                    action: [
+                        apply_dark_purple_tint(image.copy())  # copy surface first
+                        for image in images
+                    ]
+                    for action, images in data["sprites"].items()
+                },
+                    "impact_frame": self.sprite_dict[key]["impact_frame"] if self.sprite_dict[key].get("impact_frame") else ...
+            }
+
+        self.sprite_dict = new_sprite_dict
+
+        for key in self.core_stats.keys():
+            self.core_stats[key] *= 2
+        self.exp_given *= 2
+        self.recalculate_stats()
 
     def initialize_enemy(self) -> list or None:
         combat_moves = critical_hit_chance = blocking_chance = core_stats = None
@@ -90,7 +100,7 @@ class Enemy(Entity):
                 "luck": 7,
             }
             combat_moves = ["sword_slash"]
-            critical_hit_chance = 0.1
+            critical_hit_chance = 0.9
             blocking_chance = 0.25
             return skeleton_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
 
@@ -105,7 +115,7 @@ class Enemy(Entity):
             }
 
             combat_moves = ["poison_stab", "sword_slash"]
-            critical_hit_chance = 0.1
+            critical_hit_chance = 0.9
             blocking_chance = 0.25
             return goblin_sprites, core_stats, combat_moves, critical_hit_chance, blocking_chance
         else:
@@ -118,10 +128,15 @@ class Enemy(Entity):
 
         # Calculate total distance using Pythagorean theorem
         distance = math.hypot(x_distance, y_distance)
+
         if distance > 500:
             self.x, self.y = player.x, player.y
             self.update_pos()
             print("yes")
+        elif distance > 75:
+            self.sprinting = True
+        else:
+            self.sprinting = False
 
         # Define detection radius (how far the enemy can see)
         detection_radius = 500  # Adjust this value as needed
@@ -150,7 +165,7 @@ class Enemy(Entity):
                     self.direction = "up"  # Player is above
 
             # Normalize movement vector for consistent speed
-            if distance > 48:  # Prevent division by zero
+            if distance > 50:  # Prevent division by zero
                 dx = x_distance / distance  # Creates value between -1 and 1
                 dy = y_distance / distance  # Creates value between -1 and 1
                 self.move((dx, dy))
@@ -160,8 +175,6 @@ class Enemy(Entity):
         else:
             # Player is too far - enemy stops
             self.detected_player = False
-
-
 
     def chase_player(self, player) -> None:
         # Calculate distances between enemy and player
@@ -217,11 +230,6 @@ class Enemy(Entity):
             if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
                 self.reached_bounds = False
 
-
-
-
-
-
     def random_movement(self):
         current_time = pygame.time.get_ticks()
 
@@ -270,14 +278,23 @@ class Enemy(Entity):
                 self.action = "idle"
 
     def clone(self, name):
-        return Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
+        clone = Enemy(name, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
-    def recruit(self):
-        new_recruit = Enemy(self.name, self.image, self.spawn, self.group, self.obstacle_sprites)
+        if not self.corrupted:
+            clone.corrupted = random.choices(population=[True, False], weights=[0.9, 0.1], k=1)[0]
+            if clone.corrupted:
+                clone.initialize_corrupted_enemy()
+
+        return clone
+
+    def recruit(self, name):
+        new_recruit = Enemy(name, self.image, self.spawn, self.group, self.obstacle_sprites)
         new_recruit.occupation = "hero"
         new_recruit.selected = True
 
         new_recruit.sprint_speed = 200
+        new_recruit.walking_speed = 100
+
 
 
         # use the original's level
@@ -301,7 +318,6 @@ class Enemy(Entity):
 
             if not player.in_battle:
                 if self.occupation == "hero":
-                    self.sprinting = player.sprinting
                     self.follow_player(player)
                 elif pygame.time.get_ticks() >= player.post_battle_iframes:
                     self.chase_player(player)
