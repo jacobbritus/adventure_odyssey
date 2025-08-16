@@ -17,7 +17,7 @@ class Player(Entity):
 
         # General
         self.type = "player"
-        self.occupation = "hero"
+        self.role = "hero"
         self.name = "jacob"
         self.inventory = Inventory()
 
@@ -39,7 +39,7 @@ class Player(Entity):
         self.sprint_speed = 200
 
         # Image
-        self.sprite_dict: dict[str: str: list] = player_sprites
+        self.sprite_dict: dict[str: str: list] = CHARACTER_SPRITES[self.name]
         self.icon = UI["icons"][self.name]
         self.image = self.sprite_dict[self.action]["sprites"][self.direction][math.floor(self.frame)]
         self.width, self.height = pygame.Surface.get_size(self.image)
@@ -48,15 +48,13 @@ class Player(Entity):
 
         # Stats
         self.level = 1
-
         self.exp = 0
-        self.max_exp = 50
-        self.total_exp = 0
+        self.max_exp = self.exp_to_level()
         self.close_hp_bar_time = 0
 
 
-        self.leveling = True
-        self.stat_points = 1
+        self.leveling = False
+        self.stat_points = 0
 
 
         # === core stats ===

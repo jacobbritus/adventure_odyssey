@@ -11,7 +11,8 @@ class StatusBar:
         self.owner = owner
         self.y_offset = y_offset
 
-        if owner.type == "player" or owner.occupation == "hero":
+        print(owner.role)
+        if owner.type == "player" or owner.role == "hero":
             self.has_mana = True
         else:
             self.has_mana = False
@@ -73,7 +74,7 @@ class StatusBar:
         self.press_delay = 0
         self.x_offset = UI["status_bar"]["background"].get_width() - 32
 
-        if self.owner.type == "player" or self.owner.occupation == "hero":
+        if self.owner.type == "player" or self.owner.role == "hero":
             self.stats.extend(["mana", "exp"])
 
             self.setup_hero_status_bar(y_offset, )

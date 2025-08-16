@@ -10,8 +10,8 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 SCALE = 2
-MUSIC_VOLUME = 0.5
-EFFECT_VOLUME = 1
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0
 UI_OPACITY = 225
 
 WINDOW_WIDTH = 1280
@@ -24,9 +24,13 @@ TILE_SIZE = 32
 fireball_sprites = fireball_sprites
 level_up_sprites = level_up_sprites
 
-player_sprites = player_sprites
+CHARACTER_SPRITES = {
+    "jacob": player_sprites,
+    "skeleton": skeleton_sprites,
+    "goblin": goblin_sprites
+}
+
 sprite_dust = sprite_dust
-skeleton_sprites = skeleton_sprites
 block_shield_sprites = block_shield_sprites
 
 item_drop = item_drop

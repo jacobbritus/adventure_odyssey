@@ -16,7 +16,7 @@ class Entity(pygame.sprite.Sprite):
         super().__init__(group)
         # General
         self.type = None
-        self.occupation = None
+        self.role = None
         self.group = group
 
         # Position related.
@@ -149,16 +149,21 @@ class Entity(pygame.sprite.Sprite):
                 self.stat_points += 1
                 self.exp = 0
                 self.total_exp = max(self.total_exp - self.max_exp, 0)
-                self.max_exp += 20
+                self.max_exp = self.exp_to_level()
 
         if pygame.time.get_ticks() >= self.close_hp_bar_time and self.leveling:
             self.leveling = False
-            self.hp_bar.visible = False
+            self.hp_bar.display_exp = False
+
             self.exp = round(self.exp)
+
+    def exp_to_level(self, base_exp = 50, exponent = 1.25):
+        return round(base_exp * (self.level ** exponent))
 
     def recalculate_stats(self):
         self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
         self.hp = self.max_hp
+
 
     def blocking_mechanics(self, window, offset) -> None:
         if self.blocking:
@@ -671,7 +676,8 @@ class Entity(pygame.sprite.Sprite):
                     setcolor=(180, 0, 0, self.hurt_mask_opacity),
                     unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
-            elif not self.occupation == "hero" and not self.selected and self.animation_state == AnimationState.IDLE:
+
+            elif self.role == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
                 mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 100),
                                                                        unsetcolor=(0, 0, 0, 0))
                 window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)

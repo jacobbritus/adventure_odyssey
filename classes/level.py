@@ -9,7 +9,7 @@ from other.play_sound import play_sound
 from other.settings import *
 from datetime import datetime
 from classes.camera import YSortCameraGroup
-from classes.enemy import Enemy
+from classes.npc import NPC, Enemy
 from classes.player import Player, DustParticle
 from classes.Tiles import StaticTile, AnimatedTile
 from pytmx.util_pygame import load_pygame
@@ -72,8 +72,8 @@ class Level:
                 pos = (obj.x, obj.y)
 
 
-                Enemy(surf=obj.image, pos=pos, name=obj.name, group=(self.enemies, self.visible_sprites),
-                      obstacle_sprites=self.obstacle_sprites)
+                Enemy(surf=obj.image, pos=pos, name=obj.name, level=1, group=(self.enemies, self.visible_sprites),
+                    obstacle_sprites=self.obstacle_sprites)
 
 
         # === draw the ground items ===
@@ -252,19 +252,19 @@ class Level:
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
         for enemy in self.visible_sprites.enemy_sprites:
-            enemy.update_enemy(player, self.display_surface, self.visible_sprites.offset)
+            enemy.update_npc(player, self.display_surface, self.visible_sprites.offset)
             if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
                 enemy.hp = enemy.max_hp
                 enemy.action = "idle"
                 enemy.death = False
-            if enemy.death and enemy.item_drop and not enemy.in_battle:
+            if enemy.role == "enemy" and enemy.death and enemy.item_drop and not enemy.in_battle:
                 item_pos = pygame.Vector2(enemy.hitbox.topleft) + (8, 0)
                 Item(self.visible_sprites, enemy.item_drop, 1, item_pos)
                 enemy.item_drop = None
 
             # test
             if not self.player.current_allies:
-                self.player.current_allies.append(enemy.recruit("Goblin"))
+                self.player.current_allies.append(enemy.recruit("Goblin", enemy.level))
                 self.player.current_allies[0].hp_bar = StatusBar(self.player.current_allies[0], 28)
 
 
@@ -272,12 +272,12 @@ class Level:
 
 
     def enemy_collision(self, player):
-        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
+        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
 
         # checks all battle spots instead of just the visible ones
         for enemy in self.enemy_sprites:
             if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
-                if enemy.occupation == "hero" or enemy.death:
+                if enemy.death:
                     continue
 
                 else:

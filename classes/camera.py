@@ -182,7 +182,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         enemies = self.battle_participants["enemies"]
 
         second_enemy = random.choices([True, False], k=1, weights = [0.9, 0.1])[0]
-        if second_enemy: enemies.append(enemies[0].clone("Skeleton"))
+        if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
 
 
         for participant in [*enemies, *heroes]:
