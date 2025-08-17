@@ -11,7 +11,6 @@ class StatusBar:
         self.owner = owner
         self.y_offset = y_offset
 
-        print(owner.role)
         if owner.type == "player" or owner.role == "hero":
             self.has_mana = True
         else:

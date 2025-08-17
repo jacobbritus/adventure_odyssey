@@ -164,7 +164,7 @@ class Level:
 
         self.item_collision()
 
-        for ally in self.player.current_allies:
+        for ally in self.player.active_allies:
             ally.hp_bar.draw(self.display_surface)
             self.player.hp_bar.draw(self.display_surface)
 
@@ -227,10 +227,11 @@ class Level:
         self.overworld_transition()
         self.visible_sprites.transition_screen()
 
-        if self.player.level_up_visual:
-            self.player.level_up_visual.draw(self.display_surface)
-            self.player.level_up_visual.update(self.player.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x),
-                                                       int(self.visible_sprites.offset.y)) - (0, 232))
+        for hero in [self.player, *self.player.active_allies]:
+            if hero.level_up_visual:
+                hero.level_up_visual.draw(self.display_surface)
+                hero.level_up_visual.update(hero.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x),
+                                                           int(self.visible_sprites.offset.y)) - (0, 232))
 
 
     def item_collision(self):
@@ -251,21 +252,38 @@ class Level:
 
     def update_enemies(self, player):
         """Updates all the enemy sprites based on the player's position."""
-        for enemy in self.visible_sprites.enemy_sprites:
-            enemy.update_npc(player, self.display_surface, self.visible_sprites.offset)
-            if not enemy.in_battle and enemy.death and pygame.time.get_ticks() >= enemy.respawn_time:
-                enemy.hp = enemy.max_hp
-                enemy.action = "idle"
-                enemy.death = False
-            if enemy.role == "enemy" and enemy.death and enemy.item_drop and not enemy.in_battle:
-                item_pos = pygame.Vector2(enemy.hitbox.topleft) + (8, 0)
-                Item(self.visible_sprites, enemy.item_drop, 1, item_pos)
-                enemy.item_drop = None
+        npc_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
 
-            # test
-            if not self.player.current_allies:
-                enemy.recruit(player, "Goblin", enemy.level)
-                enemy.recruit(player, "Skeleton", enemy.level)
+        for npc in self.visible_sprites.enemy_sprites:
+            npc.update_npc(player, self.display_surface, self.visible_sprites.offset)
+            if not npc.in_battle and npc.death and pygame.time.get_ticks() >= npc.respawn_time:
+                npc.hp = npc.max_hp
+                npc.action = "idle"
+                npc.death = False
+            if npc.role == "enemy" and npc.death and npc.item_drop and not npc.in_battle:
+                item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
+                Item(self.visible_sprites, npc.item_drop, 1, item_pos)
+                npc.item_drop = None
+
+            # testing allies
+            if not self.player.active_allies:
+                npc.recruit(player, "Goblin", npc.level)
+                npc.recruit(player, "Skeleton", npc.level)
+                npc.recruit(player, "Goblin", npc.level)
+                npc.recruit(player, "Skeleton", npc.level)
+                npc.recruit(player, "Goblin", npc.level)
+                npc.recruit(player, "Skeleton", npc.level)
+                npc.recruit(player, "Goblin", npc.level)
+                npc.recruit(player, "Skeleton", npc.level)
+
+
+            # for ally in self.player.all_allies:
+            #     if not ally.group == self.visible_sprites:
+            #         print("done")
+            #         ally.active = True
+            #         ally.group = self.visible_sprites
+
+
 
 
 
@@ -274,17 +292,17 @@ class Level:
 
 
     def initiate_battle_session(self, player):
-        self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
+        enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
 
         # checks all battle spots instead of just the visible ones
-        for enemy in self.enemy_sprites:
+        for enemy in enemy_sprites:
             if player.hitbox.colliderect(enemy.hitbox) and pygame.time.get_ticks() >= player.post_battle_iframes:
                 if enemy.death:
                     continue
 
                 else:
                     self.visible_sprites.battle_participants = {
-                        "heroes": [player] + player.current_allies,
+                        "heroes": [player] + player.active_allies,
                         "enemies": [enemy]
                     }
 

@@ -92,20 +92,24 @@ class NPC(Entity):
                 self.moving_randomly = False
                 self.action = "idle"
 
-    def recruit(self, player,  name, level, ):
-        new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
+    def recruit(self, player,  name, level):
+
+        if not len(player.active_allies) >= 3:
+            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
+
+            new_recruit.active = True
+            player.active_allies.append(new_recruit)
+            new_recruit.hp_bar = StatusBar(new_recruit, 28 * len(player.active_allies))
+        else:
+            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
+            new_recruit.active = False
+            player.inactive_allies.append(new_recruit)
+
 
         new_recruit.sprint_speed = 200
         new_recruit.walking_speed = 100
 
-        if not len(player.current_allies) > 4:
-            player.current_allies.append(new_recruit)
-            new_recruit.hp_bar = StatusBar(new_recruit, 28 * len(player.current_allies))
-        else:
-            player.all_allies.append(new_recruit)
 
-
-        return new_recruit
 
 
     def update_npc(self, player, window, offset) -> None:
@@ -186,13 +190,6 @@ class CombatNPC(NPC):
             }
 
         self.sprite_dict = new_sprite_dict
-
-
-
-
-
-
-
 
 class Enemy(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
@@ -319,6 +316,9 @@ class Ally(CombatNPC):
         self.exp = 0
         self.max_exp = self.exp_to_level()
 
+        self.active = None
+
+
     def follow_player(self, player):
         # Calculate distances between enemy and player
         x_distance = player.x - self.x  # Positive if player is to the right
@@ -327,7 +327,7 @@ class Ally(CombatNPC):
         # Calculate total distance using Pythagorean theorem
         distance = math.hypot(x_distance, y_distance)
         player_distance = 72
-        ally_distance = 52 * player.current_allies.index(self)
+        ally_distance = 52 * player.active_allies.index(self)
         stop_distance =  player_distance + ally_distance
 
 
@@ -375,10 +375,12 @@ class Ally(CombatNPC):
 
     def update_npc(self, player, window, offset) -> None:
         super().update_npc(player, window, offset)
+        self.level_up_animation(offset)
+
 
         if not self.death:
             # === follow the player ===
-            if not player.in_battle:
+            if not player.in_battle and self.active:
                 self.level_stats()
                 self.follow_player(player)
 

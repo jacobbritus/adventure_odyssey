@@ -133,7 +133,6 @@ class BattleLoop:
         # === blit the text ===
         if self.battle_text_surface:
             self.battle_text_bg.set_alpha(min(self.battle_text_opacity, UI_OPACITY))
-            self.battle_text_surface.set_alpha(min(self.battle_text_opacity, UI_OPACITY))
             self.battle_text_opacity += 10
             window.blit(self.battle_text_bg, self.battle_text_bg_pos)
             window.blit(self.battle_text_surface, self.battle_text_pos)

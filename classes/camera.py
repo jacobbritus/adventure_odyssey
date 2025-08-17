@@ -150,6 +150,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in sorted_sprites:
             if draw_performer_last and sprite == self.battle_loop.performer:
                 continue
+            elif hasattr(sprite, "active") and not sprite.active:
+                continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
                 if sprite.type in ["player"]:
@@ -181,7 +183,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        second_enemy = random.choices([True, False], k=1, weights = [0.9, 0.1])[0]
+        second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
         if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
 
 
@@ -302,7 +304,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
 
         # === go back to initiate pos ====
-        for participant in [player, original_enemy, *player.current_allies]:
+        for participant in [player, original_enemy, *player.active_allies]:
             if participant == player and self.battle_loop.winner == enemies:
                 participant.in_battle = False
                 continue
@@ -317,7 +319,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_participants = None
         self.state = LevelState.OVERWORLD
 
-        for hero in [player, *player.current_allies]:
+        for hero in [player, *player.active_allies]:
             hero.hp_bar.display_exp = False
 
 

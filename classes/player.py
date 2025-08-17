@@ -73,8 +73,8 @@ class Player(Entity):
         self.max_mana = 10
 
         # === allies ===
-        self.current_allies = []
-        self.all_allies = []
+        self.active_allies = []
+        self.inactive_allies = []
 
 
         # Other
@@ -158,15 +158,6 @@ class Player(Entity):
 
 
 
-
-
-    def level_up_animation(self, offset, window) -> None:
-        """Draws an animating shining light on the player upon leveling up."""
-        if self.exp == self.max_exp:
-            if not self.level_up_visual:
-                StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
-                play_sound("gameplay", "level_up", None)
-
     def item_pickup_animation(self, window):
         if not self.in_battle: self.action = "item_use"
         if not self.in_battle: self.direction = "down"
@@ -197,7 +188,7 @@ class Player(Entity):
         self.calculate_exp()
 
         self.update_animations()
-        self.level_up_animation(offset, window)
+        self.level_up_animation(offset)
 
 
 
