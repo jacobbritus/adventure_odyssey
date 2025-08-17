@@ -79,11 +79,12 @@ class Item(pygame.sprite.Sprite):
 
 
 class Inventory:
-    def __init__(self):
-        self.items = {
-            "small_health_potion": 1
-
-        }
+    def __init__(self, **kwargs):
+        # === enemies spawn with items in their inventory ===
+        if kwargs.get("item"):
+            self.items = kwargs.get("item")
+        else:
+            self.items = {}
 
     def add(self, item):
         if item.name in self.items.keys():

@@ -134,7 +134,7 @@ class Level:
 
     def battle_transition(self):
         if not self.visible_sprites.battle_participants:
-            self.enemy_collision(self.player)
+            self.initiate_battle_session(self.player)
         else:
             if not self.visible_sprites.delay or pygame.time.get_ticks() >= self.visible_sprites.delay:
                 self.visible_sprites.start_battle()
@@ -264,14 +264,16 @@ class Level:
 
             # test
             if not self.player.current_allies:
-                self.player.current_allies.append(enemy.recruit("Goblin", enemy.level))
-                self.player.current_allies[0].hp_bar = StatusBar(self.player.current_allies[0], 28)
+                enemy.recruit(player, "Goblin", enemy.level)
+                enemy.recruit(player, "Skeleton", enemy.level)
 
 
 
 
 
-    def enemy_collision(self, player):
+
+
+    def initiate_battle_session(self, player):
         self.enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
 
         # checks all battle spots instead of just the visible ones

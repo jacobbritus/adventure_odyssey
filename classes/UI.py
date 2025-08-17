@@ -808,14 +808,15 @@ class BattleMenu:
                 y_offset = (0, 20 * index)
                 padding = (6, 6)
                 pos = self.skills_bg_pos + padding + y_offset
+                formatted_item_name = item.replace("_", " ").upper()
 
                 # === disable item usage ===
                 if self.player.inventory.items[item] <= 0:
                     Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function,
-                           (item.upper(), str(self.player.inventory.items[item])),
+                           (formatted_item_name, str(self.player.inventory.items[item])),
                            ButtonVariant.WIDE, pos, True)
                 else:
-                    Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function, (item.upper(), str(self.player.inventory.items[item])),
+                    Button([self.buttons_group, self.inventory_buttons], item.upper(), self.attack_function, (formatted_item_name, str(self.player.inventory.items[item])),
                        ButtonVariant.WIDE, pos, False)
 
 

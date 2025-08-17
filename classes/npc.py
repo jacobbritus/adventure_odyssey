@@ -3,6 +3,7 @@ import random
 import pygame.mixer
 
 from archive.corruption_test import apply_dark_purple_tint
+from classes.UI import StatusBar
 from classes.entity import Entity, BlockShield
 from classes.inventory import Item, Inventory
 from other.settings import *
@@ -91,11 +92,19 @@ class NPC(Entity):
                 self.moving_randomly = False
                 self.action = "idle"
 
-    def recruit(self, name, level):
+    def recruit(self, player,  name, level, ):
         new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
 
         new_recruit.sprint_speed = 200
         new_recruit.walking_speed = 100
+
+        if not len(player.current_allies) > 4:
+            player.current_allies.append(new_recruit)
+            new_recruit.hp_bar = StatusBar(new_recruit, 28 * len(player.current_allies))
+        else:
+            player.all_allies.append(new_recruit)
+
+
         return new_recruit
 
 
@@ -151,9 +160,7 @@ class CombatNPC(NPC):
             core_stats[key] += self.level
 
         # === double stats for corruption ===
-        if corrupted:
-            for key in core_stats:
-                core_stats[key] *= 1.5
+
 
         return core_stats, combat_moves, critical_hit_chance, blocking_chance
 
@@ -206,7 +213,7 @@ class Enemy(CombatNPC):
 
         # === inventory ===
         self.item_drop = "small_health_potion"
-        self.inventory = Inventory()
+        self.inventory = Inventory(item = {"small_health_potion": 2})
 
         # === other ===
         self.detected_player = False
@@ -214,6 +221,11 @@ class Enemy(CombatNPC):
 
         # === corrupted ===
         if self.corrupted:
+            for key in self.core_stats:
+                self.core_stats[key] = round(self.core_stats[key] * 1.5)
+            self.recalculate_stats()
+
+            print(self.core_stats)
             self.exp_given *= 2
             self.initialize_corrupted_enemy()
 
@@ -227,8 +239,6 @@ class Enemy(CombatNPC):
 
         # Define detection radius (how far the enemy can see)
         detection_radius = 200  # Adjust this value as needed
-
-
 
         if distance <= detection_radius and not self.reached_bounds:
             # Enemy sees player - start chasing
@@ -316,53 +326,52 @@ class Ally(CombatNPC):
 
         # Calculate total distance using Pythagorean theorem
         distance = math.hypot(x_distance, y_distance)
+        player_distance = 72
+        ally_distance = 52 * player.current_allies.index(self)
+        stop_distance =  player_distance + ally_distance
+
 
         if distance > 500:
             self.x, self.y = player.x, player.y
             self.update_pos()
-        elif distance > 75:
+        elif distance > stop_distance:
             self.sprinting = True
         else:
             self.sprinting = False
 
-        # Define detection radius (how far the enemy can see)
-        detection_radius = 500  # Adjust this value as needed
+        # Determine primary direction based on largest distance
+        if abs(x_distance) > abs(y_distance):
+            # Horizontal distance is larger
+            if x_distance > 0:
+                self.direction = "right"  # Player is to the right
+            else:
+                self.direction = "left"  # Player is to the left
+        else:
+            # Vertical distance is larger
+            if y_distance > 0:
+                self.direction = "down"  # Player is below
+            else:
+                self.direction = "up"  # Player is above
 
-        if distance <= detection_radius:
-            # Enemy sees player - start chasing
+        # Normalize movement vector for consistent speed
+
+        if distance > stop_distance - 32:  # Prevent division by zero
             self.action = "running"
+            dx = x_distance / distance  # Creates value between -1 and 1
+            dy = y_distance / distance  # Creates value between -1 and 1
+            self.move((dx, dy))
+        else:
+            self.action = "idle"
 
 
-            # Determine primary direction based on largest distance
-            if abs(x_distance) > abs(y_distance):
-                # Horizontal distance is larger
-                if x_distance > 0:
-                    self.direction = "right"  # Player is to the right
-                else:
-                    self.direction = "left"  # Player is to the left
-            else:
-                # Vertical distance is larger
-                if y_distance > 0:
-                    self.direction = "down"  # Player is below
-                else:
-                    self.direction = "up"  # Player is above
-
-            # Normalize movement vector for consistent speed
-            if distance > 50:  # Prevent division by zero
-                dx = x_distance / distance  # Creates value between -1 and 1
-                dy = y_distance / distance  # Creates value between -1 and 1
-                self.move((dx, dy))
-            else:
-                self.action = "idle"
-
-
+    # allies should have dominant core stats that get leveled rather than every stat
     def level_stats(self) -> None:
         """Automatically scale stats."""
         if self.stat_points > 0:
             for stat in self.core_stats.keys():
                 self.core_stats[stat] += 10
             self.stat_points -= 1
-        self.recalculate_stats()
+        self.recalculate_stats() # domin implement
 
     def update_npc(self, player, window, offset) -> None:
         super().update_npc(player, window, offset)

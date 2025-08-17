@@ -153,7 +153,6 @@ class Entity(pygame.sprite.Sprite):
 
         if pygame.time.get_ticks() >= self.close_hp_bar_time and self.leveling:
             self.leveling = False
-            self.hp_bar.display_exp = False
 
             self.exp = round(self.exp)
 

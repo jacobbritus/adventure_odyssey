@@ -439,7 +439,7 @@ class BattleLoop:
 
                 self.battle_queue.rotate(-1)
 
-                self.performer.mana += 1
+                self.performer.mana = min(self.performer.mana + 1, self.performer.max_mana)
                 self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
                 self.performer = self.battle_queue[0]
 

@@ -200,7 +200,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 return [pygame.Vector2(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
             def enemy_battle_spots(pos, n):
-                spacing = 80
+                spacing = 48
                 positions = []
 
                 total_height = spacing * (n - 1)  # total space between all enemies
@@ -280,8 +280,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         original_enemy = self.battle_participants["enemies"][0]
         enemies = self.battle_participants["enemies"]
 
+        # === remove cloned enemies ===
         for index, enemy in enumerate(enemies):
-            if not index == 0: enemy.kill()
+            if enemy == "original_enemy":
+                continue
+            enemy.kill()
 
         if self.battle_loop.winner == self.battle_loop.heroes:
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
@@ -308,11 +311,14 @@ class YSortCameraGroup(pygame.sprite.Group):
             participant.update_pos()
             participant.in_battle = False
 
+        original_enemy.recruit(player, original_enemy.name, original_enemy.level)
 
         self.battle_loop = None
         self.battle_participants = None
         self.state = LevelState.OVERWORLD
-        player.hp_bar.display_exp = False
+
+        for hero in [player, *player.current_allies]:
+            hero.hp_bar.display_exp = False
 
 
 
