@@ -154,7 +154,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
-                if sprite.type in ["player"]:
+                if sprite.type in ["player", "npc"]:
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
 
                 else:
@@ -183,8 +183,9 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        second_enemy = random.choices([True, False], k=1, weights = [0.1, 0.9])[0]
-        if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
+        for i in range(3):
+            second_enemy = random.choices([True, False], k=1, weights = [0.0, 1.0])[0]
+            if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
 
 
         for participant in [*enemies, *heroes]:

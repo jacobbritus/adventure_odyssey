@@ -133,7 +133,7 @@ class Entity(pygame.sprite.Sprite):
         self.corrupted = False
 
     def calculate_exp(self):
-        close_time = 5000
+        close_time = 6000
 
         if not self.exp >= self.total_exp and not self.exp == self.max_exp:
             # toggle hp_bar
@@ -158,12 +158,17 @@ class Entity(pygame.sprite.Sprite):
 
             self.exp = round(self.exp)
 
-    def level_up_animation(self, offset) -> None:
+    def level_up_animation(self, offset, window) -> None:
         """Draws an animating shining light on the player upon leveling up."""
         if self.exp == self.max_exp:
             if not self.level_up_visual:
                 StationarySpell("level_up", self.level_up_visual, self.hitbox.center - pygame.Vector2(int(offset.x), int(offset.y)))
                 play_sound("gameplay", "level_up", None)
+            else:
+                self.level_up_visual.draw(window)
+                self.level_up_visual.update(self.hitbox.center - pygame.Vector2(int(offset.x),
+                                                                                int(offset.y)) - (0, 232))
+
 
     def exp_to_level(self, base_exp = 50, exponent = 1.25):
         return round(base_exp * (self.level ** exponent))

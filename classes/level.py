@@ -125,12 +125,23 @@ class Level:
                 # seperate this too
 
     def run(self) -> None:
+        self.visible_sprites.update()
+        self.visible_sprites.draw_sprites()
+        self.update_npcs(self.player)
+        self.visible_sprites.update_camera(self.player)
+
+        self.update_day_cycle()
+
+
         if self.visible_sprites.state == LevelState.OVERWORLD:
             self.update_soundtrack()
             self.overworld()
         else:
             self.update_soundtrack()
             self.battle()
+
+        self.visible_sprites.transition_screen()
+
 
     def battle_transition(self):
         if not self.visible_sprites.battle_participants:
@@ -152,26 +163,19 @@ class Level:
 
         # if not self.menu.running:
 
-        self.visible_sprites.update()
-        self.visible_sprites.draw_sprites()
-        self.battle_transition()
-
-        self.visible_sprites.update_camera(self.player)
-        self.update_enemies(self.player)
-
-
-        self.update_day_cycle()
-
         self.item_collision()
 
+        self.draw_hp_bars()
+
+        self.battle_transition()
+
+
+        self.menu.draw(self.display_surface)
+
+    def draw_hp_bars(self):
         for ally in self.player.active_allies:
             ally.hp_bar.draw(self.display_surface)
             self.player.hp_bar.draw(self.display_surface)
-
-        self.visible_sprites.transition_screen()
-        self.menu.draw(self.display_surface, )
-
-
 
 
     def update_day_cycle(self):
@@ -179,7 +183,7 @@ class Level:
             5: {"color": (255,223,186), "opacity": 75},
             8: {"color": (255, 250, 240), "opacity": 75},
             12: {"color": (255, 255, 255), "opacity": 0},
-            16: {"color": (255, 238, 131), "opacity": 75},
+            16: {"color": (255, 238, 131), "opacity": 100},
             18: {"color": (255, 174, 66), "opacity": 125},
             20: {"color": (34, 0, 51), "opacity": 150},
             22: {"color": (0, 0, 0), "opacity": 150},
@@ -193,7 +197,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[5]
+        current_phase = day_phases[20]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -204,19 +208,10 @@ class Level:
         self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
 
         # self.visible_sprites.custom_draw(self.player)
-        self.visible_sprites.update()
-        self.visible_sprites.draw_sprites()
-
-        self.update_enemies(self.player)
-        self.visible_sprites.update_camera(self.player)
-
 
         self.visible_sprites.battle_loop.run()
         self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
 
-
-
-        self.update_day_cycle()
 
         self.visible_sprites.battle_loop.draw_ui()
         self.visible_sprites.battle_loop.top_screen_description(self.display_surface)
@@ -225,13 +220,7 @@ class Level:
 
         # end battle
         self.overworld_transition()
-        self.visible_sprites.transition_screen()
 
-        for hero in [self.player, *self.player.active_allies]:
-            if hero.level_up_visual:
-                hero.level_up_visual.draw(self.display_surface)
-                hero.level_up_visual.update(hero.hitbox.center - pygame.Vector2(int(self.visible_sprites.offset.x),
-                                                           int(self.visible_sprites.offset.y)) - (0, 232))
 
 
     def item_collision(self):
@@ -250,7 +239,7 @@ class Level:
                     self.visible_sprites.remove(item)
 
 
-    def update_enemies(self, player):
+    def update_npcs(self, player):
         """Updates all the enemy sprites based on the player's position."""
         npc_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
 
@@ -271,10 +260,7 @@ class Level:
                 npc.recruit(player, "Skeleton", npc.level)
                 npc.recruit(player, "Goblin", npc.level)
                 npc.recruit(player, "Skeleton", npc.level)
-                npc.recruit(player, "Goblin", npc.level)
-                npc.recruit(player, "Skeleton", npc.level)
-                npc.recruit(player, "Goblin", npc.level)
-                npc.recruit(player, "Skeleton", npc.level)
+
 
 
             # for ally in self.player.all_allies:
@@ -282,14 +268,6 @@ class Level:
             #         print("done")
             #         ally.active = True
             #         ally.group = self.visible_sprites
-
-
-
-
-
-
-
-
 
     def initiate_battle_session(self, player):
         enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]

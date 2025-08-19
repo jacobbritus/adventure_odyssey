@@ -133,6 +133,8 @@ class BattleLoop:
         # === blit the text ===
         if self.battle_text_surface:
             self.battle_text_bg.set_alpha(min(self.battle_text_opacity, UI_OPACITY))
+            self.battle_text_surface.set_alpha(min(self.battle_text_opacity, 255))
+
             self.battle_text_opacity += 10
             window.blit(self.battle_text_bg, self.battle_text_bg_pos)
             window.blit(self.battle_text_surface, self.battle_text_pos)
@@ -438,8 +440,9 @@ class BattleLoop:
 
                 self.battle_queue.rotate(-1)
 
-                self.performer.mana = min(self.performer.mana + 1, self.performer.max_mana)
-                self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
+                if not self.performer.mana == self.performer.max_mana:
+                    self.performer.mana = self.performer.mana + 1
+                    self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
                 self.performer = self.battle_queue[0]
 
 

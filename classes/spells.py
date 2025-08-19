@@ -27,7 +27,7 @@ class StationarySpell(pygame.sprite.Sprite):
             return heal_sprites, pygame.time.get_ticks() + 2000, pygame.time.get_ticks() + 1250, (0,0)
         if self.spell_name == "level_up":
             self.opacity = 150
-            return level_up_sprites, pygame.time.get_ticks() + 2000, pygame.time.get_ticks() + 1250, (0, 0)
+            return level_up_sprites, pygame.time.get_ticks() + 3000, pygame.time.get_ticks() + 1500, (0, 0)
         if self.spell_name == "lightning_strike":
             return lightning_sprites, pygame.time.get_ticks() + 1200, pygame.time.get_ticks() + 800, (0,100)
         return None

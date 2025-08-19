@@ -188,7 +188,7 @@ class Player(Entity):
         self.calculate_exp()
 
         self.update_animations()
-        self.level_up_animation(offset)
+        self.level_up_animation(offset, window)
 
 
 

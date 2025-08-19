@@ -843,11 +843,14 @@ class MenuBook:
 
         self.content = [{"title": UI["titles"]["info_title"], "content": self.info_page},
                         {"title": UI["titles"]["inventory_title"], "content": self.inventory_page}]
-        self.current_page = 1
+        self.current_page = 0
         self.buttons_group = pygame.sprite.Group()
         self.font = pygame.font.Font(FONT_ONE, 16)
         self.selected_item = None
-        self.click_delay = pygame.time.get_ticks()
+        self.click_delay = pygame.time.get_ticks() + 0
+        self.team_member_index = 0
+        self.selected_team_member = self.player
+
 
     def draw(self, window):
         self.update()
@@ -873,6 +876,7 @@ class MenuBook:
                 self.state = BookState.PREVIOUS_PAGE
 
     def update(self):
+
         if self.state:
             # === reset the buttons ===
             self.buttons_group = pygame.sprite.Group()
@@ -891,6 +895,7 @@ class MenuBook:
                                       WINDOW_HEIGHT // 2 - self.image.get_height() // 2)
 
     def contents(self, window):
+
         title = self.content[self.current_page]["title"]
         if self.content[self.current_page]["content"]:
             self.content[self.current_page]["content"](window)
@@ -902,17 +907,42 @@ class MenuBook:
         window.blit(title, title_pos)
 
     def info_page(self, window):
-        image = UI["book"]["info_page"]
-        image_pos = self.base_pos + (68, 64)
-        window.blit(image, image_pos)
+
 
         font = pygame.font.Font(FONT_ONE, 16)
 
+        long_divider = UI["book"]["long_divider"]
+        window.blit(long_divider, self.base_pos + (68, 118))
+
+        # === character icon and switching between team members ===
+        team_members = [self.player, *self.player.active_allies]
+
+        character_icon = UI["icons"][team_members[self.team_member_index].name.lower()]
+        character_icon_pos = self.base_pos + (65, 75)
+        window.blit(character_icon, character_icon_pos)
+
+        mouse = pygame.mouse.get_pos()
+        press = pygame.mouse.get_pressed()[0]
+
+        if character_icon.get_rect(topleft = character_icon_pos).collidepoint(mouse) and press\
+                and pygame.time.get_ticks() >= self.click_delay:
+
+            self.team_member_index = min(self.team_member_index + 1, len(team_members))
+
+            if self.team_member_index == len(team_members):
+                self.team_member_index = 0
+
+            self.selected_team_member = team_members[self.team_member_index]
+
+
+            self.click_delay = pygame.time.get_ticks() + 300
+
+
         base_stats = {
-            "LEVEL": str(self.player.level),
-            "HP": f"{str(self.player.hp)}/{str(self.player.max_hp)}",
-            "MANA": str(self.player.mana),
-            "EXP": f"{str(self.player.exp)}/{str(self.player.max_exp)}"
+            "LEVEL": str(self.selected_team_member.level),
+            "HP": f"{str(self.selected_team_member.hp)}/{str(self.selected_team_member.max_hp)}",
+            "MANA": str(self.selected_team_member.mana),
+            "EXP": f"{str(self.selected_team_member.exp)}/{str(self.selected_team_member.max_exp)}"
         }
 
         base_y = 58
@@ -928,7 +958,7 @@ class MenuBook:
             text = font.render(value, True, (255, 255, 255))
             window.blit(text, position)
 
-        core_stats = self.player.core_stats
+        core_stats = self.selected_team_member.core_stats
 
         base_y = 125
         base_x = 70
@@ -945,9 +975,9 @@ class MenuBook:
             text = font.render(str(value).upper(), True, (255, 255, 255))
             window.blit(text, position)
 
-        if self.player.stat_points:
+        if self.selected_team_member.stat_points:
             base_x = 70
-            text = font.render(str(f"STAT POINTS: {str(self.player.stat_points)}").upper(), True, (255, 255, 255))
+            text = font.render(str(f"STAT POINTS: {str(self.selected_team_member.stat_points)}").upper(), True, (255, 255, 255))
             position = self.base_pos + (base_x, self.book_height // 1.37)
             window.blit(text, position)
 
@@ -961,6 +991,17 @@ class MenuBook:
 
             for button in self.buttons_group:
                 button.draw(window)
+
+    def level_up(self):
+        for button in self.buttons_group:
+            if button.delete:
+                index = list(self.buttons_group).index(button)
+
+                stat = list(self.player.core_stats.keys())[index]
+                self.selected_team_member.core_stats[stat] += 1
+                self.selected_team_member.stat_points -= 1
+                self.selected_team_member.recalculate_stats()
+                self.buttons_group = pygame.sprite.Group()
 
     def inventory_page(self, window):
         base_x = 54
@@ -1059,15 +1100,3 @@ class MenuBook:
                     button.delete = False
 
 
-
-
-    def level_up(self):
-        for button in self.buttons_group:
-            if button.delete:
-                index = list(self.buttons_group).index(button)
-
-                stat = list(self.player.core_stats.keys())[index]
-                self.player.core_stats[stat] += 1
-                self.player.stat_points -= 1
-                self.player.recalculate_stats()
-                self.buttons_group = pygame.sprite.Group()

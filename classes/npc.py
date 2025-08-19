@@ -126,17 +126,17 @@ class CombatNPC(NPC):
     def __init__(self, name, surf, pos, group, obstacle_sprites, role):
         super().__init__(name, surf, pos, group, obstacle_sprites, role)
 
-        self.corrupted = random.choices(population=[True, False], weights=[0.25, 0.75], k=1)[0]
+        self.corrupted = random.choices(population=[True, False], weights=[0.0, 1.0], k=1)[0]
 
 
-    def initialize_enemy(self, corrupted) -> list or None:
+    def initialize_combat_elements(self, corrupted) -> list or None:
         core_stats = combat_moves = critical_hit_chance = blocking_chance = None
         if self.name == "Skeleton":
             core_stats = {
                 "vitality": 7,
                 "defense": 7,
                 "strength": 7,
-                "magic": 0,
+                "magic": 3,
                 "speed": 7,
                 "luck": 7,
             }
@@ -150,7 +150,7 @@ class CombatNPC(NPC):
                 "vitality": 7,
                 "defense": 7,
                 "strength": 7,
-                "magic": 0,
+                "magic": 3,
                 "speed": 10,
                 "luck": 7,
             }
@@ -198,7 +198,7 @@ class Enemy(CombatNPC):
         # === stat related ===
         self.level = level
 
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy(self.corrupted)
+        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements(self.corrupted)
 
 
         self.exp_given = self.exp_to_level()
@@ -222,7 +222,6 @@ class Enemy(CombatNPC):
                 self.core_stats[key] = round(self.core_stats[key] * 1.5)
             self.recalculate_stats()
 
-            print(self.core_stats)
             self.exp_given *= 2
             self.initialize_corrupted_enemy()
 
@@ -308,7 +307,7 @@ class Ally(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
         super().__init__(name, surf, pos, group, obstacle_sprites, role = "hero")
         self.level = level
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_enemy(self.corrupted)
+        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements(self.corrupted)
 
         self.hp = self.max_hp = int(10 + 1.5 * self.core_stats["vitality"])
         self.mana = self.max_mana = self.core_stats["magic"]
@@ -317,6 +316,13 @@ class Ally(CombatNPC):
         self.max_exp = self.exp_to_level()
 
         self.active = None
+
+        if self.corrupted:
+            for key in self.core_stats:
+                self.core_stats[key] = round(self.core_stats[key] * 1.5)
+            self.recalculate_stats()
+
+            self.initialize_corrupted_enemy()
 
 
     def follow_player(self, player):
@@ -365,23 +371,21 @@ class Ally(CombatNPC):
 
 
     # allies should have dominant core stats that get leveled rather than every stat
-    def level_stats(self) -> None:
-        """Automatically scale stats."""
-        if self.stat_points > 0:
-            for stat in self.core_stats.keys():
-                self.core_stats[stat] += 10
-            self.stat_points -= 1
-        self.recalculate_stats() # domin implement
+    # def level_stats(self) -> None:
+    #     """Automatically scale stats."""
+    #     if self.stat_points > 0:
+    #         for stat in self.core_stats.keys():
+    #             self.core_stats[stat] += 10
+    #         self.stat_points -= 1
+    #     self.recalculate_stats() # domin implement
 
     def update_npc(self, player, window, offset) -> None:
         super().update_npc(player, window, offset)
-        self.level_up_animation(offset)
-
+        self.level_up_animation(offset, window)
 
         if not self.death:
             # === follow the player ===
             if not player.in_battle and self.active:
-                self.level_stats()
                 self.follow_player(player)
 
 
