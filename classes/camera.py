@@ -26,7 +26,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
         self.offset_float = pygame.math.Vector2()
 
-        self.enemy_sprites: list = []
+        self.npc_sprites: list = []
         self.obstacles: []
 
         # Game state
@@ -37,7 +37,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.battle_loop = None
         self.battle_position: pygame.math.Vector2 = pygame.math.Vector2()
 
-        self.animation_camera = None
 
         self.delay = pygame.time.get_ticks() + 0
         self.transition_timer = 0
@@ -127,6 +126,9 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def draw_sprites(self):
         visible_sprites = list(self.get_visible_sprites())
+        self.npc_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "npc"]
+
+        self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
 
         # === draw the ground sprites ===
         ground_sprites = [sprite for sprite in visible_sprites if
@@ -148,15 +150,16 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # === draw the y sorted sprites ===
         for sprite in sorted_sprites:
+            # draw the performing sprite last
             if draw_performer_last and sprite == self.battle_loop.performer:
                 continue
+            # skip inactive allies
             elif hasattr(sprite, "active") and not sprite.active:
                 continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
                 if sprite.type in ["player", "npc"]:
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
-
                 else:
                     offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
                 self.display_surface.blit(sprite.image, offset_pos)
@@ -167,10 +170,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.offset += self.shake_offset
 
-        self.enemy_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "npc"]
 
-
-        self.item_sprites = [sprite for sprite in self.get_visible_sprites() if sprite.type == "item"]
         # for item in self.item_sprites:
         #     offset_pos = item.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
         #
@@ -285,7 +285,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # === remove cloned enemies ===
         for index, enemy in enumerate(enemies):
-            if enemy == "original_enemy":
+            if enemy == original_enemy:
                 continue
             enemy.kill()
 

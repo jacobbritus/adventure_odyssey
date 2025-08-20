@@ -251,6 +251,9 @@ class BattleLoop:
 
             if not all(hero.leveling for hero in self.heroes):
                 self.state = BattleState.END_BATTLE
+                for hero in self.heroes:
+                    hero.hp_bar.visible = False
+
 
 
 

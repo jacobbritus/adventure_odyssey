@@ -939,9 +939,10 @@ class MenuBook:
 
 
         base_stats = {
-            "LEVEL": str(self.selected_team_member.level),
             "HP": f"{str(self.selected_team_member.hp)}/{str(self.selected_team_member.max_hp)}",
-            "MANA": str(self.selected_team_member.mana),
+            "MANA": f"{str(self.selected_team_member.mana)}/{str(self.selected_team_member.max_mana)}",
+            "LEVEL": str(self.selected_team_member.level),
+
             "EXP": f"{str(self.selected_team_member.exp)}/{str(self.selected_team_member.max_exp)}"
         }
 

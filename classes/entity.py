@@ -378,14 +378,6 @@ class Entity(pygame.sprite.Sprite):
 
             self.used_item = False
 
-
-
-
-
-
-
-
-
     def buff_animation(self):
         """Stationary battle actions"""
         if not self.spawn_projectile:
@@ -574,10 +566,12 @@ class Entity(pygame.sprite.Sprite):
 
         if not target.hp <= 0 and not target.blocking:
 
-            # === afflict the status effect if applicable
+            # === afflict the status effect if applicable ===
             status_effect = SKILLS[self.current_attack].get("status_effect")
             if status_effect and not target.status_effect:
                 target.status_effect = status_effect
+                target.status_effect_count = status_effect.value["turns"]
+
                 status_effect_name = status_effect.value["name"]
                 color = status_effect.value["color"]
 
@@ -596,15 +590,15 @@ class Entity(pygame.sprite.Sprite):
                 damage = 2
                 self.hp -= damage
                 self.screen_messages.append(("hp_dealt", "-" + str(damage), (255, 87, 34)))
-                self.status_effect_count += 1
+                self.status_effect_count -= 1
 
             elif self.status_effect == StatusEffects.POISONED:
                 damage = 1
                 self.hp -= 1
                 self.screen_messages.append(("hp_dealt", "-" + str(damage), (102, 205, 170)))
-                self.status_effect_count += 1
+                self.status_effect_count -= 1
 
-            if self.status_effect_count > StatusEffects.BURNED.value["turns"]:
+            if self.status_effect_count == 0:
                 self.status_effect = None
 
 
@@ -666,62 +660,65 @@ class Entity(pygame.sprite.Sprite):
             self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
 
     def mask(self, window, offset):
-            if self.type == "enemy" and self.corrupted:
-                self.image = apply_dark_purple_tint(self.image)
-                #
-                # mask = pygame.mask.from_surface(self.image).to_surface(
-                #     setcolor=(48, 25, 52, 150),
-                #     unsetcolor=(0, 0, 0, 0))
-                # window.blit(mask, pygame.Vector2(self.x, self.y) - offset)
+        mask = info_icon = None
 
 
+        if self.role == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
+            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 100),
+                                                                   unsetcolor=(0, 0, 0, 0))
 
-            if self.animation_state in (AnimationState.HURT, AnimationState.DEATH):
-                if not pygame.time.get_ticks() >= self.hurt_time - 250:
-                    self.hurt_mask_opacity += 25
-                    self.hurt_mask_opacity = min(200, self.hurt_mask_opacity)
+        if self.status_effect == StatusEffects.BURNED:
+            info_icon = UI["icons"]["fire"]
+            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 87, 34, 100),
+                                                                   unsetcolor=(0, 0, 0, 0))
 
-                elif pygame.time.get_ticks() >= self.hurt_time - 250:
-                    self.hurt_mask_opacity -= 25
-                    self.hurt_mask_opacity = max(0, self.hurt_mask_opacity)
-
-                mask = pygame.mask.from_surface(self.image).to_surface(
-                    setcolor=(180, 0, 0, self.hurt_mask_opacity),
-                    unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
-
-            elif self.role == "enemy" and not self.selected and self.animation_state == AnimationState.IDLE:
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 0, 0, 100),
-                                                                       unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
-
-            elif self.status_effect == StatusEffects.BURNED:
-
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 87, 34, 100),
-                                                                       unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
-
-            elif self.status_effect == StatusEffects.POISONED:
-
-                mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(102, 205, 170, 100),
-                                                                       unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+        if self.status_effect == StatusEffects.POISONED:
+            info_icon = UI["icons"]["poison"]
+            mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(102, 205, 170, 100),
+                                                                   unsetcolor=(0, 0, 0, 0))
 
 
+        if self.animation_state in (AnimationState.HURT, AnimationState.DEATH):
+            if not pygame.time.get_ticks() >= self.hurt_time - 250:
+                self.hurt_mask_opacity += 25
+                self.hurt_mask_opacity = min(200, self.hurt_mask_opacity)
 
-            else:
-                self.hurt_mask_opacity = 0
-            #
-            # if self.blocking:
-            #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(255, 255, 255, 150),
-            #                                                            unsetcolor=(0, 0, 0, 0))
-            #     window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            elif pygame.time.get_ticks() >= self.hurt_time - 250:
+                self.hurt_mask_opacity -= 25
+                self.hurt_mask_opacity = max(0, self.hurt_mask_opacity)
 
-            # if self.used_item and ITEMS[self.current_attack]["type"] == "healing":
-            #     mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(0, 255, 0, 150),
-            #                                                                unsetcolor=(0, 0, 0, 0))
-            #     window.blit(mask, pygame.Vector2(self.rect.topleft) - offset)
+            mask = pygame.mask.from_surface(self.image).to_surface(
+                setcolor=(180, 0, 0, self.hurt_mask_opacity),
+                unsetcolor=(0, 0, 0, 0))
+        else:
+            self.hurt_mask_opacity = 0
 
+        if mask:
+            window.blit(mask, pygame.Vector2(self.x, self.y) - offset)
+
+        mouse = pygame.mouse.get_pos()
+        press = pygame.mouse.get_pressed()[0]
+
+        rect = self.hitbox.copy()
+        rect.update(self.hitbox.x - offset.x, self.hitbox.y - offset.y, self.hitbox.width ,self.hitbox.height)
+
+        if info_icon and rect.collidepoint(mouse) and press:
+            text = pygame.font.Font(FONT_ONE, 16).render(str(self.status_effect_count), True, (255, 255, 255))
+
+
+            offset = (64, 36) if self.direction == "left" else (0, 36)
+            pos = self.screen_position + offset
+
+            elements = (
+                (UI["book"]["item_slot"], pos),
+                        (info_icon, pos),
+                        (text, pos + (24, 16))
+            )
+
+
+            for element, pos in elements:
+                element.set_alpha(255)
+                window.blit(element, pos)
 
 
 

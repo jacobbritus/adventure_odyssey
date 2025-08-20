@@ -1,6 +1,4 @@
-from classes.UI import MenuBook
 from classes.level import Level
-from classes.states import BookState
 from other.settings import *
 
 class Game:
@@ -45,8 +43,8 @@ class Game:
             delta_time = self.clock.tick(FPS)
 
             self.level.player.get_dt(delta_time)
-            for enemy in self.level.visible_sprites.enemy_sprites:
-                enemy.get_dt(delta_time)
+            for npc in self.level.visible_sprites.npc_sprites:
+                npc.get_dt(delta_time)
 
             self.level.run()
 

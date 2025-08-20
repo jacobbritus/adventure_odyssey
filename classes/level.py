@@ -205,7 +205,7 @@ class Level:
 
     def battle(self):
         # Make camera follow the animation
-        self.visible_sprites.animation_camera = self.visible_sprites.battle_loop.state
+
 
         # self.visible_sprites.custom_draw(self.player)
 
@@ -243,7 +243,7 @@ class Level:
         """Updates all the enemy sprites based on the player's position."""
         npc_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
 
-        for npc in self.visible_sprites.enemy_sprites:
+        for npc in self.visible_sprites.npc_sprites:
             npc.update_npc(player, self.display_surface, self.visible_sprites.offset)
             if not npc.in_battle and npc.death and pygame.time.get_ticks() >= npc.respawn_time:
                 npc.hp = npc.max_hp
