@@ -99,7 +99,7 @@ class NPC(Entity):
 
             new_recruit.active = True
             player.active_allies.append(new_recruit)
-            new_recruit.hp_bar = StatusBar(new_recruit, 28 * len(player.active_allies))
+            new_recruit.status_bar = StatusBar(new_recruit, 28 * len(player.active_allies))
         else:
             new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
             new_recruit.active = False
@@ -117,7 +117,7 @@ class NPC(Entity):
         self.blocking_mechanics(window, offset)
 
         if not self.death:
-            self.mask(window, offset)
+            self.visual_cues(window, offset)
             self.update_pos(offset=offset)
 
             self.update_animations()
@@ -129,16 +129,16 @@ class CombatNPC(NPC):
         self.corrupted = random.choices(population=[True, False], weights=[0.0, 1.0], k=1)[0]
 
 
-    def initialize_combat_elements(self, corrupted) -> list or None:
+    def initialize_combat_elements(self) -> list or None:
         core_stats = combat_moves = critical_hit_chance = blocking_chance = None
         if self.name == "Skeleton":
             core_stats = {
-                "vitality": 7,
-                "defense": 7,
-                "strength": 7,
-                "magic": 3,
-                "speed": 7,
-                "luck": 7,
+                "vitality": 5,
+                "defense": 5,
+                "strength": 5,
+                "magic": 5,
+                "speed": 3,
+                "luck": 5,
             }
 
             combat_moves = ["sword_slash"]
@@ -147,23 +147,21 @@ class CombatNPC(NPC):
 
         elif self.name == "Goblin":
             core_stats = {
-                "vitality": 7,
-                "defense": 7,
-                "strength": 7,
-                "magic": 3,
-                "speed": 10,
-                "luck": 7,
+                "vitality": 5,
+                "defense": 5,
+                "strength": 5,
+                "magic": 5,
+                "speed": 5,
+                "luck": 5,
             }
 
             combat_moves = ["poison_stab", "sword_slash"]
             critical_hit_chance = 0.9
-            blocking_chance = 0.25
+            blocking_chance = 0.5
 
-        # === scale stats to level ===
-        for key in core_stats:
-            core_stats[key] += self.level
-
-        # === double stats for corruption ===
+        # === scale stats to level === (to be reworked)
+        # for key in core_stats:
+        #     core_stats[key] += self.level
 
 
         return core_stats, combat_moves, critical_hit_chance, blocking_chance
@@ -198,15 +196,14 @@ class Enemy(CombatNPC):
         # === stat related ===
         self.level = level
 
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements(self.corrupted)
+        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements()
 
 
         self.exp_given = self.exp_to_level()
 
-        self.hp = int(10 + 1.5 * self.core_stats["vitality"])
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
+        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
         self.mana = 0
-        self.max_mana = 5
+        self.max_mana = self.core_stats["magic"]
 
         # === inventory ===
         self.item_drop = "small_health_potion"
@@ -307,10 +304,11 @@ class Ally(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
         super().__init__(name, surf, pos, group, obstacle_sprites, role = "hero")
         self.level = level
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements(self.corrupted)
+        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements()
 
-        self.hp = self.max_hp = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana = self.max_mana = self.core_stats["magic"]
+        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
+        self.mana = 0
+        self.max_mana = self.core_stats["magic"]
 
         self.exp = 0
         self.max_exp = self.exp_to_level()

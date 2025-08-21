@@ -2,14 +2,14 @@ import random
 
 import pygame.font
 
-from classes.UI import BattleMenu, StatusBar, EnemyStatusBar
+from classes.UI import BattleMenu, EnemyStatusBar
+from classes.pointer import Pointer
 from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
 from classes.screenmessages import ScreenMessages
 from other.play_sound import play_sound
 from other.settings import *
 from collections import deque
 
-from other.text_bg_effect import text_bg_effect
 
 
 class BattleLoop:
@@ -28,10 +28,10 @@ class BattleLoop:
         self.winner = None
 
         # === UI setup ===
-        self.combat_menu = BattleMenu(self.player, performer=heroes[0], functions=[self.get_player_input, self.end_battle])
+        self.battle_menu = BattleMenu(self.player, performer=heroes[0], functions=[self.get_player_input, self.end_battle])
 
         for hero in self.heroes:
-            hero.hp_bar.visible = True
+            hero.status_bar.visible = True
             # hero.hp_bar.setup_hero_status_bar(0)
 
         self.enemy_hp_bars_test = {}
@@ -48,11 +48,12 @@ class BattleLoop:
         self.battle_queue = deque(participants)
 
         self.performer = self.battle_queue[0]
+        self.performer.performing = True
         self.target = None
 
         if self.performer in self.heroes:
             self.state = BattleState.PLAYER_TURN
-            self.combat_menu.state = CombatMenuState.MAIN_MENU
+            self.battle_menu.state = CombatMenuState.MAIN_MENU
         else:
             self.state = BattleState.ENEMY_TURN
 
@@ -81,6 +82,9 @@ class BattleLoop:
         self.battle_text_opacity = 0
         self.font = pygame.font.Font(FONT_ONE, 16)
 
+        # turn pointer
+        self.turn_pointer = Pointer()
+
         # === sound for selecting target ===
         self.click_sound_played = False
         self.hover_sound_played = False
@@ -90,9 +94,9 @@ class BattleLoop:
 
     def top_screen_description(self, window):
         if self.state == BattleState.PLAYER_TURN:
-            for button in self.combat_menu.buttons_group:
+            for button in self.battle_menu.buttons_group:
 
-                if button.text_string in self.combat_menu.formatted_skills:
+                if button.text_string in self.battle_menu.formatted_skills:
                     internal_name = button.text_string.replace(" ", "_").lower()
                     data = SKILLS
                 elif button.text_string[0].replace(" ", "_").lower() in self.player.inventory.items.keys():
@@ -108,7 +112,7 @@ class BattleLoop:
                     self.battle_text_string = data[internal_name]["description"].upper()
 
                 # === display nothing ===
-                elif all(not button.hovering for button in self.combat_menu.buttons_group):
+                elif all(not button.hovering for button in self.battle_menu.buttons_group):
                     self.battle_text_string = None
 
         # === display the performed attack's name ===
@@ -149,7 +153,7 @@ class BattleLoop:
             # === cancel attack ===
             if rect.collidepoint(mouse_pos) and press:
                 self.performer.current_attack = None
-                self.combat_menu.state = CombatMenuState.MAIN_MENU
+                self.battle_menu.state = CombatMenuState.MAIN_MENU
                 for enemy in self.enemies:
                     enemy.selected = True
 
@@ -172,6 +176,9 @@ class BattleLoop:
 
                         break
                     else:
+                        self.turn_pointer.draw(self.window, enemy.screen_position,
+                                               enemy.direction)
+
                         self.battle_text_string = enemy.name.upper()
 
                         if not self.hover_sound_played:
@@ -212,7 +219,7 @@ class BattleLoop:
                     self.battle_text_string = "BATTLE LOST"
 
                 # branch to win_menu and lose_menu
-                self.combat_menu.state = CombatMenuState.END_MENU
+                self.battle_menu.state = CombatMenuState.END_MENU
 
 
     def screen_messages(self) -> None:
@@ -242,49 +249,50 @@ class BattleLoop:
     def draw_ui(self) -> None:
         """Displays and updates the UI components."""
 
+        # == display heroes status bars ===
         for hero in self.heroes:
-            hero.hp_bar.draw(self.window)
+            hero.status_bar.draw(self.window)
 
+        # === handle heroes exp gain and display exp on status bar
         if self.winner == self.heroes:
             for hero in self.heroes:
                 hero.calculate_exp()
 
+            # === end the sequence ===
             if not all(hero.leveling for hero in self.heroes):
                 self.state = BattleState.END_BATTLE
                 for hero in self.heroes:
-                    hero.hp_bar.visible = False
+                    hero.status_bar.visible = False
 
-
-
-
-
+        # === display enemy status bars ===
         for enemy, hp_bar in self.enemy_hp_bars_test.items():
             if enemy.screen_position:
                 hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
 
-        if self.state == BattleState.PLAYER_TURN or self.winner == self.enemies:
-            self.combat_menu.visible = True
+        # === turn pointers ===
+        if self.performer and not self.performer.current_attack and not self.state in [BattleState.END_BATTLE, BattleState.END_MENU]:
+            self.turn_pointer.draw(self.window, self.performer.screen_position, self.performer.direction)
 
-        # elif self.state == BattleState.END_MENU and all(not hero.leveling for hero in self.heroes):
-        #     self.combat_menu.visible = True
+
+        # === display battle menu ===
+        if self.state == BattleState.PLAYER_TURN or self.winner == self.enemies:
+            self.battle_menu.visible = True
         else:
-            self.combat_menu.visible = False
+            self.battle_menu.visible = False
 
         if not self.winner == self.heroes:
-            self.combat_menu.draw(self.window, self.performer)
+            self.battle_menu.draw(self.window, self.performer)
 
         self.screen_messages()
 
     def end_battle(self) -> None:
         """End battle when the player picks run / this function."""
-
-
         self.state = BattleState.END_BATTLE
 
     def get_player_input(self, attack) -> None:
         """Takes in the picked attack from the combat menu."""
-        if attack in self.combat_menu.formatted_skills:
+        if attack in self.battle_menu.formatted_skills:
             internal_attack = attack.replace(" ", "_").lower()
             self.performer.current_attack = internal_attack
 
@@ -415,12 +423,13 @@ class BattleLoop:
                 self.winner = self.heroes
                 for hero in self.heroes:
                     hero.total_exp += sum(enemy.exp_given for enemy in self.enemies)
-
             else:
-                self.player.hp_bar.visible = True
+                self.player.status_bar.visible = True
                 self.winner = self.enemies
 
             self.performer.current_attack = None
+            self.performer.performing = False
+
             self.state = BattleState.END_MENU
 
 
@@ -446,18 +455,21 @@ class BattleLoop:
                 if not self.performer.mana == self.performer.max_mana:
                     self.performer.mana = self.performer.mana + 1
                     self.performer.screen_messages.append(("mana_recovered", "1 SP", (99, 155, 255)))
+
+                self.performer.performing = False
                 self.performer = self.battle_queue[0]
+                self.performer.performing = True
 
 
                 if self.winner:
-                    self.combat_menu.state = CombatMenuState.END_MENU
-                    self.combat_menu.buttons_group = pygame.sprite.Group()
+                    self.battle_menu.state = CombatMenuState.END_MENU
+                    self.battle_menu.buttons_group = pygame.sprite.Group()
 
                 elif self.performer in self.heroes:
                     # === set an enemy target ===
                     self.state = BattleState.PLAYER_TURN
-                    self.combat_menu.state = CombatMenuState.MAIN_MENU
-                    self.combat_menu.buttons_group = pygame.sprite.Group()
+                    self.battle_menu.state = CombatMenuState.MAIN_MENU
+                    self.battle_menu.buttons_group = pygame.sprite.Group()
 
 
                 else:

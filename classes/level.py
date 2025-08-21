@@ -119,11 +119,6 @@ class Level:
 
 
 
-
-                # enemy.name in the future
-
-                # seperate this too
-
     def run(self) -> None:
         self.visible_sprites.update()
         self.visible_sprites.draw_sprites()
@@ -173,9 +168,9 @@ class Level:
         self.menu.draw(self.display_surface)
 
     def draw_hp_bars(self):
-        for ally in self.player.active_allies:
-            ally.hp_bar.draw(self.display_surface)
-            self.player.hp_bar.draw(self.display_surface)
+        for character in [self.player, *self.player.active_allies]:
+            character.status_bar.draw(self.display_surface)
+            self.player.status_bar.draw(self.display_surface)
 
 
     def update_day_cycle(self):
@@ -185,7 +180,7 @@ class Level:
             12: {"color": (255, 255, 255), "opacity": 0},
             16: {"color": (255, 238, 131), "opacity": 100},
             18: {"color": (255, 174, 66), "opacity": 125},
-            20: {"color": (34, 0, 51), "opacity": 150},
+            20: {"color": (34, 0, 51), "opacity": 125},
             22: {"color": (0, 0, 0), "opacity": 150},
             0: {"color": (0, 0, 0), "opacity": 150},
 
@@ -197,7 +192,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[20]
+        current_phase = day_phases[18]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -210,7 +205,8 @@ class Level:
         # self.visible_sprites.custom_draw(self.player)
 
         self.visible_sprites.battle_loop.run()
-        self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
+        if self.visible_sprites.battle_loop.performer:
+            self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
 
 
         self.visible_sprites.battle_loop.draw_ui()
@@ -257,17 +253,10 @@ class Level:
             # testing allies
             if not self.player.active_allies:
                 npc.recruit(player, "Goblin", npc.level)
-                npc.recruit(player, "Skeleton", npc.level)
-                npc.recruit(player, "Goblin", npc.level)
-                npc.recruit(player, "Skeleton", npc.level)
+            #     npc.recruit(player, "Skeleton", npc.level)
+            #     npc.recruit(player, "Goblin", npc.level)
+            #     npc.recruit(player, "Skeleton", npc.level)
 
-
-
-            # for ally in self.player.all_allies:
-            #     if not ally.group == self.visible_sprites:
-            #         print("done")
-            #         ally.active = True
-            #         ally.group = self.visible_sprites
 
     def initiate_battle_session(self, player):
         enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
@@ -292,9 +281,6 @@ class Level:
                             participant.in_battle = True
                             participant.action = "idle"
                 break
-
-
-
 
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):

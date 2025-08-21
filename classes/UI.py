@@ -452,6 +452,8 @@ class EnemyStatusBar(StatusBar):
 
 
         for surface, pos in elements:
+            surface.set_alpha(150)
+
             if self.owner.death and self.bars["hp"]["bg_width"] <= 5:
                 self.opacity -= 20
                 surface.set_alpha(max(0, self.opacity))
@@ -543,8 +545,6 @@ class Button(pygame.sprite.Sprite):
         root = UI["buttons"]
         statuses = ["unselected", "pressed", "selected"]
         buttons = [root[variant.value + "_" + status].copy() for status in statuses]
-
-
 
         return buttons
 
@@ -676,8 +676,6 @@ class BattleMenu:
         self.main_menu_bg = UI["battle_menu"]["main_background"]
         self.skills_menu_bg = UI["battle_menu"]["skills_background"]
 
-
-
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
         self.update()
@@ -705,7 +703,6 @@ class BattleMenu:
         """Update the state based on the button clicked."""
         for button in self.buttons_group:
             if button.delete:
-
                 # === main menu flow ===
                 if button.text_string in ["SKILLS", "ITEMS"]:
 

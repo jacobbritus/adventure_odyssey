@@ -171,20 +171,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset += self.shake_offset
 
 
-        # for item in self.item_sprites:
-        #     offset_pos = item.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
-        #
-        #     self.display_surface.blit(item.image, offset_pos)
-
-
 
     def start_battle(self):
         player = self.battle_participants["heroes"][0]
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        for i in range(3):
-            second_enemy = random.choices([True, False], k=1, weights = [0.0, 1.0])[0]
+        for i in range(1):
+            second_enemy = random.choices([True, False], k=1, weights = [0.5, 0.5])[0]
             if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
 
 
@@ -312,8 +306,14 @@ class YSortCameraGroup(pygame.sprite.Group):
             participant.rect.topleft = participant.pre_battle_pos
             participant.x, participant.y = participant.pre_battle_pos
             participant.update_pos()
+
+            # update status
             participant.in_battle = False
 
+            # reset mana
+            participant.mana = 0
+
+        # this will become an option
         original_enemy.recruit(player, original_enemy.name, original_enemy.level)
 
         self.battle_loop = None
@@ -321,7 +321,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.state = LevelState.OVERWORLD
 
         for hero in [player, *player.active_allies]:
-            hero.hp_bar.display_exp = False
+            hero.status_bar.display_exp = False
 
 
 

@@ -28,16 +28,16 @@ class Game:
 
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
-                    if not self.level.player.hp_bar.visible:
+                    if not self.level.player.status_bar.visible:
                         for ally in self.level.player.active_allies:
-                            ally.hp_bar.visible = True
+                            ally.status_bar.visible = True
 
-                        self.level.player.hp_bar.visible = True
+                        self.level.player.status_bar.visible = True
                     else:
 
                         for ally in self.level.player.active_allies:
-                            ally.hp_bar.visible = False
-                        self.level.player.hp_bar.visible = False
+                            ally.status_bar.visible = False
+                        self.level.player.status_bar.visible = False
 
 
             delta_time = self.clock.tick(FPS)

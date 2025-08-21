@@ -5,6 +5,7 @@ import pygame.mixer
 
 from archive.corruption_test import apply_dark_purple_tint
 from classes.inventory import Item
+from classes.pointer import Pointer
 from classes.states import AnimationState
 from classes.spells import ProjectileSpell, StationarySpell
 from other.play_sound import play_sound
@@ -49,11 +50,12 @@ class Entity(pygame.sprite.Sprite):
         self.delta_time = FPS / 1000
 
         # === battle stuff ===
-        self.hp_bar = None
+        self.status_bar = None
         self.in_battle = False
         self.pre_battle_pos = None
         self.battle_pos = None
         self.current_attack = None
+        self.performing = False
         self.selected = False
 
         self.critical_hit_chance = None
@@ -83,9 +85,10 @@ class Entity(pygame.sprite.Sprite):
         self.critical_hit = False
         self.critical_hit_is_done = False
 
-        # === screen messages ===
+        # === visual cues ===
         self.dmg_position = None
         self.screen_messages = []
+        self.pointer = Pointer()
 
         # === spells ===
         self.spawn_projectile = False
@@ -138,8 +141,8 @@ class Entity(pygame.sprite.Sprite):
         if not self.exp >= self.total_exp and not self.exp == self.max_exp:
             # toggle hp_bar
             self.leveling = True
-            self.hp_bar.visible = True
-            self.hp_bar.display_exp = True
+            self.status_bar.visible = True
+            self.status_bar.display_exp = True
 
             speed = max(abs(self.exp - self.total_exp) * 0.025, 0.025)
             self.exp = min(self.exp + speed, self.max_exp)
@@ -659,7 +662,7 @@ class Entity(pygame.sprite.Sprite):
         else:
             self.image = self.sprite_dict[self.action]["sprites"][self.direction][-1]
 
-    def mask(self, window, offset):
+    def visual_cues(self, window, offset):
         mask = info_icon = None
 
 
@@ -676,7 +679,6 @@ class Entity(pygame.sprite.Sprite):
             info_icon = UI["icons"]["poison"]
             mask = pygame.mask.from_surface(self.image).to_surface(setcolor=(102, 205, 170, 100),
                                                                    unsetcolor=(0, 0, 0, 0))
-
 
         if self.animation_state in (AnimationState.HURT, AnimationState.DEATH):
             if not pygame.time.get_ticks() >= self.hurt_time - 250:

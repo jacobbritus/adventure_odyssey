@@ -63,14 +63,13 @@ class Player(Entity):
             "defense": 5,
             "strength": 5,
             "magic": 5,
-            "speed": 15,
+            "speed": 5,
             "luck": 5,
         }
 
-        self.hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.mana: int = 5
-        self.max_mana = 10
+        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
+        self.mana = 0
+        self.max_mana = self.core_stats["magic"]
 
         # === allies ===
         self.active_allies = []
@@ -92,7 +91,7 @@ class Player(Entity):
         self.item_sprites = pygame.sprite.Group()
         self.item_use_delay = pygame.time.get_ticks() + 0
 
-        self.hp_bar = StatusBar(
+        self.status_bar = StatusBar(
             owner=self,
             y_offset=0)
 
@@ -176,7 +175,7 @@ class Player(Entity):
         # window.blit(debug_surface, (self.hitbox.topleft - offset))
         self.update_pos(offset = offset)
 
-        self.mask(window, offset)
+        self.visual_cues(window, offset)
 
 
 

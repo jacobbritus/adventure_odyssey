@@ -14,8 +14,8 @@ MUSIC_VOLUME = 0.5
 EFFECT_VOLUME = 1
 UI_OPACITY = 150
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 360
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 FPS = 60
 TILE_SIZE = 32
@@ -191,7 +191,10 @@ for directory in UI_directories:
     images_dict = {}
     for image in os.listdir(get_file_location(os.path.join(UI_directory, directory))):
         png_image = pygame.image.load(get_file_location(os.path.join(UI_directory, directory, image)))
-        png_image.set_alpha(UI_OPACITY)
+
+        # === skip adjusting opacity ===
+        if not directory == "cursors":
+            png_image.set_alpha(UI_OPACITY)
         key_name = image[:-4]
         images_dict[key_name] = png_image
 
