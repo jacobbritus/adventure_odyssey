@@ -9,13 +9,12 @@ pygame.mixer.set_num_channels(32)
 
 from other.png_to_sprite import *
 
-SCALE = 2
 MUSIC_VOLUME = 0.5
-EFFECT_VOLUME = 1
-UI_OPACITY = 150
+EFFECT_VOLUME = 1.0
+UI_OPACITY = 225
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 360
 
 FPS = 60
 TILE_SIZE = 32
@@ -50,7 +49,7 @@ SKILLS = {
     },
     "sword_slash": {
         "base_damage": 2,
-        "multiplier": 0.5,
+        "multiplier": 1,
         "stat": "strength",
         "type": "physical",
         "mana": 0,

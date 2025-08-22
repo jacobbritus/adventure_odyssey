@@ -22,10 +22,10 @@ class Game:
                 if not self.level.visible_sprites.battle_loop:
                     self.level.menu.keybinds(event)
                     self.level.overworld_ui.hotkeys(event)
-
-                if self.level.player.in_battle:
+                else:
+                    self.level.visible_sprites.battle_loop.kb_selecting_target(event)
                     self.level.player.blocking_critical_hotkey(event)
-
+                    self.level.visible_sprites.battle_loop.battle_menu.hotkeys(event)
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
                     if not self.level.player.status_bar.visible:

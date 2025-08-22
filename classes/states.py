@@ -39,7 +39,7 @@ class BookState(Enum):
     OPEN_BOOK = auto()
     CLOSE_BOOK = auto()
 
-class CombatMenuState(Enum):
+class BattleMenuState(Enum):
     MAIN_MENU = auto()
     SKILLS_MENU = auto()
     END_MENU = auto()

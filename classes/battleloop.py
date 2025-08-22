@@ -4,7 +4,7 @@ import pygame.font
 
 from classes.UI import BattleMenu, EnemyStatusBar
 from classes.pointer import Pointer
-from classes.states import AnimationState, BattleState, CombatMenuState, AttackType
+from classes.states import AnimationState, BattleState, BattleMenuState, AttackType
 from classes.screenmessages import ScreenMessages
 from other.play_sound import play_sound
 from other.settings import *
@@ -53,7 +53,7 @@ class BattleLoop:
 
         if self.performer in self.heroes:
             self.state = BattleState.PLAYER_TURN
-            self.battle_menu.state = CombatMenuState.MAIN_MENU
+            self.battle_menu.state = BattleMenuState.MAIN_MENU
         else:
             self.state = BattleState.ENEMY_TURN
 
@@ -63,6 +63,8 @@ class BattleLoop:
         # === selecting enemies setup ===
         for other in self.enemies:
             other.selected = True
+        self.selected_target_index = 0
+        self.mouse_navigation = False
 
         # === state / animation phase delay ===
         self.current_time: pygame.time = pygame.time.get_ticks()
@@ -143,6 +145,38 @@ class BattleLoop:
             window.blit(self.battle_text_bg, self.battle_text_bg_pos)
             window.blit(self.battle_text_surface, self.battle_text_pos)
 
+    def kb_selecting_target(self, event):
+        if event.type == pygame.KEYDOWN and self.state == BattleState.PLAYER_TURN and self.performer.current_attack:
+
+            # === target navigation ===
+            if event.key in [pygame.K_w, pygame.K_s]:
+                pre = self.selected_target_index
+
+                # === go up ===
+                if event.key == pygame.K_w:
+                    self.selected_target_index = max(self.selected_target_index - 1, 0)
+
+                # === go down ===
+                elif event.key == pygame.K_s:
+                    available_targets = len([enemy for enemy in self.enemies if not enemy.death])
+                    self.selected_target_index = min(self.selected_target_index + 1, available_targets - 1)
+
+                post = self.selected_target_index
+
+                if not pre == post:
+                    play_sound("ui", "hover", None)
+
+            # === pick target ===
+            elif event.key == pygame.K_c:
+                self.target = self.enemies[self.selected_target_index]
+                self.player_turn()
+
+                for enemy in self.enemies:
+                    enemy.selected = True
+
+
+
+
     def get_mouse_input(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
@@ -153,40 +187,56 @@ class BattleLoop:
             # === cancel attack ===
             if rect.collidepoint(mouse_pos) and press:
                 self.performer.current_attack = None
-                self.battle_menu.state = CombatMenuState.MAIN_MENU
+                self.battle_menu.state = BattleMenuState.MAIN_MENU
                 for enemy in self.enemies:
                     enemy.selected = True
 
         if self.state == BattleState.PLAYER_TURN and self.performer.current_attack:
             self.battle_text_string = "SELECT A TARGET"
             self.battle_text_bg = UI["battle_message_box"]["small_background"]
-            for enemy in self.enemies:
-                pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
-                rect = pygame.Rect(pos.x, pos.y, 32, 32)
-                if rect.collidepoint(mouse_pos):
-                    if press and not enemy.death:
-                        if not self.click_sound_played:
-                            play_sound("ui", "press", None)
-                        self.click_sound_played = True
 
-                        for other in self.enemies:
-                            other.selected = True
-                        self.target = enemy
-                        self.player_turn()
+            if self.mouse_navigation:
+                for enemy in self.enemies:
+                    pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
+                    rect = pygame.Rect(pos.x, pos.y, 32, 32)
+                    if rect.collidepoint(mouse_pos):
+                        if press and not enemy.death:
+                            if not self.click_sound_played:
+                                play_sound("ui", "press", None)
+                            self.click_sound_played = True
 
-                        break
+                            for other in self.enemies:
+                                other.selected = True
+                            self.target = enemy
+                            self.player_turn()
+
+                            break
+                        else:
+                            self.turn_pointer.draw(self.window, enemy.screen_position,
+                                                   enemy.direction)
+
+                            self.battle_text_string = enemy.name.upper()
+
+                            if not self.hover_sound_played:
+                                play_sound("ui", "hover", None)
+                                self.hover_sound_played = True
+                            enemy.selected = True
                     else:
-                        self.turn_pointer.draw(self.window, enemy.screen_position,
-                                               enemy.direction)
+                        enemy.selected = False
+            else:
+                enemy = self.enemies[self.selected_target_index]
 
-                        self.battle_text_string = enemy.name.upper()
+                self.turn_pointer.draw(self.window, enemy.screen_position,
+                                       enemy.direction)
+                self.battle_text_string = enemy.name.upper()
+                enemy.selected = True
 
-                        if not self.hover_sound_played:
-                            play_sound("ui", "hover", None)
-                            self.hover_sound_played = True
-                        enemy.selected = True
-                else:
-                    enemy.selected = False
+                for other_enemy in self.enemies:
+                    if other_enemy == enemy:
+                        continue
+                    other_enemy.selected = False
+
+
 
             if all(not enemy.selected for enemy in self.enemies):
                 self.hover_sound_played = False
@@ -219,7 +269,7 @@ class BattleLoop:
                     self.battle_text_string = "BATTLE LOST"
 
                 # branch to win_menu and lose_menu
-                self.battle_menu.state = CombatMenuState.END_MENU
+                self.battle_menu.state = BattleMenuState.END_MENU
 
 
     def screen_messages(self) -> None:
@@ -344,7 +394,7 @@ class BattleLoop:
         options = [skill for skill in self.performer.skills if self.performer.mana >= SKILLS[skill]["mana"]]
         self.performer.current_attack = random.choice(options)
 
-        self.performer.item_use_logic()
+        self.performer.battle_ai()
 
         self.target = random.choice([hero for hero in self.heroes if not hero.death])
 
@@ -462,13 +512,13 @@ class BattleLoop:
 
 
                 if self.winner:
-                    self.battle_menu.state = CombatMenuState.END_MENU
+                    self.battle_menu.state = BattleMenuState.END_MENU
                     self.battle_menu.buttons_group = pygame.sprite.Group()
 
                 elif self.performer in self.heroes:
                     # === set an enemy target ===
                     self.state = BattleState.PLAYER_TURN
-                    self.battle_menu.state = CombatMenuState.MAIN_MENU
+                    self.battle_menu.state = BattleMenuState.MAIN_MENU
                     self.battle_menu.buttons_group = pygame.sprite.Group()
 
 

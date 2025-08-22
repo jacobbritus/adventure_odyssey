@@ -523,7 +523,9 @@ class Entity(pygame.sprite.Sprite):
         return int(total_damage)
 
     def handle_attack_impact(self, target):
-        damage = self.calculate_damage()
+        defense = round(target.core_stats["defense"] * 0.25)
+        damage = max(self.calculate_damage() - defense, 1)
+
 
         if not self.critical_hit_is_done:
 

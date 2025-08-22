@@ -197,7 +197,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 return [pygame.Vector2(rect.left + spacing * i, y) for i in range(1, n + 1)]
 
             def enemy_battle_spots(pos, n):
-                spacing = 48
+                spacing = 64
                 positions = []
 
                 total_height = spacing * (n - 1)  # total space between all enemies

@@ -1,6 +1,6 @@
 import pygame
 
-from classes.states import BookState, CombatMenuState, ButtonVariant
+from classes.states import BookState, BattleMenuState, ButtonVariant
 from other.play_sound import play_sound
 from other.settings import *
 from other.text_bg_effect import text_bg_effect
@@ -452,7 +452,6 @@ class EnemyStatusBar(StatusBar):
 
 
         for surface, pos in elements:
-            surface.set_alpha(150)
 
             if self.owner.death and self.bars["hp"]["bg_width"] <= 5:
                 self.opacity -= 20
@@ -676,28 +675,83 @@ class BattleMenu:
         self.main_menu_bg = UI["battle_menu"]["main_background"]
         self.skills_menu_bg = UI["battle_menu"]["skills_background"]
 
+        self.selected_option = -1
+        self.mouse_navigation = False
+
+    def hotkeys(self, event):
+        if event.type == pygame.KEYDOWN and self.state and not self.mouse_navigation:
+            if not self.selected_option: self.selected_option = 0
+            if event.key in [pygame.K_w, pygame.K_s, pygame.K_d, pygame.K_a]:
+                pre = self.selected_option
+                if event.key == pygame.K_w:
+                    self.selected_option = max(self.selected_option - 1, 0)
+
+                elif event.key == pygame.K_s:
+                    self.selected_option = min(self.selected_option + 1, len(list(self.buttons_group)) - 1)
+
+                elif event.key == pygame.K_d and len(list(self.buttons_group)) > 3:
+                    self.selected_option = 3
+
+                elif event.key == pygame.K_a and len(list(self.buttons_group)) > 3:
+                    self.selected_option = 0
+
+                elif event.key == pygame.K_x:
+                    self.state = BattleMenuState.MAIN_MENU
+                    for other_button in self.buttons_group:
+                        if not other_button.text_string in ["SKILLS", "ITEMS", "RUN"]:
+                            other_button.kill()
+
+                post = self.selected_option
+                if not pre == post:
+                    play_sound("ui", "hover", None)
+
+            # === click the selected button ===
+            if event.key == pygame.K_c:
+                list(self.buttons_group)[self.selected_option].clicked = True
+
+
+    def hotkey_button_selection(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.buttons_group and self.selected_option >= 0:
+            list(self.buttons_group)[self.selected_option].hovering = True
+            list(self.buttons_group)[self.selected_option].image = list(self.buttons_group)[self.selected_option].image_selected
+
+        if self.main_menu_bg.get_rect(topleft = self.main_menu_bg_pos).collidepoint(mouse_pos)\
+                or self.skills_menu_bg.get_rect(topleft = self.skills_bg_pos).collidepoint(mouse_pos):
+            self.mouse_navigation = True
+
+            self.selected_option = -1
+        else:
+            self.mouse_navigation = False
+
+
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
         self.update()
+
+
         self.performer = performer
         self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in self.performer.skills]
 
-        if not self.state == CombatMenuState.END_MENU and self.state:
+        if not self.state == BattleMenuState.END_MENU and self.state:
             window.blit(self.main_menu_bg, self.main_menu_bg_pos)
             self.draw_main_menu()
 
         # === buttons are drawn through the main menu skills button's function ===
-        if self.state == CombatMenuState.SKILLS_MENU:
+        if self.state == BattleMenuState.SKILLS_MENU:
             window.blit(self.skills_menu_bg, self.skills_bg_pos)
 
-        elif self.state == CombatMenuState.END_MENU:
+        elif self.state == BattleMenuState.END_MENU:
             self.draw_end_menu()
 
-        elif self.state == CombatMenuState.INVENTORY_MENU:
+        elif self.state == BattleMenuState.INVENTORY_MENU:
             window.blit(self.skills_menu_bg, self.skills_bg_pos)
 
         for button in self.buttons_group:
             button.draw(window)
+
+        self.hotkey_button_selection()
+
 
     def update(self) -> None:
         """Update the state based on the button clicked."""
@@ -705,40 +759,58 @@ class BattleMenu:
             if button.delete:
                 # === main menu flow ===
                 if button.text_string in ["SKILLS", "ITEMS"]:
-
                     # === clear the active inventory menu or skill menu buttons ===
                     for other_button in self.buttons_group:
                         if not other_button.text_string in ["SKILLS", "ITEMS", "RUN"]:
                             other_button.kill()
 
                     # === open skills menu if not active ===
-                    if button.text_string == "SKILLS" and not self.state == CombatMenuState.SKILLS_MENU:
-                        self.state = CombatMenuState.SKILLS_MENU
+                    if button.text_string == "SKILLS" and not self.state == BattleMenuState.SKILLS_MENU:
+                        self.state = BattleMenuState.SKILLS_MENU
                         self.draw_skills_menu()
 
+
                     # === open inventory menu ===
-                    elif button.text_string == "ITEMS" and not self.state == CombatMenuState.INVENTORY_MENU:
-                        self.state = CombatMenuState.INVENTORY_MENU
+                    elif button.text_string == "ITEMS" and not self.state == BattleMenuState.INVENTORY_MENU:
+                        self.state = BattleMenuState.INVENTORY_MENU
                         self.draw_inventory_menu()
+                        if self.player.inventory.items:
+                            self.selected_option = 3
+
 
                     # === if the state is equal to the button for it pressed,
                     # e.g., SKILLS clicked and self.state == SKILLS MENU, go back to the main menu.
                     else:
-                        self.state = CombatMenuState.MAIN_MENU
+                        self.selected_option = 0
+                        self.state = BattleMenuState.MAIN_MENU
 
                     # reset the button pressed
                     button.clicked = False
                     button.delete = False
+                    button.hovering = False
                     button.delete_delay = 0
+
+                    if self.state == BattleMenuState.SKILLS_MENU:
+                        if self.selected_option >= 0:
+                            print(self.selected_option)
+                            self.selected_option = 3
+                    elif self.state == BattleMenuState.INVENTORY_MENU and self.player.inventory.items:
+                        if self.selected_option >= 0:
+                            self.selected_option = 3
+
 
                 # === skills menu -> player animation ===
                 elif button in self.skills_buttons:
                     self.state = None
                     self.buttons_group = pygame.sprite.Group()
+                    self.selected_option = 0
+
 
                 elif self.inventory_buttons and button in self.inventory_buttons:
                     self.state = None
                     self.buttons_group = pygame.sprite.Group()
+                    self.selected_option = 0
+
 
                 # === end screen -> overworld ===
                 elif button.text_string == "END":

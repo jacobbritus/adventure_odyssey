@@ -179,7 +179,7 @@ class Level:
             8: {"color": (255, 250, 240), "opacity": 75},
             12: {"color": (255, 255, 255), "opacity": 0},
             16: {"color": (255, 238, 131), "opacity": 100},
-            18: {"color": (255, 174, 66), "opacity": 125},
+            18: {"color": (255, 174, 66), "opacity": 75},
             20: {"color": (34, 0, 51), "opacity": 125},
             22: {"color": (0, 0, 0), "opacity": 150},
             0: {"color": (0, 0, 0), "opacity": 150},
@@ -204,12 +204,14 @@ class Level:
 
         # self.visible_sprites.custom_draw(self.player)
 
-        self.visible_sprites.battle_loop.run()
         if self.visible_sprites.battle_loop.performer:
             self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
 
 
         self.visible_sprites.battle_loop.draw_ui()
+
+        self.visible_sprites.battle_loop.run()
+
         self.visible_sprites.battle_loop.top_screen_description(self.display_surface)
         # use this smart ass
         # here to be drawn on top of the overlay
@@ -241,14 +243,17 @@ class Level:
 
         for npc in self.visible_sprites.npc_sprites:
             npc.update_npc(player, self.display_surface, self.visible_sprites.offset)
-            if not npc.in_battle and npc.death and pygame.time.get_ticks() >= npc.respawn_time:
-                npc.hp = npc.max_hp
-                npc.action = "idle"
-                npc.death = False
-            if npc.role == "enemy" and npc.death and npc.item_drop and not npc.in_battle:
-                item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
-                Item(self.visible_sprites, npc.item_drop, 1, item_pos)
-                npc.item_drop = None
+
+            if npc.role == "enemy":
+
+                if not npc.in_battle and npc.death and pygame.time.get_ticks() >= npc.respawn_time:
+                    npc.hp = npc.max_hp
+                    npc.action = "idle"
+                    npc.death = False
+                if npc.death and npc.item_drop and not npc.in_battle:
+                    item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
+                    Item(self.visible_sprites, npc.item_drop, 1, item_pos)
+                    npc.item_drop = None
 
             # testing allies
             if not self.player.active_allies:

@@ -123,14 +123,45 @@ class NPC(Entity):
             self.update_animations()
 
 class CombatNPC(NPC):
-    def __init__(self, name, surf, pos, group, obstacle_sprites, role):
+    def __init__(self, name, level, surf, pos, group, obstacle_sprites, role):
         super().__init__(name, surf, pos, group, obstacle_sprites, role)
+        self.level = level
+        self.stat_points = level
+
+        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance, self.dominant_stats = self.initialize_combat_elements()
+
+        self.exp_given = self.exp_to_level()
+
+        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
+        self.mana = 0
+        self.max_mana = self.core_stats["magic"]
 
         self.corrupted = random.choices(population=[True, False], weights=[0.0, 1.0], k=1)[0]
 
+        # === corrupted ===
+        if self.corrupted:
+            for key in self.core_stats:
+                self.core_stats[key] = round(self.core_stats[key] * 1.5)
+            self.recalculate_stats()
+
+            self.exp_given *= 2
+            self.initialize_corrupted_enemy()
+
+
+    def scale_stats_to_level(self):
+        if not self.stat_points <= 0:
+            for stat in self.dominant_stats:
+
+
+                self.core_stats[stat] += 1
+                self.stat_points -= 1
+
+            self.recalculate_stats()
+
 
     def initialize_combat_elements(self) -> list or None:
-        core_stats = combat_moves = critical_hit_chance = blocking_chance = None
+        core_stats = skills = critical_hit_chance = blocking_chance = None
+        dominant_stats = ["vitality"]
         if self.name == "Skeleton":
             core_stats = {
                 "vitality": 5,
@@ -141,9 +172,10 @@ class CombatNPC(NPC):
                 "luck": 5,
             }
 
-            combat_moves = ["sword_slash"]
+            skills = ["sword_slash"]
             critical_hit_chance = 0.9
             blocking_chance = 0.25
+            dominant_stats += ["strength", "defense"]
 
         elif self.name == "Goblin":
             core_stats = {
@@ -155,18 +187,20 @@ class CombatNPC(NPC):
                 "luck": 5,
             }
 
-            combat_moves = ["poison_stab", "sword_slash"]
+            skills = ["poison_stab", "sword_slash"]
             critical_hit_chance = 0.9
             blocking_chance = 0.5
+            dominant_stats += ["strength", "speed"]
+
 
         # === scale stats to level === (to be reworked)
         # for key in core_stats:
         #     core_stats[key] += self.level
 
 
-        return core_stats, combat_moves, critical_hit_chance, blocking_chance
+        return core_stats, skills, critical_hit_chance, blocking_chance, dominant_stats
 
-    def item_use_logic(self):
+    def battle_ai(self):
         """Make the enemy use an item depending on certain circumstances."""
         if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
             self.current_attack = "small_health_potion"
@@ -191,20 +225,7 @@ class CombatNPC(NPC):
 
 class Enemy(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
-        super().__init__(name, surf, pos, group, obstacle_sprites, role = "enemy")
-
-        # === stat related ===
-        self.level = level
-
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements()
-
-
-        self.exp_given = self.exp_to_level()
-
-        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
-        self.mana = 0
-        self.max_mana = self.core_stats["magic"]
-
+        super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "enemy")
         # === inventory ===
         self.item_drop = "small_health_potion"
         self.inventory = Inventory(item = {"small_health_potion": 2})
@@ -213,14 +234,9 @@ class Enemy(CombatNPC):
         self.detected_player = False
         self.respawn_time = pygame.time.get_ticks() + 0
 
-        # === corrupted ===
-        if self.corrupted:
-            for key in self.core_stats:
-                self.core_stats[key] = round(self.core_stats[key] * 1.5)
-            self.recalculate_stats()
 
-            self.exp_given *= 2
-            self.initialize_corrupted_enemy()
+
+
 
     def chase_player(self, player) -> None:
         # Calculate distances between enemy and player
@@ -287,6 +303,7 @@ class Enemy(CombatNPC):
 
     def update_npc(self, player, window, offset) -> None:
         super().update_npc(player, window, offset)
+        self.scale_stats_to_level()
 
         if not self.death:
 
@@ -299,28 +316,15 @@ class Enemy(CombatNPC):
                 self.random_movement()
 
 
-
 class Ally(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
-        super().__init__(name, surf, pos, group, obstacle_sprites, role = "hero")
-        self.level = level
-        self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance = self.initialize_combat_elements()
+        super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "hero")
 
-        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
-        self.mana = 0
-        self.max_mana = self.core_stats["magic"]
-
+        # === level experience ===
         self.exp = 0
         self.max_exp = self.exp_to_level()
 
-        self.active = None
 
-        if self.corrupted:
-            for key in self.core_stats:
-                self.core_stats[key] = round(self.core_stats[key] * 1.5)
-            self.recalculate_stats()
-
-            self.initialize_corrupted_enemy()
 
 
     def follow_player(self, player):
