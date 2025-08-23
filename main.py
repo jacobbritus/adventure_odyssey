@@ -23,7 +23,7 @@ class Game:
                     self.level.menu.keybinds(event)
                     self.level.overworld_ui.hotkeys(event)
                 else:
-                    self.level.visible_sprites.battle_loop.kb_selecting_target(event)
+                    self.level.visible_sprites.battle_loop.selecting_target_hotkeys(event)
                     self.level.player.blocking_critical_hotkey(event)
                     self.level.visible_sprites.battle_loop.battle_menu.hotkeys(event)
 

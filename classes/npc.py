@@ -95,14 +95,12 @@ class NPC(Entity):
     def recruit(self, player,  name, level):
 
         if not len(player.active_allies) >= 3:
-            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
+            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites, active = False)
 
-            new_recruit.active = True
             player.active_allies.append(new_recruit)
             new_recruit.status_bar = StatusBar(new_recruit, 28 * len(player.active_allies))
         else:
-            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites)
-            new_recruit.active = False
+            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites, active = False)
             player.inactive_allies.append(new_recruit)
 
 
@@ -115,11 +113,10 @@ class NPC(Entity):
     def update_npc(self, player, window, offset) -> None:
 
         self.blocking_mechanics(window, offset)
+        self.update_pos(offset=offset)
+        self.visual_cues(window, offset)
 
         if not self.death:
-            self.visual_cues(window, offset)
-            self.update_pos(offset=offset)
-
             self.update_animations()
 
 class CombatNPC(NPC):
@@ -204,6 +201,10 @@ class CombatNPC(NPC):
         """Make the enemy use an item depending on certain circumstances."""
         if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
             self.current_attack = "small_health_potion"
+        else:
+            options = [skill for skill in self.skills if self.mana >= SKILLS[skill]["mana"]]
+            self.current_attack = random.choice(options)
+
 
     def initialize_corrupted_enemy(self):
         new_sprite_dict = {}
@@ -317,9 +318,9 @@ class Enemy(CombatNPC):
 
 
 class Ally(CombatNPC):
-    def __init__(self, name, level, surf, pos, group, obstacle_sprites):
+    def __init__(self, name, level, surf, pos, group, obstacle_sprites, active):
         super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "hero")
-
+        self.active = active
         # === level experience ===
         self.exp = 0
         self.max_exp = self.exp_to_level()
@@ -371,15 +372,6 @@ class Ally(CombatNPC):
         else:
             self.action = "idle"
 
-
-    # allies should have dominant core stats that get leveled rather than every stat
-    # def level_stats(self) -> None:
-    #     """Automatically scale stats."""
-    #     if self.stat_points > 0:
-    #         for stat in self.core_stats.keys():
-    #             self.core_stats[stat] += 10
-    #         self.stat_points -= 1
-    #     self.recalculate_stats() # domin implement
 
     def update_npc(self, player, window, offset) -> None:
         super().update_npc(player, window, offset)

@@ -9,9 +9,9 @@ pygame.mixer.set_num_channels(32)
 
 from other.png_to_sprite import *
 
-MUSIC_VOLUME = 0.5
-EFFECT_VOLUME = 1.0
-UI_OPACITY = 225
+MUSIC_VOLUME = 0.0
+EFFECT_VOLUME = 0
+UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 360

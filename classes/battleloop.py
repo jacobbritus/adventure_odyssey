@@ -85,7 +85,8 @@ class BattleLoop:
         self.font = pygame.font.Font(FONT_ONE, 16)
 
         # turn pointer
-        self.turn_pointer = Pointer()
+        self.turn_pointer = Pointer(variant = "tick_pointer", direction = "down")
+        self.select_pointer = Pointer(variant = "hand_pointer", direction = "down")
 
         # === sound for selecting target ===
         self.click_sound_played = False
@@ -145,7 +146,7 @@ class BattleLoop:
             window.blit(self.battle_text_bg, self.battle_text_bg_pos)
             window.blit(self.battle_text_surface, self.battle_text_pos)
 
-    def kb_selecting_target(self, event):
+    def selecting_target_hotkeys(self, event):
         if event.type == pygame.KEYDOWN and self.state == BattleState.PLAYER_TURN and self.performer.current_attack:
 
             # === target navigation ===
@@ -154,12 +155,17 @@ class BattleLoop:
 
                 # === go up ===
                 if event.key == pygame.K_w:
-                    self.selected_target_index = max(self.selected_target_index - 1, 0)
+                    if not self.enemies[self.selected_target_index - 1].death:
+                        self.selected_target_index = max(self.selected_target_index - 1, 0)
+
+
 
                 # === go down ===
                 elif event.key == pygame.K_s:
-                    available_targets = len([enemy for enemy in self.enemies if not enemy.death])
-                    self.selected_target_index = min(self.selected_target_index + 1, available_targets - 1)
+                    if not self.selected_target_index == len(self.enemies) - 1 and not self.enemies[self.selected_target_index + 1].death:
+
+                        self.selected_target_index = min(self.selected_target_index + 1, len(self.enemies) - 1)
+
 
                 post = self.selected_target_index
 
@@ -169,7 +175,7 @@ class BattleLoop:
             # === pick target ===
             elif event.key == pygame.K_c:
                 self.target = self.enemies[self.selected_target_index]
-                self.player_turn()
+                self.process_attack_option()
 
                 for enemy in self.enemies:
                     enemy.selected = True
@@ -177,7 +183,7 @@ class BattleLoop:
 
 
 
-    def get_mouse_input(self) -> None:
+    def selecting_target(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
         press = pygame.mouse.get_pressed()[0]
 
@@ -195,39 +201,47 @@ class BattleLoop:
             self.battle_text_string = "SELECT A TARGET"
             self.battle_text_bg = UI["battle_message_box"]["small_background"]
 
-            if self.mouse_navigation:
-                for enemy in self.enemies:
-                    pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
-                    rect = pygame.Rect(pos.x, pos.y, 32, 32)
-                    if rect.collidepoint(mouse_pos):
-                        if press and not enemy.death:
-                            if not self.click_sound_played:
-                                play_sound("ui", "press", None)
-                            self.click_sound_played = True
+            for enemy in self.enemies:
+                pos = pygame.Vector2(enemy.hitbox.topleft - self.offset)
+                rect = pygame.Rect(pos.x, pos.y, 32, 32)
+                if rect.collidepoint(mouse_pos):
+                    self.mouse_navigation = True
 
-                            for other in self.enemies:
-                                other.selected = True
-                            self.target = enemy
-                            self.player_turn()
+                    if press and not enemy.death:
+                        if not self.click_sound_played:
+                            play_sound("ui", "press", None)
+                        self.click_sound_played = True
 
-                            break
-                        else:
-                            self.turn_pointer.draw(self.window, enemy.screen_position,
-                                                   enemy.direction)
+                        for other in self.enemies:
+                            other.selected = True
+                        self.target = enemy
+                        self.process_attack_option()
 
-                            self.battle_text_string = enemy.name.upper()
-
-                            if not self.hover_sound_played:
-                                play_sound("ui", "hover", None)
-                                self.hover_sound_played = True
-                            enemy.selected = True
+                        break
                     else:
-                        enemy.selected = False
-            else:
+                        self.select_pointer.draw(self.window, enemy.screen_position + (32, -12), "down")
+
+                        self.battle_text_string = enemy.name.upper()
+
+                        if not self.hover_sound_played:
+                            play_sound("ui", "hover", None)
+                            self.hover_sound_played = True
+
+                        for other_enemy in self.enemies:
+                            if other_enemy == enemy:
+                                continue
+                            other_enemy.selected = False
+                        enemy.selected = True
+                else:
+                    self.mouse_navigation = False
+                    enemy.selected = False
+
+
+            if not self.mouse_navigation:
                 enemy = self.enemies[self.selected_target_index]
 
-                self.turn_pointer.draw(self.window, enemy.screen_position,
-                                       enemy.direction)
+                self.select_pointer.draw(self.window, enemy.screen_position + (32, -12), "down")
+
                 self.battle_text_string = enemy.name.upper()
                 enemy.selected = True
 
@@ -235,6 +249,8 @@ class BattleLoop:
                     if other_enemy == enemy:
                         continue
                     other_enemy.selected = False
+
+
 
 
 
@@ -247,7 +263,8 @@ class BattleLoop:
         self.current_time = pygame.time.get_ticks()
         self.animations()
 
-        self.get_mouse_input()
+        self.selecting_target()
+
 
         if self.current_time >= self.delay:
             if self.state == BattleState.PLAYER_TURN:
@@ -319,10 +336,23 @@ class BattleLoop:
             if enemy.screen_position:
                 hp_bar.draw(self.window, enemy.screen_position + (12, 12))
 
+        # === highlight the target's hp bar and dim others whenever a hero attacks ===
+        if self.state == BattleState.PLAYER_ANIMATION:
+            for enemy, hp_bar in self.enemy_hp_bars_test.items():
+                if enemy == self.target:
+                    continue
+                if not enemy.death:
+                    hp_bar.opacity = 100
+        else:
+            for enemy, hp_bar in self.enemy_hp_bars_test.items():
+                if not enemy.death:
+                    hp_bar.opacity = UI_OPACITY
+        print(self.state)
 
         # === turn pointers ===
         if self.performer and not self.performer.current_attack and not self.state in [BattleState.END_BATTLE, BattleState.END_MENU]:
-            self.turn_pointer.draw(self.window, self.performer.screen_position, self.performer.direction)
+            color = "blue" if self.performer in self.heroes else "red"
+            self.turn_pointer.draw(self.window, self.performer.screen_position + (32, -6) , "down", color = color)
 
 
         # === display battle menu ===
@@ -357,24 +387,24 @@ class BattleLoop:
             self.performer.current_attack = internal_item
             self.player.inventory.items[internal_item] -= 1
 
-        self.player_turn()
+        self.process_attack_option()
 
 
-    def player_turn(self) -> None:
+    def process_attack_option(self) -> None:
         if self.performer.current_attack in SKILLS.keys() and self.target:
-            if self.performer in self.heroes:
-                self.performer.mana -= SKILLS[self.performer.current_attack]["mana"]
-            self.state = BattleState.PLAYER_ANIMATION
-            self.handle_attack()
+            self.performer.mana -= SKILLS[self.performer.current_attack]["mana"]
+            self.handle_attack_type()
+            self.state = BattleState.PLAYER_ANIMATION if self.performer in self.heroes else BattleState.ENEMY_ANIMATION
 
 
         elif self.performer.current_attack in ITEMS.keys():
             self.performer.animation_state = AnimationState.ITEM
             self.target = self.performer
             self.set_delay(2000)
-            self.state = BattleState.PLAYER_ANIMATION
 
-    def handle_attack(self) -> None:
+            self.state = BattleState.PLAYER_ANIMATION if self.performer in self.heroes else BattleState.ENEMY_ANIMATION
+
+    def handle_attack_type(self) -> None:
         """Handles the different animation start phases depending on the attack type."""
 
         if SKILLS[self.performer.current_attack]["type"] == AttackType.PHYSICAL.value:
@@ -391,14 +421,11 @@ class BattleLoop:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
 
-        options = [skill for skill in self.performer.skills if self.performer.mana >= SKILLS[skill]["mana"]]
-        self.performer.current_attack = random.choice(options)
-
         self.performer.battle_ai()
 
         self.target = random.choice([hero for hero in self.heroes if not hero.death])
 
-        self.player_turn()
+        self.process_attack_option()
 
 
     def animation_phases(self, performer, target) -> None:
@@ -474,7 +501,6 @@ class BattleLoop:
                 for hero in self.heroes:
                     hero.total_exp += sum(enemy.exp_given for enemy in self.enemies)
             else:
-                self.player.status_bar.visible = True
                 self.winner = self.enemies
 
             self.performer.current_attack = None
@@ -495,6 +521,15 @@ class BattleLoop:
                 if self.performer.hp <= 0 and not self.performer.death:
                     self.performer.animation_state = AnimationState.DEATH
                     return
+
+                # === move the auto selected target ===
+                if self.target.death and self.performer in self.heroes:
+                    for i in range(len(self.enemies)):
+                        if self.enemies[i].death:
+                            continue
+                        else:
+                            self.selected_target_index = i
+                            break
 
 
                 self.performer.current_attack = None
@@ -522,11 +557,12 @@ class BattleLoop:
                     self.battle_menu.buttons_group = pygame.sprite.Group()
 
 
+
                 else:
                     self.state = BattleState.ENEMY_TURN
 
 
-                self.set_delay(1000)
+                self.set_delay(2000)
                 self.battle_text_string = None
 
     def animations(self) -> None:

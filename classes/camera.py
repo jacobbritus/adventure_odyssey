@@ -158,7 +158,9 @@ class YSortCameraGroup(pygame.sprite.Group):
                 continue
             if hasattr(sprite, "image"):
                 # === draw player not using rect as that uses int ===
-                if sprite.type in ["player", "npc"]:
+                sprites_drawn_precise = ["player"]
+                if self.battle_loop: sprites_drawn_precise.append("npc")
+                if sprite.type in sprites_drawn_precise:
                     offset_pos = (sprite.x, sprite.y) - pygame.math.Vector2(self.offset.x, self.offset.y)
                 else:
                     offset_pos = sprite.rect.topleft - pygame.math.Vector2(self.offset.x, self.offset.y)
@@ -177,8 +179,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        for i in range(1):
-            second_enemy = random.choices([True, False], k=1, weights = [0.5, 0.5])[0]
+        for i in range(3):
+            second_enemy = random.choices([True, False], k=1, weights = [1, 0.0])[0]
             if second_enemy: enemies.append(enemies[0].clone_enemy("Skeleton"))
 
 
@@ -203,9 +205,16 @@ class YSortCameraGroup(pygame.sprite.Group):
                 total_height = spacing * (n - 1)  # total space between all enemies
                 start_y = pos.y - total_height / 2  # first enemy starts above pos.y
 
-                for i in range(n):
-                    y = start_y + spacing * i
+                for index in range(n):
+                    y = start_y + spacing * index
+
+                    if index in [0, 3] and n == 4:
+                        positions.append(pygame.Vector2(pos.x + 64, y))  # same X, shifted Y
+                        continue
+
                     positions.append(pygame.Vector2(pos.x, y))  # same X, shifted Y
+
+                print(positions)
 
                 return positions
 

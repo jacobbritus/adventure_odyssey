@@ -88,7 +88,6 @@ class Entity(pygame.sprite.Sprite):
         # === visual cues ===
         self.dmg_position = None
         self.screen_messages = []
-        self.pointer = Pointer()
 
         # === spells ===
         self.spawn_projectile = False

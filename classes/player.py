@@ -59,9 +59,9 @@ class Player(Entity):
 
         # === core stats ===
         self.core_stats = {
-            "vitality": 5,
+            "vitality": 50,
             "defense": 5,
-            "strength": 5,
+            "strength": 50,
             "magic": 5,
             "speed": 5,
             "luck": 5,

@@ -1,5 +1,6 @@
 import pygame
 
+from classes.pointer import Pointer
 from classes.states import BookState, BattleMenuState, ButtonVariant
 from other.play_sound import play_sound
 from other.settings import *
@@ -68,7 +69,7 @@ class StatusBar:
         self.setup_small_hp_bar()
         self.stats = ["hp"]
 
-        self.opacity = 0
+        self.opacity = UI_OPACITY
         self.visible = False
         self.press_delay = 0
         self.x_offset = UI["status_bar"]["background"].get_width() - 32
@@ -452,10 +453,10 @@ class EnemyStatusBar(StatusBar):
 
 
         for surface, pos in elements:
+            surface.set_alpha(max(0, self.opacity))
 
             if self.owner.death and self.bars["hp"]["bg_width"] <= 5:
-                self.opacity -= 20
-                surface.set_alpha(max(0, self.opacity))
+                self.opacity -= 1
 
             window.blit(surface, pos)
 
@@ -655,9 +656,13 @@ class BattleMenu:
         self.skills_buttons: pygame.sprite.Group = pygame.sprite.Group()
 
         # === main menu position ===
+        self.main_menu_bg = UI["battle_menu"]["main_background"]
+
         self.main_menu_bg_pos = pygame.Vector2(0, WINDOW_HEIGHT - UI["battle_menu"]["main_background"].get_height())
 
         # === skills menu position ===
+        self.skills_menu_bg = UI["battle_menu"]["skills_background"]
+
         self.skills_bg_pos = self.main_menu_bg_pos + (112, 0)
 
         # === end menu position ===
@@ -672,11 +677,21 @@ class BattleMenu:
         # === enum states ===
         self.state = None
         self.visible = True
-        self.main_menu_bg = UI["battle_menu"]["main_background"]
-        self.skills_menu_bg = UI["battle_menu"]["skills_background"]
 
         self.selected_option = -1
         self.mouse_navigation = False
+        self.pointer = Pointer(variant = "hand_pointer")
+
+
+    def draw_pointer(self, window):
+        for button in self.buttons_group:
+            if button.hovering:
+                if not button.text_string in ["SKILLS", "ITEMS", "RUN"]:
+                    x_offset = (28, 6)
+                else:
+                    x_offset = (8, 0)
+
+                self.pointer.draw(window, pygame.Vector2(button.rect.topleft) - x_offset , "right")
 
     def hotkeys(self, event):
         if event.type == pygame.KEYDOWN and self.state and not self.mouse_navigation:
@@ -707,7 +722,7 @@ class BattleMenu:
 
             # === click the selected button ===
             if event.key == pygame.K_c:
-                list(self.buttons_group)[self.selected_option].clicked = True
+                if not list(self.buttons_group)[self.selected_option].disabled: list(self.buttons_group)[self.selected_option].clicked = True
 
 
     def hotkey_button_selection(self):
@@ -728,7 +743,6 @@ class BattleMenu:
     def draw(self, window: pygame.Surface, performer) -> None:
         """Draw the buttons and images associated with the current state."""
         self.update()
-
 
         self.performer = performer
         self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in self.performer.skills]
@@ -751,6 +765,7 @@ class BattleMenu:
             button.draw(window)
 
         self.hotkey_button_selection()
+        self.draw_pointer(window)
 
 
     def update(self) -> None:
@@ -792,7 +807,6 @@ class BattleMenu:
 
                     if self.state == BattleMenuState.SKILLS_MENU:
                         if self.selected_option >= 0:
-                            print(self.selected_option)
                             self.selected_option = 3
                     elif self.state == BattleMenuState.INVENTORY_MENU and self.player.inventory.items:
                         if self.selected_option >= 0:
@@ -864,6 +878,7 @@ class BattleMenu:
                     Button([self.buttons_group, self.skills_buttons], skill_name, self.attack_function, skill_name,
                            ButtonVariant.WIDE, pos, False)
                 else:
+                    print(skill_name)
                     Button([self.buttons_group, self.skills_buttons], skill_name, self.attack_function, skill_name,
                            ButtonVariant.WIDE, pos, True)
 

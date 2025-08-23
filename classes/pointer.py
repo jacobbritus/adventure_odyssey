@@ -1,25 +1,33 @@
 import math
 
-import pygame
-
 from other.settings import *
 
 class Pointer:
-    def __init__(self):
-        self.image = UI["cursors"]["tick_pointer_right"]
+    def __init__(self, variant = "tick_pointer", direction = "right", color = "blue"):
+        if variant == "tick_pointer":
+            self.image = UI["cursors"][f"{color}_{variant}_{direction}"]
+        else:
+            self.image = UI["cursors"][f"{variant}_{direction}"]
+        self.variant = variant
+        self.direction = direction
         self.pos = None
-        self.x_float = 5
+        self.float = 5
 
+    def draw(self, window, pos, direction, **kwargs):
+        if kwargs.get("color"):
+            self.image = UI["cursors"][f"{kwargs.get("color")}_{self.variant}_{direction}"]
+        else:
+            self.image = UI["cursors"][f"{self.variant}_{direction}"]
 
-    def draw(self, window, pos, direction):
-        x_offset = (-2, 30) if direction == "right" else (64, 30)
-        self.pos = pos + x_offset
+        self.pos = pygame.Vector2(pos)
 
-        self.image = UI["cursors"][f"hand_pointer_{direction}"]
-        float_offset = math.sin(self.x_float) * 5
+        float_offset = math.sin(self.float) * 5
 
-        x = self.pos.x + float_offset
-
-        self.x_float -= 0.1
-
-        window.blit(self.image, (x, self.pos.y))
+        if direction in ["left", "right"]:
+            x = self.pos.x + float_offset
+            self.float -= 0.1
+            window.blit(self.image, (x, self.pos.y))
+        else:
+            y = self.pos.y + float_offset
+            self.float -= 0.1
+            window.blit(self.image, (self.pos.x, y))
