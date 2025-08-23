@@ -64,14 +64,14 @@ class StatusBarState(Enum):
 class StatusEffects(Enum):
     POISONED = {
         "name": "POISONED",
-        "damage": 1,
+        "damage_percentage": 0.1,
         "turns": 6,
         "color": (102, 205, 170)
     }
 
     BURNED = {
         "name": "BURNED",
-        "damage": 2,
+        "damage_percentage": 0.25,
         "turns": 2,
         "color": (255, 87, 34)
     }

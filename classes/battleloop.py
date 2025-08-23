@@ -334,7 +334,7 @@ class BattleLoop:
         # === display enemy status bars ===
         for enemy, hp_bar in self.enemy_hp_bars_test.items():
             if enemy.screen_position:
-                hp_bar.draw(self.window, enemy.screen_position + (12, 12))
+                hp_bar.draw(self.window, pos = enemy.screen_position + (12, 12))
 
         # === highlight the target's hp bar and dim others whenever a hero attacks ===
         if self.state == BattleState.PLAYER_ANIMATION:
@@ -347,7 +347,6 @@ class BattleLoop:
             for enemy, hp_bar in self.enemy_hp_bars_test.items():
                 if not enemy.death:
                     hp_bar.opacity = UI_OPACITY
-        print(self.state)
 
         # === turn pointers ===
         if self.performer and not self.performer.current_attack and not self.state in [BattleState.END_BATTLE, BattleState.END_MENU]:
@@ -421,9 +420,8 @@ class BattleLoop:
         """Picks a random attack choice for the enemy."""
         self.state = BattleState.ENEMY_ANIMATION
 
-        self.performer.battle_ai()
+        self.target = self.performer.battle_ai([hero for hero in self.heroes if not hero.death])
 
-        self.target = random.choice([hero for hero in self.heroes if not hero.death])
 
         self.process_attack_option()
 

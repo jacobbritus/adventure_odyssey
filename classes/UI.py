@@ -439,8 +439,9 @@ class EnemyStatusBar(StatusBar):
 
 
 
-    def draw(self, window, dynamic_pos, *args) -> None:
-        self.dynamic_pos(dynamic_pos)
+    def draw(self, window, **kwargs) -> None:
+
+        self.dynamic_pos(kwargs.get("pos"))
 
 
         self.set_bars()
@@ -642,7 +643,6 @@ class BattleMenu:
     def __init__(self, player, performer, functions):
         # === player's attacks and functions ===
         # e.g., attack(name of button clicked) and player_run(no parameter)
-
         self.player = player
         self.performer = performer
         self.formatted_skills: list[str] = [attack.replace("_", " ").upper() for attack in self.performer.skills]
@@ -708,11 +708,7 @@ class BattleMenu:
                 elif event.key == pygame.K_a and len(list(self.buttons_group)) > 3:
                     self.selected_option = 0
 
-                elif event.key == pygame.K_x:
-                    self.state = BattleMenuState.MAIN_MENU
-                    for other_button in self.buttons_group:
-                        if not other_button.text_string in ["SKILLS", "ITEMS", "RUN"]:
-                            other_button.kill()
+
 
                 post = self.selected_option
                 if not pre == post:
@@ -729,13 +725,17 @@ class BattleMenu:
             list(self.buttons_group)[self.selected_option].hovering = True
             list(self.buttons_group)[self.selected_option].image = list(self.buttons_group)[self.selected_option].image_selected
 
-        if self.main_menu_bg.get_rect(topleft = self.main_menu_bg_pos).collidepoint(mouse_pos)\
-                or self.skills_menu_bg.get_rect(topleft = self.skills_bg_pos).collidepoint(mouse_pos):
-            self.mouse_navigation = True
+        rects = [self.main_menu_bg.get_rect(topleft = self.main_menu_bg_pos)]
+        if self.state in [BattleMenuState.INVENTORY_MENU, BattleMenuState.SKILLS_MENU]:
+            rects.append(self.skills_menu_bg.get_rect(topleft = self.skills_bg_pos))
 
-            self.selected_option = -1
-        else:
-            self.mouse_navigation = False
+        for rect in rects:
+            if rect.collidepoint(mouse_pos):
+                self.mouse_navigation = True
+
+                self.selected_option = -1
+            else:
+                self.mouse_navigation = False
 
 
     def draw(self, window: pygame.Surface, performer) -> None:
@@ -876,7 +876,6 @@ class BattleMenu:
                     Button([self.buttons_group, self.skills_buttons], skill_name, self.attack_function, skill_name,
                            ButtonVariant.WIDE, pos, False)
                 else:
-                    print(skill_name)
                     Button([self.buttons_group, self.skills_buttons], skill_name, self.attack_function, skill_name,
                            ButtonVariant.WIDE, pos, True)
 
@@ -903,6 +902,7 @@ class BattleMenu:
 
 class MenuBook:
     def __init__(self, player):
+        self.sound_played = False
         self.player = player
         self.image = UI["book"]["default_image"]
         self.book_width, self.book_height = self.image.get_size()
@@ -960,6 +960,10 @@ class MenuBook:
     def update(self):
 
         if self.state:
+            if not self.sound_played:
+                play_sound("ui", "book", None)
+                self.sound_played = True
+
             # === reset the buttons ===
             self.buttons_group = pygame.sprite.Group()
             if self.frame >= len(book_sprites[self.animations[self.state]["sprites"]]) - 1:
@@ -971,6 +975,8 @@ class MenuBook:
                 self.frame += 0.17
                 self.image = book_sprites[self.animations[self.state]["sprites"]][round(self.frame)]
         else:
+            self.sound_played = False
+
             self.frame = 0
             self.image = UI["book"]["default_image"]
             self.pos = pygame.Vector2(WINDOW_WIDTH // 2 - self.image.get_width() // 2,

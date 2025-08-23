@@ -1,5 +1,3 @@
-import os
-
 import pygame.mixer
 
 from classes.states import StatusEffects
@@ -10,7 +8,7 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 MUSIC_VOLUME = 0.0
-EFFECT_VOLUME = 0
+EFFECT_VOLUME = 0.75
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -37,11 +35,11 @@ item_drop = item_drop
 # === moves info ===
 SKILLS = {
     "fire_ball": {
-        "base_damage": 6,
+        "base_damage": 3,
         "multiplier": 0.5,
         "stat": "magic",
         "type": "special",
-        "mana": 3,
+        "mana": 0,
         "status_effect": StatusEffects.BURNED,
 
         "sound": [get_file_location("sounds/effects/fire_woosh.mp3"),get_file_location("sounds/effects/fire_impact.mp3")],
@@ -65,7 +63,7 @@ SKILLS = {
             "type": "physical",
             "mana": 0,
             "sound": [get_file_location("sounds/effects/sword_slash.wav")],
-            "description": "A heavy sword overhead sword slash that deals physical damage to one enemy."
+            "description": "A overhead sword slash that deals physical damage to one enemy."
         },
     "punch": {
         "base_damage": 1,
@@ -97,7 +95,7 @@ SKILLS = {
             "multiplier": 0.25,
             "stat": "strength",
             "type": "physical",
-            "mana": 2,
+            "mana": 1,
             "status_effect": StatusEffects.POISONED,
             "sound": [get_file_location("sounds/effects/sword_slash.mp3")],
             "description": "A close-range blow that deals physical damage to one enemy."}
@@ -121,7 +119,6 @@ ITEMS = {
         "effect": +5, # get attr(player, stat) += effect
         "description": "A basic potion that restores a small amount of health.",
         "inventory_desc": "Restores 5 SP"
-
 }
 }
 
@@ -147,6 +144,8 @@ SOUND_EFFECTS = {
     "moves": {
         "fire_ball": [pygame.mixer.Sound(get_file_location("sounds/effects/fire_woosh.mp3")), pygame.mixer.Sound(get_file_location("sounds/effects/fire_impact.mp3"))],
         "sword_slash": pygame.mixer.Sound(get_file_location("sounds/effects/sword_slash.wav")),
+        "overhead_slash": pygame.mixer.Sound(get_file_location("sounds/effects/sword_slash.wav")),
+
         "punch": pygame.mixer.Sound(get_file_location("sounds/effects/punch.mp3")),
         "heal": pygame.mixer.Sound(get_file_location("sounds/effects/heal.mp3")),
         "lightning_strike": pygame.mixer.Sound(get_file_location("sounds/effects/lightning_strike.mp3"))
@@ -155,6 +154,7 @@ SOUND_EFFECTS = {
         "hover": pygame.mixer.Sound(get_file_location("sounds/effects/hover.wav")),
         "press": pygame.mixer.Sound(get_file_location("sounds/effects/click.wav")),
         "disabled": pygame.mixer.Sound(get_file_location("sounds/effects/disabled.wav")),
+        "book": pygame.mixer.Sound(get_file_location("sounds/effects/book.mp3"))
     },
     "gameplay": {
         "enemy_alert": pygame.mixer.Sound(get_file_location("sounds/effects/enemy_alert.mp3")),

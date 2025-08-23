@@ -508,8 +508,12 @@ class Entity(pygame.sprite.Sprite):
 
 
 
-    def calculate_damage(self):
-        skill = self.current_attack
+    def calculate_damage(self, **kwargs):
+        if kwargs.get("skill"):
+            skill = kwargs.get("skill")
+        else:
+            skill = self.current_attack
+
         base = SKILLS[skill]["base_damage"]
         stat_name = SKILLS[skill]["stat"]
         multiplier = SKILLS[skill]["multiplier"]
@@ -590,17 +594,12 @@ class Entity(pygame.sprite.Sprite):
         if self.status_effect:
             play_sound("gameplay", self.status_effect.value["name"].lower(), None)
 
-            if self.status_effect == StatusEffects.BURNED:
-                damage = 2
-                self.hp -= damage
-                self.screen_messages.append(("hp_dealt", "-" + str(damage), (255, 87, 34)))
-                self.status_effect_count -= 1
 
-            elif self.status_effect == StatusEffects.POISONED:
-                damage = 1
-                self.hp -= 1
-                self.screen_messages.append(("hp_dealt", "-" + str(damage), (102, 205, 170)))
-                self.status_effect_count -= 1
+
+            damage = round(self.max_hp * self.status_effect.value["damage_percentage"])
+            self.hp -= damage
+            self.screen_messages.append(("hp_dealt", "-" + str(damage), self.status_effect.value["color"]))
+            self.status_effect_count -= 1
 
             if self.status_effect_count == 0:
                 self.status_effect = None

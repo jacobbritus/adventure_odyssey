@@ -239,8 +239,6 @@ class Level:
 
     def update_npcs(self, player):
         """Updates all the enemy sprites based on the player's position."""
-        npc_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc"]
-
         for npc in self.visible_sprites.npc_sprites:
             npc.update_npc(player, self.display_surface, self.visible_sprites.offset)
 
@@ -250,14 +248,16 @@ class Level:
                     npc.hp = npc.max_hp
                     npc.action = "idle"
                     npc.death = False
-                if npc.death and npc.item_drop and not npc.in_battle:
-                    item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
-                    Item(self.visible_sprites, npc.item_drop, 1, item_pos)
-                    npc.item_drop = None
+                if npc.death and npc.item_drops and not npc.in_battle:
+                    for item in npc.item_drops:
+                        item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
+                        Item(self.visible_sprites, item, 1, item_pos)
+                        npc.item_drop = None
+                    npc.item_drops.clear()
 
             # testing allies
-            if not self.player.active_allies:
-                npc.recruit(player, "Goblin", npc.level)
+            # if not self.player.active_allies:
+            #     npc.recruit(player, "Goblin", npc.level)
             #     npc.recruit(player, "Skeleton", npc.level)
             #     npc.recruit(player, "Goblin", npc.level)
             #     npc.recruit(player, "Skeleton", npc.level)

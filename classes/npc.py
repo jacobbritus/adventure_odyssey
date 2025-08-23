@@ -123,17 +123,13 @@ class CombatNPC(NPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites, role):
         super().__init__(name, surf, pos, group, obstacle_sprites, role)
         self.level = level
-        self.stat_points = 15
+        self.stat_points = level
 
         self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance, self.dominant_stats = self.initialize_combat_elements()
 
         self.exp_given = self.exp_to_level()
 
-        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
-        self.mana = 0
-        self.max_mana = self.core_stats["magic"]
-
-        self.corrupted = random.choices(population=[True, False], weights=[0.0, 1.0], k=1)[0]
+        self.corrupted = random.choices(population=[True, False], weights=[1.0, 0.0], k=1)[0]
 
         # === corrupted ===
         if self.corrupted:
@@ -145,6 +141,10 @@ class CombatNPC(NPC):
 
             self.exp_given *= 2
             self.initialize_corrupted_enemy()
+
+        self.hp = self.max_hp = int(10 + 2 * self.core_stats["vitality"])
+        self.mana = 0
+        self.max_mana = self.core_stats["magic"]
 
 
     def scale_stats_to_level(self):
@@ -173,7 +173,7 @@ class CombatNPC(NPC):
             }
 
             skills = ["sword_slash"]
-            critical_hit_chance = 0.9
+            critical_hit_chance = 0.5
             blocking_chance = 0.25
             dominant_stats += ["strength", "defense"]
 
@@ -188,7 +188,7 @@ class CombatNPC(NPC):
             }
 
             skills = ["poison_stab", "sword_slash"]
-            critical_hit_chance = 0.9
+            critical_hit_chance = 0.5
             blocking_chance = 0.5
             dominant_stats += ["strength", "speed"]
 
@@ -200,13 +200,34 @@ class CombatNPC(NPC):
 
         return core_stats, skills, critical_hit_chance, blocking_chance, dominant_stats
 
-    def battle_ai(self):
-        """Make the enemy use an item depending on certain circumstances."""
+    def battle_ai(self, targets):
+        """Conditionals that decide the enemy's battle action."""
+
+        # === defeating a target is prioritized over all ===
+        for skill_name in self.skills:
+            damage = self.calculate_damage(skill = skill_name)
+            for target in targets:
+                if damage >= target.hp:
+                    self.current_attack = skill_name
+                    return target
+
+        # === apply status effect second ===
+        for skill_name in self.skills:
+            if hasattr(SKILLS[skill_name], "status_effect"):
+                self.current_attack = skill_name
+                return random.choice(self.random_target)
+
+        # === heal if less than 50% hp is left ===
         if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
             self.current_attack = "small_health_potion"
+            return self
+
+        # === random option, random target ===
         else:
             options = [skill for skill in self.skills if self.mana >= SKILLS[skill]["mana"]]
             self.current_attack = random.choice(options)
+            return random.choice(targets)
+
 
 
     def initialize_corrupted_enemy(self):
@@ -232,6 +253,8 @@ class Enemy(CombatNPC):
         super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "enemy")
         # === inventory ===
         self.item_drop = "small_health_potion"
+        self.item_drops = [self.item_drop] + [self.item_drop] if self.corrupted else [self.item_drop]
+        print(self.item_drops)
         self.inventory = Inventory(item = {"small_health_potion": 2})
 
         # === other ===
