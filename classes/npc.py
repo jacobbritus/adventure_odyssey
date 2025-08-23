@@ -95,7 +95,7 @@ class NPC(Entity):
     def recruit(self, player,  name, level):
 
         if not len(player.active_allies) >= 3:
-            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites, active = False)
+            new_recruit = Ally(name, level, self.image, self.spawn, self.group, self.obstacle_sprites, active = True)
 
             player.active_allies.append(new_recruit)
             new_recruit.status_bar = StatusBar(new_recruit, 28 * len(player.active_allies))
@@ -123,7 +123,7 @@ class CombatNPC(NPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites, role):
         super().__init__(name, surf, pos, group, obstacle_sprites, role)
         self.level = level
-        self.stat_points = level
+        self.stat_points = 15
 
         self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance, self.dominant_stats = self.initialize_combat_elements()
 
@@ -138,6 +138,8 @@ class CombatNPC(NPC):
         # === corrupted ===
         if self.corrupted:
             for key in self.core_stats:
+                if key == max(self.core_stats.values()) and not all(stat == max(self.dominant_stats) for stat in  self.dominant_stats):
+                    continue
                 self.core_stats[key] = round(self.core_stats[key] * 1.5)
             self.recalculate_stats()
 
@@ -148,12 +150,13 @@ class CombatNPC(NPC):
     def scale_stats_to_level(self):
         if not self.stat_points <= 0:
             for stat in self.dominant_stats:
-
-
                 self.core_stats[stat] += 1
                 self.stat_points -= 1
 
             self.recalculate_stats()
+            self.hp = self.max_hp
+
+            print(self.core_stats)
 
 
     def initialize_combat_elements(self) -> list or None:
@@ -340,7 +343,7 @@ class Ally(CombatNPC):
         stop_distance =  player_distance + ally_distance
 
 
-        if distance > 500:
+        if distance > 250:
             self.x, self.y = player.x, player.y
             self.update_pos()
         elif distance > stop_distance:

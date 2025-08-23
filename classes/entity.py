@@ -176,8 +176,8 @@ class Entity(pygame.sprite.Sprite):
         return round(base_exp * (self.level ** exponent))
 
     def recalculate_stats(self):
-        self.max_hp: int = int(10 + 1.5 * self.core_stats["vitality"])
-        self.hp = self.max_hp
+        self.max_hp: int = int(10 + 2 * self.core_stats["vitality"])
+
 
 
     def blocking_mechanics(self, window, offset) -> None:

@@ -49,7 +49,7 @@ SKILLS = {
     },
     "sword_slash": {
         "base_damage": 2,
-        "multiplier": 1,
+        "multiplier": 0.75,
         "stat": "strength",
         "type": "physical",
         "mana": 0,
@@ -58,6 +58,15 @@ SKILLS = {
 
 
     },
+    "overhead_slash": {
+            "base_damage": 4,
+            "multiplier": 0.75,
+            "stat": "strength",
+            "type": "physical",
+            "mana": 0,
+            "sound": [get_file_location("sounds/effects/sword_slash.wav")],
+            "description": "A heavy sword overhead sword slash that deals physical damage to one enemy."
+        },
     "punch": {
         "base_damage": 1,
         "multiplier": 0.25,
@@ -189,13 +198,14 @@ for directory in UI_directories:
 
     images_dict = {}
     for image in os.listdir(get_file_location(os.path.join(UI_directory, directory))):
-        png_image = pygame.image.load(get_file_location(os.path.join(UI_directory, directory, image)))
+        if image.endswith(".png"):
+            png_image = pygame.image.load(get_file_location(os.path.join(UI_directory, directory, image)))
 
-        # === skip adjusting opacity ===
-        if not directory == "cursors":
-            png_image.set_alpha(UI_OPACITY)
-        key_name = image[:-4]
-        images_dict[key_name] = png_image
+            # === skip adjusting opacity ===
+            if not directory == "cursors":
+                png_image.set_alpha(UI_OPACITY)
+            key_name = image[:-4]
+            images_dict[key_name] = png_image
 
     UI[directory] = images_dict
 

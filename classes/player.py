@@ -59,9 +59,9 @@ class Player(Entity):
 
         # === core stats ===
         self.core_stats = {
-            "vitality": 50,
+            "vitality": 5,
             "defense": 5,
-            "strength": 50,
+            "strength": 5,
             "magic": 5,
             "speed": 5,
             "luck": 5,
@@ -83,7 +83,7 @@ class Player(Entity):
         self.dust_particles = dust_particles
         self.level_up_visual = pygame.sprite.Group()
 
-        self.skills = ["sword_slash", "punch", "fire_ball", "heal", "lightning_strike"]
+        self.skills = ["sword_slash", "punch", "overhead_slash", "heal", "lightning_strike"]
         self.post_battle_iframes = pygame.time.get_ticks() + 0
         self.block_cooldown_end = pygame.time.get_ticks() + 0
 

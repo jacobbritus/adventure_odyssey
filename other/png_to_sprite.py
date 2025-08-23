@@ -67,6 +67,16 @@ player_sprites = {
 
 
     },
+    "overhead_slash": {
+            "sprites": {
+                "right": sprite_converter("sprites/characters/jacob.png", 16, 6, 96, 80, False),
+                "left": sprite_converter("sprites/characters/jacob.png", 16, 6, 96, 80, True),
+            },
+            "sound": get_file_location("sounds/sword_slash.wav"),
+            "impact_frame": 4
+
+
+        },
 
     "punch": {
             "sprites": {

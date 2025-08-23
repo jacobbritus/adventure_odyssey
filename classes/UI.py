@@ -172,9 +172,6 @@ class StatusBar:
             self.normal_speed = max(diff * 0.2, 1)
 
 
-
-
-
             # === modify the foreground bar ===
             if bar["current_width"] < bar["target_width"]:
                 bar["current_width"] = min(bar["current_width"] + self.normal_speed, bar["target_width"])
@@ -184,6 +181,7 @@ class StatusBar:
                 bar["current_width"] = max(bar["current_width"] - self.normal_speed, bar["target_width"])
 
             crop = pygame.Rect(0, 0, bar["current_width"], bar["image"].get_height())
+
             bar["bar"] = bar["image"].subsurface(crop).copy()
 
 
