@@ -140,7 +140,7 @@ skeleton_sprites = {
         "sound": "sounds/skeleton_run.wav",
                  "impact_frame": None
 },
-    "sword_slash": {
+    "overhead_slash": {
         "sprites": {
             "right": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 6, 96, 80, False),
             "left": sprite_converter("sprites/characters/skeleton_swordless2.png", 7, 6, 96, 80, True),

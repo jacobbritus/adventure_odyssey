@@ -1,13 +1,10 @@
 import math
 
-import pygame.image
+import pygame
 
 from classes.UI import StatusBar
 from classes.entity import Entity, BlockShield
 from classes.inventory import Inventory
-from classes.spells import ProjectileSpell, StationarySpell
-from classes.states import AnimationState
-from other.play_sound import play_sound
 from other.settings import *
 
 class Player(Entity):
@@ -97,7 +94,7 @@ class Player(Entity):
 
     def blocking_critical_hotkey(self, event) -> None:
         """The player's block | crit hotkey with its delay."""
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
             if not self.blocking and pygame.time.get_ticks() >= self.block_cooldown_end:
                 self.blocking = True
                 self.block_cooldown_end = pygame.time.get_ticks() + 2000
@@ -161,7 +158,7 @@ class Player(Entity):
         if not self.in_battle: self.action = "item_use"
         if not self.in_battle: self.direction = "down"
         for item in self.item_sprites:
-            item.draw(window, self.screen_position + (32, -16), "life_time")
+            item.draw(window, pygame.Vector2(self.screen_position.x, self.screen_position.y) + (32, -16), "life_time")
 
 
 

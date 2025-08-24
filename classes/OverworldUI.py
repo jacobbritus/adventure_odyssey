@@ -1,5 +1,3 @@
-import pygame
-
 from classes.UI import Button
 from classes.states import ButtonVariant
 from other.settings import *
@@ -40,7 +38,7 @@ class OverworldUI:
 
     def hotkeys(self, event) -> None:
         """Hotkey to pick up item."""
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
             self.button.clicked = True
 
     def item_message(self, window):

@@ -93,7 +93,7 @@ class BattleLoop:
         self.hover_sound_played = False
 
     def set_delay(self, ms):
-        self.delay = self.current_time + ms
+        self.delay = self.current_time + round(ms / 2)
 
     def top_screen_description(self, window):
         if self.state == BattleState.PLAYER_TURN:
@@ -351,7 +351,7 @@ class BattleLoop:
         # === turn pointers ===
         if self.performer and not self.performer.current_attack and not self.state in [BattleState.END_BATTLE, BattleState.END_MENU]:
             color = "blue" if self.performer in self.heroes else "red"
-            self.turn_pointer.draw(self.window, self.performer.screen_position + (32, -6) , "down", color = color)
+            self.turn_pointer.draw(self.window, self.performer.screen_position + (32, -2) , "down", color = color)
 
 
         # === display battle menu ===
@@ -399,7 +399,7 @@ class BattleLoop:
         elif self.performer.current_attack in ITEMS.keys():
             self.performer.animation_state = AnimationState.ITEM
             self.target = self.performer
-            self.set_delay(2000)
+            self.set_delay(4000)
 
             self.state = BattleState.PLAYER_ANIMATION if self.performer in self.heroes else BattleState.ENEMY_ANIMATION
 
@@ -431,7 +431,7 @@ class BattleLoop:
         # === [ APPROACH ] > WAIT > ATTACK ===
         if performer.animation_state == AnimationState.APPROACH:
             performer.approach_animation(target)
-            delay_time = 1000 if performer in self.heroes else random.randint(500, 3000)
+            delay_time = 500 if performer in self.heroes else random.randint(250, 1500)
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:

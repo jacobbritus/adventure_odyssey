@@ -8,7 +8,7 @@ pygame.mixer.set_num_channels(32)
 from other.png_to_sprite import *
 
 MUSIC_VOLUME = 0.0
-EFFECT_VOLUME = 0.75
+EFFECT_VOLUME = 0.0
 UI_OPACITY = 200
 
 WINDOW_WIDTH = 640
@@ -108,7 +108,7 @@ ITEMS = {
         "type": "consumable",
         "image": pygame.image.load(get_file_location("sprites/items/small_health_potion.png")),
         "stat": "hp",
-        "effect": +5, # get attr(player, stat) += effect
+        "effect": +10, # get attr(player, stat) += effect
         "description": "A basic potion that restores a small amount of health.",
         "inventory_desc": "Restores 5 HP"
     },
@@ -163,7 +163,7 @@ SOUND_EFFECTS = {
         "level_up": pygame.mixer.Sound(get_file_location("sounds/effects/level_up_sound.mp3")),
         "victory": [pygame.mixer.Sound(get_file_location("sounds/background/victory1.wav")),
         pygame.mixer.Sound(get_file_location("sounds/background/victory2.wav")),
-        pygame.mixer.Sound(get_file_location("sounds/background/victory3.wav")),],
+        pygame.mixer.Sound(get_file_location("sounds/background/victory3.wav"))],
         "poisoned": pygame.mixer.Sound(get_file_location("sounds/effects/poisoned.mp3")),
         "burned": pygame.mixer.Sound(get_file_location("sounds/effects/burned.mp3"))
 
@@ -210,8 +210,6 @@ for directory in UI_directories:
     UI[directory] = images_dict
 
 
-# ___hp bar___
-EXCLAMATION_MARK = get_file_location(f"sprites/UI/exclamation_mark.png")
 
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")

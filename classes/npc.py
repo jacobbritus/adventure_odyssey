@@ -4,8 +4,8 @@ import pygame.mixer
 
 from archive.corruption_test import apply_dark_purple_tint
 from classes.UI import StatusBar
-from classes.entity import Entity, BlockShield
-from classes.inventory import Item, Inventory
+from classes.entity import Entity
+from classes.inventory import Inventory
 from other.settings import *
 import math
 
@@ -156,8 +156,6 @@ class CombatNPC(NPC):
             self.recalculate_stats()
             self.hp = self.max_hp
 
-            print(self.core_stats)
-
 
     def initialize_combat_elements(self) -> list or None:
         core_stats = skills = critical_hit_chance = blocking_chance = None
@@ -165,23 +163,23 @@ class CombatNPC(NPC):
         if self.name == "Skeleton":
             core_stats = {
                 "vitality": 5,
-                "defense": 5,
+                "defense": 2,
                 "strength": 5,
                 "magic": 5,
-                "speed": 3,
+                "speed": 2,
                 "luck": 5,
             }
 
-            skills = ["sword_slash"]
+            skills = ["overhead_slash"]
             critical_hit_chance = 0.5
             blocking_chance = 0.25
             dominant_stats += ["strength", "defense"]
 
         elif self.name == "Goblin":
             core_stats = {
-                "vitality": 5,
-                "defense": 5,
-                "strength": 5,
+                "vitality": 2,
+                "defense": 2,
+                "strength": 2,
                 "magic": 5,
                 "speed": 5,
                 "luck": 5,
@@ -202,31 +200,41 @@ class CombatNPC(NPC):
 
     def battle_ai(self, targets):
         """Conditionals that decide the enemy's battle action."""
+        available_skills = [skill for skill in self.skills if self.mana >= SKILLS[skill]["mana"]]
 
         # === defeating a target is prioritized over all ===
-        for skill_name in self.skills:
+        for skill_name in available_skills:
             damage = self.calculate_damage(skill = skill_name)
             for target in targets:
                 if damage >= target.hp:
                     self.current_attack = skill_name
                     return target
 
-        # === apply status effect second ===
-        for skill_name in self.skills:
-            if hasattr(SKILLS[skill_name], "status_effect"):
-                self.current_attack = skill_name
-                return random.choice(self.random_target)
+
+        if any([hasattr(SKILLS[skill], "status_effect") for skill in available_skills])\
+                and not any([target.status_effect for target in targets]):
+
+            for skill_name in available_skills:
+                if hasattr(SKILLS[skill_name], "status_effect"):
+                    self.current_attack = skill_name
+                    # === apply status effect second ===
+                    for target in targets:
+                        if not target.status_effect:
+                            return target
 
         # === heal if less than 50% hp is left ===
         if self.hp / self.max_hp <= 0.5 and not self.inventory.items["small_health_potion"] <= 0:
             self.current_attack = "small_health_potion"
             return self
 
-        # === random option, random target ===
+        # === highest damage, weakest target ===
         else:
-            options = [skill for skill in self.skills if self.mana >= SKILLS[skill]["mana"]]
-            self.current_attack = random.choice(options)
-            return random.choice(targets)
+
+            self.current_attack = max(available_skills, key = lambda skill: self.calculate_damage(skill=skill_name))
+
+            target_weakest_enemy = random.choices([True, False], k = 1, weights = [0.5, 0.5])[0]
+
+            return min(targets, key = lambda  t: t.hp) if target_weakest_enemy else random.choice(targets)
 
 
 
@@ -254,16 +262,11 @@ class Enemy(CombatNPC):
         # === inventory ===
         self.item_drop = "small_health_potion"
         self.item_drops = [self.item_drop] + [self.item_drop] if self.corrupted else [self.item_drop]
-        print(self.item_drops)
-        self.inventory = Inventory(item = {"small_health_potion": 2})
+        self.inventory = Inventory(item = {"small_health_potion": 1})
 
         # === other ===
         self.detected_player = False
         self.respawn_time = pygame.time.get_ticks() + 0
-
-
-
-
 
     def chase_player(self, player) -> None:
         # Calculate distances between enemy and player
@@ -333,7 +336,6 @@ class Enemy(CombatNPC):
         self.scale_stats_to_level()
 
         if not self.death:
-
             # === chase the player ===
             if not player.in_battle and pygame.time.get_ticks() >= player.post_battle_iframes:
                 self.chase_player(player)
@@ -350,8 +352,6 @@ class Ally(CombatNPC):
         # === level experience ===
         self.exp = 0
         self.max_exp = self.exp_to_level()
-
-
 
 
     def follow_player(self, player):

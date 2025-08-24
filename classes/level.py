@@ -278,7 +278,6 @@ class Level:
                         "enemies": [enemy]
                     }
 
-                    # self.battle_participants = [player, enemy, enemy.clone((enemy.x, enemy.y))]
                     self.visible_sprites.transition_timer = pygame.time.get_ticks()
                     self.visible_sprites.delay = pygame.time.get_ticks() + self.visible_sprites.delay_time
                     for group in self.visible_sprites.battle_participants.values():

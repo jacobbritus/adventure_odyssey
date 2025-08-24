@@ -1,4 +1,5 @@
 from classes.level import Level
+from classes.states import BattleState
 from other.settings import *
 
 class Game:
@@ -24,7 +25,11 @@ class Game:
                     self.level.overworld_ui.hotkeys(event)
                 else:
                     self.level.visible_sprites.battle_loop.selecting_target_hotkeys(event)
-                    self.level.player.blocking_critical_hotkey(event)
+
+                    if (self.level.visible_sprites.battle_loop.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]
+                            and self.level.player in [self.level.visible_sprites.battle_loop.target, self.level.visible_sprites.battle_loop.performer]):
+
+                        self.level.player.blocking_critical_hotkey(event)
                     self.level.visible_sprites.battle_loop.battle_menu.hotkeys(event)
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_h:

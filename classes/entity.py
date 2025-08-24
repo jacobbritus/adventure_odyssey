@@ -374,7 +374,7 @@ class Entity(pygame.sprite.Sprite):
             # === update stat
             setattr(self, stat_name, min(current_value + item_effect, max_value))
 
-            self.screen_messages.append(("hp_recovered", 5, (0, 255, 0)))
+            self.screen_messages.append(("hp_recovered", str(item_effect), (0, 255, 0)))
             self.item_use_delay = pygame.time.get_ticks() + 3000
             self.inventory.items[item] -= 1
 
