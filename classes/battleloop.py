@@ -439,7 +439,7 @@ class BattleLoop:
             if pygame.time.get_ticks() >= self.delay:
                 performer.animation_state = AnimationState.IDLE
                 performer.used_item = False
-                performer.item = None
+                performer.item_name = None
 
 
 

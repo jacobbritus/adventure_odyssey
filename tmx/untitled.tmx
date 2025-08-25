@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="2529">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="2531">
  <tileset firstgid="1" source="../tsx/plains.tsx"/>
  <tileset firstgid="241" source="../tsx/Objects.tsx"/>
  <tileset firstgid="250" source="../tsx/decor_32x32.tsx"/>
@@ -1444,13 +1444,14 @@
   <object id="2524" gid="241" x="977.333" y="1073.33" width="96" height="128"/>
  </objectgroup>
  <objectgroup id="3" name="Enemies">
-  <object id="2515" name="Skeleton" gid="249" x="1542" y="967" width="96" height="80"/>
-  <object id="2516" name="Goblin" gid="248" x="854" y="852" width="96" height="80"/>
-  <object id="2517" name="Skeleton" gid="249" x="1226" y="1413" width="96" height="80"/>
-  <object id="2518" name="Goblin" gid="248" x="765" y="1801" width="96" height="80"/>
+  <object id="2515" name="skeleton" gid="249" x="1542" y="967" width="96" height="80"/>
+  <object id="2516" name="goblin" gid="248" x="854" y="852" width="96" height="80"/>
+  <object id="2517" name="skeleton" gid="249" x="1226" y="1413" width="96" height="80"/>
+  <object id="2518" name="goblin" gid="248" x="765" y="1801" width="96" height="80"/>
  </objectgroup>
  <objectgroup id="5" name="Items">
   <object id="2525" name="small_health_potion" gid="277" x="1112" y="665.333" width="32" height="32"/>
   <object id="2526" name="small_mana_potion" gid="278" x="1016.37" y="1176.69" width="32" height="32"/>
+  <object id="2530" name="small_health_potion" gid="277" x="1173.52" y="665.048" width="32" height="32"/>
  </objectgroup>
 </map>

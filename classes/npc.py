@@ -160,7 +160,7 @@ class CombatNPC(NPC):
     def initialize_combat_elements(self) -> list or None:
         core_stats = skills = critical_hit_chance = blocking_chance = None
         dominant_stats = ["vitality"]
-        if self.name == "Skeleton":
+        if self.name == "skeleton":
             core_stats = {
                 "vitality": 5,
                 "defense": 2,
@@ -175,7 +175,7 @@ class CombatNPC(NPC):
             blocking_chance = 0.25
             dominant_stats += ["strength", "defense"]
 
-        elif self.name == "Goblin":
+        elif self.name == "goblin":
             core_stats = {
                 "vitality": 2,
                 "defense": 2,
@@ -320,7 +320,7 @@ class Enemy(CombatNPC):
             if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
                 self.reached_bounds = False
 
-    def clone_enemy(self, name):
+    def spawn_enemy(self, name):
         """Spawn additional enemies when triggered before starting a battle."""
         clone = Enemy(name, self.level, self.image, self.screen_position, self.group, self.obstacle_sprites)
 

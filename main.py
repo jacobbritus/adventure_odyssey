@@ -1,4 +1,5 @@
 from classes.level import Level
+from classes.mouse import Mouse
 from classes.states import BattleState
 from other.settings import *
 
@@ -6,14 +7,16 @@ class Game:
     def __init__(self):
         """General setup"""
         pygame.init()
-        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock = pygame.time.Clock()
         self.level = Level()
+        self.mouse = Mouse()
+        pygame.mouse.set_visible(False)
 
     def run(self) -> None:
         """Run the game."""
         while True:
-            self.window.fill((255, 255, 255))
+            self.display_surface.fill((255, 255, 255))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -52,6 +55,8 @@ class Game:
                 npc.get_dt(delta_time)
 
             self.level.run()
+
+            self.mouse.draw(self.display_surface)
 
             pygame.display.update()
 

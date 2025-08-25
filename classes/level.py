@@ -71,7 +71,7 @@ class Level:
             for obj in enemy_sprites:
                 pos = (obj.x, obj.y)
 
-
+                print(obj.name)
                 Enemy(surf=obj.image, pos=pos, name=obj.name, level=1, group=(self.enemies, self.visible_sprites),
                     obstacle_sprites=self.obstacle_sprites)
 
@@ -192,7 +192,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[12]
+        current_phase = day_phases[20]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -201,8 +201,6 @@ class Level:
     def battle(self):
         # Make camera follow the animation
 
-
-        # self.visible_sprites.custom_draw(self.player)
 
         if self.visible_sprites.battle_loop.performer:
             self.visible_sprites.battle_loop.performer.spells.draw(self.display_surface)
@@ -222,7 +220,7 @@ class Level:
 
 
     def item_collision(self):
-        self.overworld_ui.item_message(self.display_surface)
+        self.overworld_ui.draw_item_messages(self.display_surface)
 
 
         for item in self.visible_sprites.item_sprites:
