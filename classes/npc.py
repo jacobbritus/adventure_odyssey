@@ -123,13 +123,13 @@ class CombatNPC(NPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites, role):
         super().__init__(name, surf, pos, group, obstacle_sprites, role)
         self.level = level
-        self.stat_points = level
+        self.stat_points = level - 1
 
         self.core_stats, self.skills, self.critical_hit_chance, self.blocking_chance, self.dominant_stats = self.initialize_combat_elements()
 
         self.exp_given = self.exp_to_level()
 
-        self.corrupted = random.choices(population=[True, False], weights=[1.0, 0.0], k=1)[0]
+        self.corrupted = random.choices(population=[True, False], weights=[0.0, 1.0], k=1)[0]
 
         # === corrupted ===
         if self.corrupted:
@@ -261,8 +261,8 @@ class Enemy(CombatNPC):
         super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "enemy")
         # === inventory ===
         self.item_drop = "small_health_potion"
-        self.item_drops = [self.item_drop] + [self.item_drop] if self.corrupted else [self.item_drop]
-        self.inventory = Inventory(item = {"small_health_potion": 1})
+        self.item_drops = [self.item_drop] * 2 if self.corrupted else [self.item_drop]
+        self.inventory = Inventory(item = {"small_health_potion": 1 if self.corrupted else 0})
 
         # === other ===
         self.detected_player = False

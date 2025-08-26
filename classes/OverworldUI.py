@@ -31,6 +31,7 @@ class OverworldUI:
                 for item_message in list(self.item_messages):
                     if item.name == item_message.item.name:
                         item_message.quantity += 1
+                        item_message.message_time += 7500
             else:
                 ItemMessage(item, len(list(self.item_messages)), self.item_messages)
             self.button.clicked = False

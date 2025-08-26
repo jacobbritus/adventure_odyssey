@@ -71,7 +71,6 @@ class Level:
             for obj in enemy_sprites:
                 pos = (obj.x, obj.y)
 
-                print(obj.name)
                 Enemy(surf=obj.image, pos=pos, name=obj.name, level=1, group=(self.enemies, self.visible_sprites),
                     obstacle_sprites=self.obstacle_sprites)
 
@@ -192,7 +191,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[20]
+        current_phase = day_phases[12]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -254,10 +253,10 @@ class Level:
                     npc.item_drops.clear()
 
             # testing allies
-            # if not self.player.active_allies:
-            #     npc.recruit(player, "Goblin", npc.level)
-            #     npc.recruit(player, "Skeleton", npc.level)
-            #     npc.recruit(player, "Goblin", npc.level)
+            if not self.player.active_allies:
+                npc.recruit(player, "goblin", npc.level)
+                # npc.recruit(player, "skeleton", npc.level)
+                # npc.recruit(player, "goblin", npc.level)
             #     npc.recruit(player, "Skeleton", npc.level)
 
 

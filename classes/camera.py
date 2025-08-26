@@ -1,4 +1,5 @@
 import random
+from collections import deque
 
 import pygame
 
@@ -179,7 +180,23 @@ class YSortCameraGroup(pygame.sprite.Group):
         heroes = self.battle_participants["heroes"]
         enemies = self.battle_participants["enemies"]
 
-        for i in range(len(heroes) - 1):
+        match len(heroes):
+            case 4:
+                weights = [0.1, 0.2, 0.3, 0.4]
+            case 3:
+                weights = [0.1, 0.3, 0.4, 0.2]
+            case 2:
+                weights = [0.3, 0.4, 0.2, 0.1]
+            case 1:
+                weights = [0.4, 0.3, 0.2, 0.1]
+            case _:
+                weights = None
+
+
+
+        additional_enemies = random.choices([0, 1, 2, 3], k = 1, weights = weights)[0]
+
+        for i in range(additional_enemies):
             second_enemy = random.choices([True, False], k=1, weights = [1, 0.0])[0]
             if second_enemy: enemies.append(enemies[0].spawn_enemy("skeleton"))
 
@@ -214,7 +231,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
                     positions.append(pygame.Vector2(pos.x, y))  # same X, shifted Y
 
-                print(positions)
 
                 return positions
 
@@ -323,7 +339,9 @@ class YSortCameraGroup(pygame.sprite.Group):
             participant.mana = 0
 
         # this will become an option
-        original_enemy.recruit(player, original_enemy.name, original_enemy.level)
+        recruit_enemy = random.choices([True, False], k = 1, weights = [0.25, 0.75])[0]
+        if recruit_enemy:
+            original_enemy.recruit(player, original_enemy.name, original_enemy.level)
 
         self.battle_loop = None
         self.battle_participants = None

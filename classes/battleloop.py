@@ -379,7 +379,6 @@ class BattleLoop:
 
             if SKILLS[internal_attack]["type"] == AttackType.BUFF.value or enemy_count == 1:
                 self.target = [enemy for enemy in self.enemies if not enemy.death][0]
-                print(self.target.name)
 
         else:
             internal_item = attack[0].replace(" ", "_").lower()
