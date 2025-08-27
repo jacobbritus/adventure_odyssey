@@ -177,7 +177,7 @@ class CombatNPC(NPC):
 
         elif self.name == "goblin":
             core_stats = {
-                "vitality": 2,
+                "vitality": -3,
                 "defense": 2,
                 "strength": 2,
                 "magic": 5,

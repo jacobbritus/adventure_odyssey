@@ -57,7 +57,7 @@ SKILLS = {
 
     },
     "overhead_slash": {
-            "base_damage": 4,
+            "base_damage": 2,
             "multiplier": 0.75,
             "stat": "strength",
             "type": "physical",

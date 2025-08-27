@@ -184,11 +184,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             case 4:
                 weights = [0.1, 0.2, 0.3, 0.4]
             case 3:
-                weights = [0.1, 0.3, 0.4, 0.2]
+                weights = [0.1, 0.3, 0.4, 0.0]
             case 2:
-                weights = [0.3, 0.4, 0.2, 0.1]
+                weights = [0.3, 0.4, 0.2, 0.0]
             case 1:
-                weights = [0.4, 0.3, 0.2, 0.1]
+                weights = [0.4, 0.3, 0.2, 0.0]
             case _:
                 weights = None
 
@@ -309,8 +309,14 @@ class YSortCameraGroup(pygame.sprite.Group):
             enemy.kill()
 
         if self.battle_loop.winner == self.battle_loop.heroes:
+            recruit_enemy = random.choices([True, False], k=1, weights=[0.25, 0.75])[0]
+            if recruit_enemy:
+                original_enemy.recruit(player, original_enemy.name, original_enemy.level)
+
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
-        else:
+        elif self.battle_loop.winner == self.battle_loop.enemies:
+
+            # === reset heroes ===
             for hero in self.battle_loop.heroes:
                 hero.hp = hero.max_hp
                 hero.mana = 0
@@ -318,9 +324,12 @@ class YSortCameraGroup(pygame.sprite.Group):
                 player.x, player.y = player.spawn
                 player.rect.topleft = player.spawn
 
+            # === reset enemies ===
             for enemy in enemies:
                 enemy.death = False
                 enemy.hp = enemy.max_hp
+        else:
+            pass
 
 
         # === go back to initiate pos ====
@@ -328,7 +337,10 @@ class YSortCameraGroup(pygame.sprite.Group):
             if participant == player and self.battle_loop.winner == enemies:
                 participant.in_battle = False
                 continue
-            participant.rect.topleft = participant.pre_battle_pos
+            try:
+                participant.rect.topleft = participant.pre_battle_pos
+            except TypeError:
+                print(participant.name)
             participant.x, participant.y = participant.pre_battle_pos
             participant.update_pos()
 
@@ -338,17 +350,23 @@ class YSortCameraGroup(pygame.sprite.Group):
             # reset mana
             participant.mana = 0
 
-        # this will become an option
-        recruit_enemy = random.choices([True, False], k = 1, weights = [0.25, 0.75])[0]
-        if recruit_enemy:
-            original_enemy.recruit(player, original_enemy.name, original_enemy.level)
+
+        for hero in self.battle_loop.heroes:
+            hero.status_bar.display_exp = False
+            if hero.death and hero.role == "hero":
+                hero.active = False
+                player.active_allies.remove(hero)
+                hero.kill()
+
+
 
         self.battle_loop = None
         self.battle_participants = None
         self.state = LevelState.OVERWORLD
 
-        for hero in [player, *player.active_allies]:
-            hero.status_bar.display_exp = False
+
+
+
 
 
 

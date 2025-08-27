@@ -676,7 +676,7 @@ class BattleMenu:
         self.state = None
         self.visible = True
 
-        self.selected_option = -1
+        self.selected_option = 0
         self.mouse_navigation = False
         self.pointer = Pointer(variant = "hand_pointer")
 
@@ -715,7 +715,7 @@ class BattleMenu:
                     play_sound("ui", "hover", None)
 
             # === click the selected button ===
-            if event.key == pygame.K_c:
+            if event.key == pygame.K_c and self.selected_option >= 0:
                 if not list(self.buttons_group)[self.selected_option].disabled: list(self.buttons_group)[self.selected_option].clicked = True
 
 

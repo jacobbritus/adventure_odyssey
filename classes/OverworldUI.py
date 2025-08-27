@@ -89,7 +89,7 @@ class ItemMessage(pygame.sprite.Sprite):
         self.message_box = UI["battle_message_box"]["large_background"]
         self.message_box_pos = pygame.Vector2(
             WINDOW_WIDTH - self.message_box.get_width() // 2,
-            30 + 32 * count
+            30 + 34 * count
         )
         self.message_box_pos_x = WINDOW_WIDTH
 

@@ -323,6 +323,8 @@ class BattleLoop:
         # === handle heroes exp gain and display exp on status bar
         if self.winner == self.heroes:
             for hero in self.heroes:
+                if hero.death:
+                    continue
                 hero.calculate_exp()
 
             # === end the sequence ===
@@ -552,6 +554,7 @@ class BattleLoop:
                     self.state = BattleState.PLAYER_TURN
                     self.battle_menu.state = BattleMenuState.MAIN_MENU
                     self.battle_menu.buttons_group = pygame.sprite.Group()
+                    self.battle_menu.selected_option = 0
 
 
 
