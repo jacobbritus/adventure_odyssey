@@ -93,7 +93,8 @@ class BattleLoop:
         self.hover_sound_played = False
 
     def set_delay(self, ms):
-        self.delay = self.current_time + round(ms / 2)
+        self.delay = self.current_time + ms
+
 
     def top_screen_description(self, window):
         if self.state == BattleState.PLAYER_TURN:
@@ -432,7 +433,7 @@ class BattleLoop:
         # === [ APPROACH ] > WAIT > ATTACK ===
         if performer.animation_state == AnimationState.APPROACH:
             performer.approach_animation(target)
-            delay_time = 500 if performer in self.heroes else random.randint(250, 1500)
+            delay_time = 0 if performer in self.heroes else random.randint(0, 750)
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:
@@ -478,7 +479,6 @@ class BattleLoop:
         elif performer.animation_state == AnimationState.ATTACK:
 
             performer.attack_animation(target, performer.current_attack)
-            self.set_delay(1000)
 
         # === [ BUFF ] > IDLE ====
         elif performer.animation_state == AnimationState.BUFF:

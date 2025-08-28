@@ -177,7 +177,7 @@ class CombatNPC(NPC):
 
         elif self.name == "goblin":
             core_stats = {
-                "vitality": -3,
+                "vitality": 3,
                 "defense": 2,
                 "strength": 2,
                 "magic": 5,
@@ -390,7 +390,7 @@ class Ally(CombatNPC):
 
         # Normalize movement vector for consistent speed
 
-        if distance > stop_distance - 32:  # Prevent division by zero
+        if distance > stop_distance - 16:  # Prevent division by zero
             self.action = "running"
             dx = x_distance / distance  # Creates value between -1 and 1
             dy = y_distance / distance  # Creates value between -1 and 1

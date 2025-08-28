@@ -164,7 +164,6 @@ class Player(Entity):
 
 
 
-
     def update_player(self, offset: pygame.Vector2, window) -> None:
         """Draw the player in the game window."""
         # debug_surface = pygame.Surface((self.hitbox.width, self.hitbox.height), pygame.SRCALPHA)

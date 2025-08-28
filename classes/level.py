@@ -163,6 +163,8 @@ class Level:
 
         self.battle_transition()
 
+        self.ally_interaction()
+
 
         self.menu.draw(self.display_surface)
 
@@ -224,12 +226,10 @@ class Level:
 
         for item in self.visible_sprites.item_sprites:
             if self.player.hitbox.colliderect(item.rect):
-                self.overworld_ui.show_pickup_prompt(self.display_surface, item)
+                self.overworld_ui.interact_prompt(self.display_surface, "item", item = item)
 
                 if self.overworld_ui.picked_up_item:
                     self.player.inventory.add(item)
-                    item.fade_time = pygame.time.get_ticks() + 2000
-                    self.player.item_sprites.add(item)
                     self.overworld_ui.picked_up_item = False
                     self.visible_sprites.remove(item)
 
@@ -259,6 +259,21 @@ class Level:
                 # npc.recruit(player, "goblin", npc.level)
             #     npc.recruit(player, "Skeleton", npc.level)
 
+    def ally_interaction(self):
+        self.overworld_ui.draw_dialogue(self.display_surface)
+        combinations = {
+            "right": "left",
+            "left": "right",
+            "up": "down",
+            "down": "up",
+
+        }
+        for ally in self.player.active_allies:
+            if ally.direction in combinations.keys() and self.player.direction == combinations[ally.direction]\
+                    and ally.rect.inflate(16, 16).collidepoint(self.player.rect.center):
+                self.overworld_ui.interact_prompt(self.display_surface, "dialogue")
+            else:
+                self.overworld_ui.dialogue = False
 
     def initiate_battle_session(self, player):
         enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
