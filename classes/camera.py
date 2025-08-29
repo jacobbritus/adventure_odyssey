@@ -198,7 +198,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         for i in range(additional_enemies):
             second_enemy = random.choices([True, False], k=1, weights = [1, 0.0])[0]
-            if second_enemy: enemies.append(enemies[0].spawn_enemy("skeleton"))
+            if second_enemy: enemies.append(enemies[0].spawn_additional_enemy("skeleton"))
 
 
         for participant in [*enemies, *heroes]:
@@ -353,10 +353,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         for hero in self.battle_loop.heroes:
             hero.status_bar.display_exp = False
-            if hero.death and hero.role == "hero":
-                print("check")
-                hero.active = False
-                player.active_allies.remove(hero)
+
 
 
 

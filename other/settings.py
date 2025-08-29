@@ -7,7 +7,7 @@ pygame.mixer.set_num_channels(32)
 
 from other.png_to_sprite import *
 
-MUSIC_VOLUME = 0.0
+MUSIC_VOLUME = 0.5
 EFFECT_VOLUME = 0.5
 UI_OPACITY = 200
 
@@ -154,7 +154,8 @@ SOUND_EFFECTS = {
         "hover": pygame.mixer.Sound(get_file_location("sounds/effects/hover.wav")),
         "press": pygame.mixer.Sound(get_file_location("sounds/effects/click.wav")),
         "disabled": pygame.mixer.Sound(get_file_location("sounds/effects/disabled.wav")),
-        "book": pygame.mixer.Sound(get_file_location("sounds/effects/book.mp3"))
+        "book": pygame.mixer.Sound(get_file_location("sounds/effects/book.mp3")),
+        "dialogue": pygame.mixer.Sound(get_file_location("sounds/effects/dialogue.wav")),
     },
     "gameplay": {
         "enemy_alert": pygame.mixer.Sound(get_file_location("sounds/effects/enemy_alert.mp3")),
@@ -214,5 +215,19 @@ for directory in UI_directories:
 # ___fonts___
 FONT_ONE = get_file_location("sprites/fonts/FantasyRPGtext.ttf")
 FONT_TWO = get_file_location("sprites/fonts/FantasyRPGtitle.ttf")
+
+
+# === dialogue ===
+ALLY_DIALOGUE = [
+    "Where to next?",
+    "This place gives me chills…",
+    "Keep your guard up.",
+    "Looks peaceful… maybe too peaceful.",
+    "I think we’re being watched.",
+    "Do you hear that?",
+    "Don’t stray too far.",
+    "Feels like we’ve been walking forever."
+]
+
 
 

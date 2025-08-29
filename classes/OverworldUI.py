@@ -1,7 +1,10 @@
+import random
+
 import pygame.sprite
 
 from classes.UI import Button
 from classes.states import ButtonVariant
+from classes.text_manager import TextManager
 from other.settings import *
 
 class OverworldUI:
@@ -19,10 +22,14 @@ class OverworldUI:
                                   self.bg_bar_pos,
                                   False)
         self.dialogue = False
+        self.dialogue_bg = UI["battle_message_box"]["large_background"]
         self.dialogue_pos = pygame.Vector2(
-            WINDOW_WIDTH // 2 - UI["battle_message_box"]["large_background"].get_width() // 2,
-            WINDOW_HEIGHT - UI["battle_message_box"]["large_background"].get_height() - 64
+            WINDOW_WIDTH // 2 - self.dialogue_bg.get_width() // 2,
+            WINDOW_HEIGHT - self.dialogue_bg.get_height() - 64
         )
+
+        self.text_manager = None
+
 
         self.button = None
 
@@ -59,12 +66,21 @@ class OverworldUI:
                     self.button.delete = False
                     self.button.clicked = False
 
+                    self.text_manager = TextManager(kwargs.get("character").upper(), random.choice(ALLY_DIALOGUE).upper(), self.dialogue_pos + (16, 6))
+
+        else:
+            self.button = None
+
         if self.button and not self.dialogue:
             self.button.draw(window)
 
     def draw_dialogue(self, window):
         if self.dialogue:
             window.blit(UI["battle_message_box"]["large_background"], self.dialogue_pos)
+
+            self.text_manager.draw(window)
+
+
 
     def hotkeys(self, event) -> None:
         """Hotkey to pick up item."""

@@ -320,7 +320,7 @@ class Enemy(CombatNPC):
             if not abs(self.spawn.y - self.y) > 150 and not abs(self.spawn.x - self.x) > 150:
                 self.reached_bounds = False
 
-    def spawn_enemy(self, name):
+    def spawn_additional_enemy(self, name):
         """Spawn additional enemies when triggered before starting a battle."""
         clone = Enemy(name, self.level, self.image, self.screen_position, self.group, self.obstacle_sprites)
 
@@ -328,6 +328,18 @@ class Enemy(CombatNPC):
             clone.corrupted = random.choices(population=[True, False], weights=[0.9, 0.1], k=1)[0]
             if clone.corrupted:
                 clone.initialize_corrupted_enemy()
+
+                for key in clone.core_stats:
+                    if key == max(clone.core_stats.values()) and not all(
+                            stat == max(clone.dominant_stats) for stat in clone.dominant_stats):
+                        continue
+                    clone.core_stats[key] = round(clone.core_stats[key] * 1.5)
+                clone.recalculate_stats()
+
+                clone.exp_given *= 2
+
+                clone.hp = clone.max_hp = int(10 + 2 * clone.core_stats["vitality"])
+                clone.max_mana = self.core_stats["magic"]
 
         return clone
 

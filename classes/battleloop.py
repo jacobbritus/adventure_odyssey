@@ -433,7 +433,7 @@ class BattleLoop:
         # === [ APPROACH ] > WAIT > ATTACK ===
         if performer.animation_state == AnimationState.APPROACH:
             performer.approach_animation(target)
-            delay_time = 0 if performer in self.heroes else random.randint(0, 750)
+            delay_time = 250 if performer in self.heroes else random.randint(0, 750)
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:
@@ -562,7 +562,7 @@ class BattleLoop:
                     self.state = BattleState.ENEMY_TURN
 
 
-                self.set_delay(2000)
+                self.set_delay(1000)
                 self.battle_text_string = None
 
     def animations(self) -> None:

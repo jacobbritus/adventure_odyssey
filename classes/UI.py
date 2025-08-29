@@ -77,7 +77,7 @@ class StatusBar:
         if self.owner.type == "player" or self.owner.role == "hero":
             self.stats.extend(["mana", "exp"])
 
-            self.setup_hero_status_bar(y_offset, )
+            self.setup_hero_status_bar()
         self.setup_status_bars()
 
     def setup_small_hp_bar(self):
@@ -85,7 +85,7 @@ class StatusBar:
         self.hp_text_surface = self.font.render(f"{self.owner.hp}/{self.owner.max_hp}", True, (255, 255, 255))
         self.hp_icon = self.font.render("HP", True, (217, 87, 99))
 
-    def setup_hero_status_bar(self, y_offset):
+    def setup_hero_status_bar(self):
         ui = UI["status_bar"]
         menu_height = UI["battle_menu"]["main_background"].get_height()
         bg_width = ui["background"].get_width()
@@ -380,12 +380,12 @@ class StatusBar:
             diff =  self.x_offset / self.bg_bar.get_width()
             speed = max(diff * 25, 0.3)
             self.x_offset = max(self.x_offset + -speed, 0)
-            self.setup_hero_status_bar(0)
+            self.setup_hero_status_bar()
         elif not self.visible:
             diff = self.x_offset
             speed = max(diff * 0.25, 0.3)
             self.x_offset = min(self.x_offset + speed, self.bg_bar.get_width() - 32)
-            self.setup_hero_status_bar(0)
+            self.setup_hero_status_bar()
 
             if self.x_offset == self.bg_bar.get_width() - 32:
                 self.display_exp = False

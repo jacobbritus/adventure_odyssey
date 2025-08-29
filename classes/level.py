@@ -170,6 +170,11 @@ class Level:
 
     def draw_hp_bars(self):
         for character in [self.player, *self.player.active_allies]:
+            if character.role == "ally":
+                if character.status_bar.y_offset != self.player.active_allies.index(character) * 28:
+                    character.status_bar.y_offset = self.player.active_allies.index(character) * 28
+                    character.status_bar.setup_hero_status_bar()
+
             character.status_bar.draw(self.display_surface)
             self.player.status_bar.draw(self.display_surface)
 
@@ -193,7 +198,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[12]
+        current_phase = day_phases[18]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -212,8 +217,6 @@ class Level:
         self.visible_sprites.battle_loop.run()
 
         self.visible_sprites.battle_loop.top_screen_description(self.display_surface)
-        # use this smart ass
-        # here to be drawn on top of the overlay
 
         # end battle
         self.overworld_transition()
@@ -222,7 +225,6 @@ class Level:
 
     def item_collision(self):
         self.overworld_ui.draw_item_messages(self.display_surface)
-
 
         for item in self.visible_sprites.item_sprites:
             if self.player.hitbox.colliderect(item.rect):
@@ -271,7 +273,7 @@ class Level:
         for ally in self.player.active_allies:
             if ally.direction in combinations.keys() and self.player.direction == combinations[ally.direction]\
                     and ally.rect.inflate(16, 16).collidepoint(self.player.rect.center):
-                self.overworld_ui.interact_prompt(self.display_surface, "dialogue")
+                self.overworld_ui.interact_prompt(self.display_surface, "dialogue", character = ally.name)
             else:
                 self.overworld_ui.dialogue = False
 
