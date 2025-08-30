@@ -73,6 +73,9 @@ class Player(Entity):
         self.inactive_allies = []
 
 
+        # === dialogue ===
+        self.interacting = False
+
         # Other
         self.obstacle_sprites = obstacle_sprites
         self.dust_spawn_time = 0

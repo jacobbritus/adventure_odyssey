@@ -24,7 +24,8 @@ level_up_sprites = level_up_sprites
 CHARACTER_SPRITES = {
     "jacob": player_sprites,
     "skeleton": skeleton_sprites,
-    "goblin": goblin_sprites
+    "goblin": goblin_sprites,
+    "john": john_sprites
 }
 
 sprite_dust = sprite_dust

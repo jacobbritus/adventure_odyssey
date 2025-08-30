@@ -177,15 +177,30 @@ class CombatNPC(NPC):
 
         elif self.name == "goblin":
             core_stats = {
-                "vitality": 3,
+                "vitality": 4,
                 "defense": 2,
-                "strength": 2,
+                "strength": 3,
+                "magic": 5,
+                "speed": 7,
+                "luck": 5,
+            }
+
+            skills = ["poison_stab", "sword_slash"]
+            critical_hit_chance = 0.5
+            blocking_chance = 0.5
+            dominant_stats += ["strength", "speed"]
+
+        elif self.name == "john":
+            core_stats = {
+                "vitality": 5,
+                "defense": 5,
+                "strength": 5,
                 "magic": 5,
                 "speed": 5,
                 "luck": 5,
             }
 
-            skills = ["poison_stab", "sword_slash"]
+            skills = ["sword_slash", "punch", "overhead_slash", "heal", "fire_ball"]
             critical_hit_chance = 0.5
             blocking_chance = 0.5
             dominant_stats += ["strength", "speed"]

@@ -309,11 +309,13 @@ class StatusBar:
         """Used to darken unselected enemy hp bars."""
 
 
-        if self.owner.type == "enemy" and not self.owner.selected and not self.owner.death:
-            for item, pos in elements:
-                mask = pygame.mask.from_surface(item).to_surface(setcolor=(0, 0, 0, 50),
+        if self.owner.death and self.owner.role == "hero":
+
+                mask = pygame.mask.from_surface(self.bg_bar).to_surface(setcolor=(0, 0, 0, 75),
                                                                  unsetcolor=(0, 0, 0, 0))
-                window.blit(mask, pos)
+                window.blit(mask, self.background_box_pos)
+
+
 
         if self.display_exp:
             # if round(self.bars["exp"]["current_width"]) == round(self.bars["exp"]["target_width"]):
@@ -1159,7 +1161,35 @@ class MenuBook:
             window.blit(hover_surface, rect.topleft)
             window.blit(UI["battle_menu"]["skills_background"], pygame.Vector2(rect.topleft) + (0, 32))
 
-            # === buttons and stuff ===
+            # === select a hero ===
+            team_members = [self.player, *self.player.active_allies]
+
+            character_icon = UI["icons"][team_members[self.team_member_index].name.lower()]
+            character_icon_pos = pygame.Vector2(rect.topleft) + (
+                UI["battle_menu"]["skills_background"].get_width() // 2 - character_icon.get_width() // 2,
+                88,
+
+            )
+
+            window.blit(character_icon, character_icon_pos)
+
+            mouse = pygame.mouse.get_pos()
+            press = pygame.mouse.get_pressed()[0]
+
+            if character_icon.get_rect(topleft=character_icon_pos).collidepoint(mouse) and press \
+                    and pygame.time.get_ticks() >= self.click_delay:
+
+                self.team_member_index = min(self.team_member_index + 1, len(team_members))
+
+                if self.team_member_index == len(team_members):
+                    self.team_member_index = 0
+
+                self.selected_team_member = team_members[self.team_member_index]
+
+                self.click_delay = pygame.time.get_ticks() + 300
+
+
+            # === selected item interface ===
             if not self.buttons_group:
                 pos = pygame.Vector2(self.selected_item[0].topleft)
                 Button(self.buttons_group, None, None, "USE", ButtonVariant.WIDE, pos + (6,56), False)
@@ -1169,17 +1199,20 @@ class MenuBook:
         for button in self.buttons_group:
             button.draw(window)
 
+            # === cancel item use ===
             if button.clicked and not button.text_string:
                 self.selected_item = None
                 self.buttons_group = pygame.sprite.Group()
                 break
 
+            # === use item ===
             elif button.clicked and button.text_string == "USE":
                 item = self.selected_item[1]
                 if pygame.time.get_ticks() >= self.click_delay:
-                    self.player.use_item(item)
+                    self.selected_team_member.use_item(item, self.player.inventory)
                     self.click_delay = pygame.time.get_ticks() + 500
 
+                # === unselect item if there is none after using ===
                 if self.player.inventory.items[item] <= 0:
                     self.selected_item = None
                     self.buttons_group = pygame.sprite.Group()

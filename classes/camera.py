@@ -302,6 +302,13 @@ class YSortCameraGroup(pygame.sprite.Group):
         original_enemy = self.battle_participants["enemies"][0]
         enemies = self.battle_participants["enemies"]
 
+        # === remove dead allies
+        for hero in self.battle_loop.heroes:
+            hero.status_bar.display_exp = False
+            hero.status_bar.visible = False
+
+
+
         # === remove cloned enemies ===
         for index, enemy in enumerate(enemies):
             if enemy == original_enemy:
@@ -337,10 +344,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             if participant == player and self.battle_loop.winner == enemies:
                 participant.in_battle = False
                 continue
-            try:
-                participant.rect.topleft = participant.pre_battle_pos
-            except TypeError:
-                print(participant.name)
+            participant.rect.topleft = participant.pre_battle_pos
             participant.x, participant.y = participant.pre_battle_pos
             participant.update_pos()
 
@@ -351,8 +355,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             participant.mana = 0
 
 
-        for hero in self.battle_loop.heroes:
-            hero.status_bar.display_exp = False
+
 
 
 

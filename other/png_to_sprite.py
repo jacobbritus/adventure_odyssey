@@ -117,6 +117,87 @@ player_sprites = {
 }
 
 
+john_sprites = {
+    "idle": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/john.png", 0, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/john.png", 1, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 1, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/john.png", 2, 6, 96, 80, False),
+        },
+        "sound": get_file_location("sounds/sword_slash"),
+        "impact_frame": None
+
+    },
+    "running": {
+        "sprites": {
+            "down": sprite_converter("sprites/characters/john.png", 3, 6, 96, 80, False),
+            "right": sprite_converter("sprites/characters/john.png", 4, 6, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 4, 6, 96, 80, True),
+            "up": sprite_converter("sprites/characters/john.png", 5, 6, 96, 80, False),
+        },
+        "sound": "sounds/footsteps.wav"
+    },
+    "sword_slash": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/john.png", 7, 4, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 7, 4, 96, 80, True),
+        },
+        "sound": get_file_location("sounds/sword_slash.wav"),
+        "impact_frame": 2
+
+
+    },
+    "overhead_slash": {
+            "sprites": {
+                "right": sprite_converter("sprites/characters/john.png", 16, 6, 96, 80, False),
+                "left": sprite_converter("sprites/characters/john.png", 16, 6, 96, 80, True),
+            },
+            "sound": get_file_location("sounds/sword_slash.wav"),
+            "impact_frame": 4
+
+
+        },
+
+    "punch": {
+            "sprites": {
+                "right": sprite_converter("sprites/characters/john.png", 11, 4, 96, 80, False),
+                "left": sprite_converter("sprites/characters/john.png", 11, 4, 96, 80, True),
+            },
+            "sound": get_file_location("sounds/sword_slash.wav"),
+            "impact_frame": 2},
+    "death": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/john.png", 9, 3, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 9, 3, 96, 80, True),
+        },
+        "sound": "sounds/death.wav"
+    },
+"cast": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/john.png", 10, 5, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 10, 5, 96, 80, True),
+        },
+        "sound": "sounds/skeleton_death.wav",
+        "impact_frame": None},
+    "blocking": {
+        "sprites": {
+            "right": sprite_converter("sprites/characters/john.png", 12, 1, 96, 80, False),
+                "left": sprite_converter("sprites/characters/john.png", 12, 1, 96, 80, True),
+        }
+    },
+    "item_use":{
+        "sprites": {
+"down": sprite_converter("sprites/characters/john.png", 13, 1, 96, 80, False),
+                "right": sprite_converter("sprites/characters/john.png", 14, 1, 96, 80, False),
+            "left": sprite_converter("sprites/characters/john.png", 14, 1, 96, 80, True),
+            "up": sprite_converter("sprites/characters/john.png", 15, 1, 96, 80, True),
+
+        }
+    }
+}
+
+
 sprite_dust = sprite_converter("sprites/particles/dust.png", 0, 4, 24, 24, False)
 
 skeleton_sprites = {

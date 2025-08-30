@@ -329,7 +329,7 @@ class BattleLoop:
                 hero.calculate_exp()
 
             # === end the sequence ===
-            if not all(hero.leveling for hero in self.heroes):
+            if all(not hero.leveling for hero in self.heroes):
                 self.state = BattleState.END_BATTLE
                 for hero in self.heroes:
                     hero.status_bar.visible = False
@@ -437,7 +437,7 @@ class BattleLoop:
             self.set_delay(delay_time)
 
         if performer.animation_state == AnimationState.ITEM:
-            performer.item_animation(self.display_surface)
+            performer.item_animation(self.display_surface, self.player.inventory)
             if pygame.time.get_ticks() >= self.delay:
                 performer.animation_state = AnimationState.IDLE
                 performer.used_item = False
@@ -498,7 +498,9 @@ class BattleLoop:
             if all(enemy.hp <= 0 for enemy in self.enemies):
                 self.winner = self.heroes
                 for hero in self.heroes:
-                    hero.total_exp += sum(enemy.exp_given for enemy in self.enemies)
+                    if not hero.death:
+                        hero.leveling = True
+                        hero.total_exp += sum(enemy.exp_given for enemy in self.enemies)
             else:
                 self.winner = self.enemies
 
@@ -518,6 +520,8 @@ class BattleLoop:
                 self.performer.handle_status_effect()
 
                 if self.performer.hp <= 0 and not self.performer.death:
+                    if self.performer in self.battle_queue:
+                        self.battle_queue.remove(self.performer)
                     self.performer.animation_state = AnimationState.DEATH
                     return
 

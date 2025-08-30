@@ -343,12 +343,12 @@ class Entity(pygame.sprite.Sprite):
         """Idle before attacking."""
         self.action = "idle"
 
-    def item_animation(self, window):
+    def item_animation(self, window, inventory):
         item = self.current_attack
 
         if not self.used_item:
             Item(self.item_sprites, item, None, self.screen_position)
-            self.use_item(item)
+            self.use_item(item, inventory)
             self.used_item = True
 
         self.action = "idle"
@@ -357,7 +357,7 @@ class Entity(pygame.sprite.Sprite):
             for item in self.item_sprites:
                 item.draw(window, self.dmg_position + (-16, 28), True)
 
-    def use_item(self, item):
+    def use_item(self, item, inventory):
         if ITEMS[item]["type"] == "consumable":
             # self.hp_bar.visible = True
 
@@ -373,10 +373,13 @@ class Entity(pygame.sprite.Sprite):
 
             # === update stat
             setattr(self, stat_name, min(current_value + item_effect, max_value))
-
-            self.screen_messages.append(("hp_recovered", str(item_effect), (0, 255, 0)))
+            if self.in_battle:
+                self.screen_messages.append(("hp_recovered", str(item_effect), (0, 255, 0)))
             self.item_use_delay = pygame.time.get_ticks() + 3000
-            self.inventory.items[item] -= 1
+            inventory.items[item] -= 1
+
+            if self.death and self.hp > 0:
+                self.death = False
 
             self.used_item = False
 

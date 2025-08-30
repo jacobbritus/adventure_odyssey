@@ -198,7 +198,7 @@ class Level:
             if abs(time - now) < abs(closest_time - now):
                 closest_time = time
 
-        current_phase = day_phases[18]
+        current_phase = day_phases[20]
         self.day_cycle_overlay.set_alpha(current_phase["opacity"])
 
         self.day_cycle_overlay.fill(current_phase["color"])
@@ -256,13 +256,14 @@ class Level:
 
             # testing allies
             if not self.player.active_allies:
-                npc.recruit(player, "goblin", npc.level)
+                npc.recruit(player, "john", npc.level)
                 # npc.recruit(player, "skeleton", npc.level)
                 # npc.recruit(player, "goblin", npc.level)
             #     npc.recruit(player, "Skeleton", npc.level)
 
     def ally_interaction(self):
         self.overworld_ui.draw_dialogue(self.display_surface)
+
         combinations = {
             "right": "left",
             "left": "right",
@@ -274,7 +275,8 @@ class Level:
             if ally.direction in combinations.keys() and self.player.direction == combinations[ally.direction]\
                     and ally.rect.inflate(16, 16).collidepoint(self.player.rect.center):
                 self.overworld_ui.interact_prompt(self.display_surface, "dialogue", character = ally.name)
-            else:
+
+            elif not self.overworld_ui.active:
                 self.overworld_ui.dialogue = False
 
     def initiate_battle_session(self, player):
@@ -288,7 +290,7 @@ class Level:
 
                 else:
                     self.visible_sprites.battle_participants = {
-                        "heroes": [player] + player.active_allies,
+                        "heroes": [player] + [ally for ally in player.active_allies if not ally.death],
                         "enemies": [enemy]
                     }
 

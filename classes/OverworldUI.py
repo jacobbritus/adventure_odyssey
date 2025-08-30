@@ -9,6 +9,7 @@ from other.settings import *
 
 class OverworldUI:
     def __init__(self):
+        self.active = None
         self.picked_up_item: bool = False
 
         self.bg_bar = UI["battle_message_box"]["small_background"]
@@ -58,17 +59,17 @@ class OverworldUI:
                 self.button.delete = False
 
         elif variant == "dialogue":
+            self.active = True
             self.button = self.dialogue_button
-
+            
             if self.button and self.button.clicked:
-                if self.button.delete:
-                    self.dialogue = True
-                    self.button.delete = False
-                    self.button.clicked = False
+                self.dialogue = True
+                self.text_manager = TextManager(kwargs.get("character").upper(), random.choice(ALLY_DIALOGUE).upper(), self.dialogue_pos + (16, 6))
 
-                    self.text_manager = TextManager(kwargs.get("character").upper(), random.choice(ALLY_DIALOGUE).upper(), self.dialogue_pos + (16, 6))
-
+                self.button.delete = False
+                self.button.clicked = False
         else:
+
             self.button = None
 
         if self.button and not self.dialogue:
@@ -77,15 +78,20 @@ class OverworldUI:
     def draw_dialogue(self, window):
         if self.dialogue:
             window.blit(UI["battle_message_box"]["large_background"], self.dialogue_pos)
-
             self.text_manager.draw(window)
 
 
 
     def hotkeys(self, event) -> None:
         """Hotkey to pick up item."""
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_c and self.button:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_c and (self.button or self.dialogue):
             self.button.clicked = True
+
+            if self.dialogue:
+                self.text_manager.delay_time = 0
+
+                if self.text_manager.text_index == len(self.text_manager.dialogue):
+                    self.dialogue = False
 
     def draw_item_messages(self, window):
         for item_message in self.item_messages:
