@@ -9,7 +9,6 @@ from other.settings import *
 
 class OverworldUI:
     def __init__(self):
-        self.active = None
         self.picked_up_item: bool = False
 
         self.bg_bar = UI["battle_message_box"]["small_background"]
@@ -23,17 +22,10 @@ class OverworldUI:
                                   self.bg_bar_pos,
                                   False)
         self.dialogue = False
-        self.dialogue_bg = UI["battle_message_box"]["large_background"]
-        self.dialogue_pos = pygame.Vector2(
-            WINDOW_WIDTH // 2 - self.dialogue_bg.get_width() // 2,
-            WINDOW_HEIGHT - self.dialogue_bg.get_height() - 64
-        )
 
         self.text_manager = None
 
-
         self.button = None
-        self.interactor = None
 
 
         self.item_messages = pygame.sprite.Group()
@@ -60,20 +52,14 @@ class OverworldUI:
                 self.button.delete = False
 
         elif variant == "dialogue" and not self.dialogue:
-            self.active = True
             self.button = self.dialogue_button
 
-
             if self.button and self.button.clicked:
-                self.interactor = kwargs.get("character")
-                self.interactor.interacting = True
-
                 self.dialogue = True
-                if self.interactor.role == "hero":
-                    dialogue = random.choice(ALLY_DIALOGUE).upper()
-                else:
-                    dialogue = NPC_DIALOGUE[self.interactor.id].upper()
-                self.text_manager = TextManager(self.interactor.name.upper(), dialogue, self.dialogue_pos + (16, 6))
+
+                interactor = kwargs.get("character")
+                interactor.interacting = True
+                self.text_manager = TextManager(interactor)
 
                 self.button.delete = False
                 self.button.clicked = False
@@ -85,8 +71,8 @@ class OverworldUI:
 
     def draw_dialogue(self, window):
         if self.dialogue and not self.text_manager.done:
-            window.blit(UI["battle_message_box"]["large_background"], self.dialogue_pos)
             self.text_manager.draw(window)
+
 
 
 
@@ -96,15 +82,6 @@ class OverworldUI:
             if self.button:
                 self.button.clicked = True
 
-            # move this to text manager class
-            if self.dialogue:
-                self.text_manager.delay_time = 0 # I'd say change this to holding
-
-                # either end or next sequence of dialogue
-                # e.g., it's equal to a set number of characters (self.next.sequence = True)
-                if self.text_manager.text_index == len(self.text_manager.dialogue):
-                    self.text_manager.done = True
-                    self.interactor.interacting = False
 
 
     def draw_item_messages(self, window):

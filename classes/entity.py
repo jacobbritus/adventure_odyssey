@@ -310,7 +310,6 @@ class Entity(pygame.sprite.Sprite):
         """Update direction based on the target location."""
         dx: int = target.rect.centerx - self.rect.centerx
         dy: int = target.rect.centery - self.rect.centery
-        print(dx, dy)
         if abs(dx) > abs(dy):
             self.direction = "right" if dx > 0 else "left"
         else:

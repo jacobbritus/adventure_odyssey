@@ -231,5 +231,14 @@ ALLY_DIALOGUE = [
 ]
 
 NPC_DIALOGUE = {
-    2531: "Hey, you look wonderful!"
+    2531: [
+        "What’s in yer pockets, hmm?",
+        "Step careful, shiny boots. Stones got eyes ‘round here.",
+        "You didn’t see me, I didn’t see you.",
+        "The caves whisper secrets. I hear ‘em all… for a price.",
+        "Don’t turn yer back—nah, not on me.",
+        "Gold talks louder than friends, always has.",
+        "Heh… pockets heavy? I can help lighten ‘em.",
+        "Keep yer hands close. I keep mine closer."
+    ],
 }

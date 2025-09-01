@@ -26,12 +26,13 @@ class Game:
                 if not self.level.visible_sprites.battle_loop:
                     self.level.menu.keybinds(event)
                     self.level.overworld_ui.hotkeys(event)
+                    if self.level.overworld_ui.text_manager:
+                        self.level.overworld_ui.text_manager.hotkeys(event)
                 else:
                     self.level.visible_sprites.battle_loop.selecting_target_hotkeys(event)
 
                     if (self.level.visible_sprites.battle_loop.state in [BattleState.PLAYER_ANIMATION, BattleState.ENEMY_ANIMATION]
                             and self.level.player in [self.level.visible_sprites.battle_loop.target, self.level.visible_sprites.battle_loop.performer]):
-
                         self.level.player.blocking_critical_hotkey(event)
                     self.level.visible_sprites.battle_loop.battle_menu.hotkeys(event)
 

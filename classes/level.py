@@ -286,8 +286,15 @@ class Level:
                     and npc.rect.inflate(16, 16).collidepoint(self.player.rect.center):
                 self.overworld_ui.interact_prompt(self.display_surface, "dialogue", character = npc)
 
+            # === remove dialogue when npc.interacting (speaking) is False ===
             elif all(not npc.interacting for npc in interactable_npcs):
                 self.overworld_ui.dialogue = None
+
+            # === remove dialogue if not within range ===
+            elif npc.interacting and not npc.rect.inflate(16, 16).collidepoint(self.player.rect.center):
+                self.overworld_ui.dialogue = None
+                npc.interacting = False
+
 
     def initiate_battle_session(self, player):
         enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]
