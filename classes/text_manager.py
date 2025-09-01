@@ -18,6 +18,7 @@ class TextManager:
         self.delay = pygame.time.get_ticks() + self.delay_time
 
         self.text_index = 0
+        self.done = False
 
 
     def update_text(self):

@@ -230,5 +230,6 @@ ALLY_DIALOGUE = [
     "Feels like we’ve been walking forever."
 ]
 
-
-
+NPC_DIALOGUE = {
+    2531: "Hey, you look wonderful!"
+}

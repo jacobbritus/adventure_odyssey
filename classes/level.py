@@ -74,6 +74,15 @@ class Level:
                 Enemy(surf=obj.image, pos=pos, name=obj.name, level=1, group=(self.enemies, self.visible_sprites),
                     obstacle_sprites=self.obstacle_sprites)
 
+        npc_sprites = self.tmx_data.get_layer_by_name("Npcs")
+        if isinstance(npc_sprites, pytmx.TiledObjectGroup):
+            for obj in npc_sprites:
+
+                pos = (obj.x, obj.y)
+
+                NPC(surf=obj.image, pos=pos, name=obj.name, group=(self.enemies, self.visible_sprites),
+                      obstacle_sprites=self.obstacle_sprites, id = obj.id)
+
 
         # === draw the ground items ===
         item_sprites = self.tmx_data.get_layer_by_name("Items")
@@ -163,7 +172,7 @@ class Level:
 
         self.battle_transition()
 
-        self.ally_interaction()
+        self.npc_interaction()
 
 
         self.menu.draw(self.display_surface)
@@ -254,14 +263,14 @@ class Level:
                         npc.item_drop = None
                     npc.item_drops.clear()
 
-            # testing allies
-            if not self.player.active_allies:
-                npc.recruit(player, "john", npc.level)
-                # npc.recruit(player, "skeleton", npc.level)
-                # npc.recruit(player, "goblin", npc.level)
-            #     npc.recruit(player, "Skeleton", npc.level)
+                # testing allies
+                if not self.player.active_allies:
+                    npc.recruit(player, "john", npc.level)
+                    # npc.recruit(player, "skeleton", npc.level)
+                    # npc.recruit(player, "goblin", npc.level)
+                #     npc.recruit(player, "Skeleton", npc.level)
 
-    def ally_interaction(self):
+    def npc_interaction(self):
         self.overworld_ui.draw_dialogue(self.display_surface)
 
         combinations = {
@@ -271,13 +280,14 @@ class Level:
             "down": "up",
 
         }
-        for ally in self.player.active_allies:
-            if ally.direction in combinations.keys() and self.player.direction == combinations[ally.direction]\
-                    and ally.rect.inflate(16, 16).collidepoint(self.player.rect.center):
-                self.overworld_ui.interact_prompt(self.display_surface, "dialogue", character = ally.name)
+        interactable_npcs = [npc for npc in self.visible_sprites if npc.type == "npc" and npc.role == "neutral"] + self.player.active_allies
+        for npc in interactable_npcs:
+            if npc.direction in combinations.keys() and self.player.direction == combinations[npc.direction]\
+                    and npc.rect.inflate(16, 16).collidepoint(self.player.rect.center):
+                self.overworld_ui.interact_prompt(self.display_surface, "dialogue", character = npc)
 
-            elif not self.overworld_ui.active:
-                self.overworld_ui.dialogue = False
+            elif all(not npc.interacting for npc in interactable_npcs):
+                self.overworld_ui.dialogue = None
 
     def initiate_battle_session(self, player):
         enemy_sprites = [sprite for sprite in self.visible_sprites.get_visible_sprites() if sprite.type == "npc" and sprite.role == "enemy"]

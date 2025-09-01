@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="2531">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="60" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="2533">
  <tileset firstgid="1" source="../tsx/plains.tsx"/>
  <tileset firstgid="241" source="../tsx/Objects.tsx"/>
  <tileset firstgid="250" source="../tsx/decor_32x32.tsx"/>
- <tileset firstgid="275" source="../tsx/Objects.tsx"/>
- <tileset firstgid="277" source="../tsx/items.tsx"/>
+ <tileset firstgid="275" source="../tsx/items.tsx"/>
  <layer id="1" name="Ground" width="80" height="60">
   <data encoding="csv">
 254,253,264,259,250,257,250,254,269,259,269,259,250,259,254,254,259,254,250,259,255,254,269,251,253,269,254,261,264,254,260,253,254,259,259,259,252,264,254,254,253,264,264,269,259,269,259,259,254,269,269,250,250,252,264,259,269,254,259,254,250,269,264,259,257,259,250,254,250,269,267,254,264,264,269,256,252,266,252,259,
@@ -1450,8 +1449,11 @@
   <object id="2518" name="goblin" gid="248" x="765" y="1801" width="96" height="80"/>
  </objectgroup>
  <objectgroup id="5" name="Items">
-  <object id="2525" name="small_health_potion" gid="277" x="1112" y="665.333" width="32" height="32"/>
-  <object id="2526" name="small_mana_potion" gid="278" x="1016.37" y="1176.69" width="32" height="32"/>
-  <object id="2530" name="small_health_potion" gid="277" x="1173.52" y="665.048" width="32" height="32"/>
+  <object id="2525" name="small_health_potion" gid="275" x="1112" y="665.333" width="32" height="32"/>
+  <object id="2526" name="small_mana_potion" gid="276" x="1016.37" y="1176.69" width="32" height="32"/>
+  <object id="2530" name="small_health_potion" gid="275" x="1173.52" y="665.048" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="6" name="Npcs">
+  <object id="2531" name="goblin" gid="248" x="1207.79" y="655.097" width="96" height="80"/>
  </objectgroup>
 </map>

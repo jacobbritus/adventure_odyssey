@@ -11,11 +11,12 @@ import math
 
 
 class NPC(Entity):
-    def __init__(self, name, surf, pos, group, obstacle_sprites, role = "neutral"):
+    def __init__(self, name, surf, pos, group, obstacle_sprites, role = "neutral", id = None):
         super().__init__(group)
         self.name = name
+        self.id = id
         self.icon = UI["icons"][name.lower()]
-
+        self.interacting = False
         self.group = group
         self.role = role
 
@@ -111,6 +112,9 @@ class NPC(Entity):
 
 
     def update_npc(self, player, window, offset) -> None:
+
+        if self.rect.inflate(16, 16).collidepoint(player.rect.center):
+            self.face_target(player)
 
         self.blocking_mechanics(window, offset)
         self.update_pos(offset=offset)
@@ -381,6 +385,7 @@ class Ally(CombatNPC):
         self.max_exp = self.exp_to_level()
 
 
+
     def follow_player(self, player):
         # Calculate distances between enemy and player
         x_distance = player.x - self.x  # Positive if player is to the right
@@ -434,7 +439,6 @@ class Ally(CombatNPC):
             # === follow the player ===
             if not player.in_battle and self.active:
                 self.follow_player(player)
-
 
 
 
