@@ -113,8 +113,13 @@ class NPC(Entity):
 
     def update_npc(self, player, window, offset) -> None:
 
-        if self.rect.inflate(16, 16).collidepoint(player.rect.center):
+        if self.rect.inflate(16, 16).collidepoint(player.rect.center) and self.role == "neutral":
             self.face_target(player)
+
+        # recuiting
+        # if self not in player.active_allies and self.interacting:
+        #     self.recruit(player, self.name, player.level)
+        #     self.kill()
 
         self.blocking_mechanics(window, offset)
         self.update_pos(offset=offset)
@@ -279,7 +284,7 @@ class Enemy(CombatNPC):
     def __init__(self, name, level, surf, pos, group, obstacle_sprites):
         super().__init__(name, level, surf, pos, group, obstacle_sprites, role = "enemy")
         # === inventory ===
-        self.item_drop = "small_health_potion"
+        self.item_drop = ["small_health_potion", "small_mana_potion"]
         self.item_drops = [self.item_drop] * 2 if self.corrupted else [self.item_drop]
         self.inventory = Inventory(item = {"small_health_potion": 1 if self.corrupted else 0})
 

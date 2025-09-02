@@ -177,6 +177,9 @@ class Level:
 
         self.menu.draw(self.display_surface)
 
+        for item_message in self.visible_sprites.item_messages:
+            item_message.draw(self.display_surface)
+
     def draw_hp_bars(self):
         for character in [self.player, *self.player.active_allies]:
             if character.role == "ally":
@@ -256,19 +259,11 @@ class Level:
                     npc.hp = npc.max_hp
                     npc.action = "idle"
                     npc.death = False
-                if npc.death and npc.item_drops and not npc.in_battle:
-                    for item in npc.item_drops:
-                        item_pos = pygame.Vector2(npc.hitbox.topleft) + (8, 0)
-                        Item(self.visible_sprites, item, 1, item_pos)
-                        npc.item_drop = None
-                    npc.item_drops.clear()
 
                 # testing allies
                 if not self.player.active_allies:
                     npc.recruit(player, "john", npc.level)
-                    # npc.recruit(player, "skeleton", npc.level)
-                    # npc.recruit(player, "goblin", npc.level)
-                #     npc.recruit(player, "Skeleton", npc.level)
+
 
     def npc_interaction(self):
         self.overworld_ui.draw_dialogue(self.display_surface)
@@ -319,6 +314,8 @@ class Level:
                             participant.action = "idle"
                 break
 
+    # just play the music whenever transitioning instead of all this
+    #
     def update_soundtrack(self):
         if not hasattr(self, 'current_music'):
             self.current_music = None

@@ -87,7 +87,7 @@ SKILLS = {
         "multiplier": 0.25,
         "stat": "strength",
         "type": "special",
-        "mana": 5,
+        "mana": 0,
         "sound": [get_file_location("sounds/effects/lightning_strike.mp3")],
         "description": "A surge of lightning that deals magic damage to one enemy."
     },

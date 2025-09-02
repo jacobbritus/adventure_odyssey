@@ -3,6 +3,7 @@ from collections import deque
 
 import pygame
 
+from classes.OverworldUI import ItemMessage
 from classes.UI import StatusBar
 from classes.inventory import Item
 from classes.states import BattleState, LevelState, AnimationState
@@ -15,6 +16,7 @@ class YSortCameraGroup(pygame.sprite.Group):
     """
     def __init__(self):
         super().__init__()
+        self.item_messages = pygame.sprite.Group()
         self.display_surface = pygame.display.get_surface()
         self.display_rect = self.display_surface.get_rect()
 
@@ -318,6 +320,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         if self.battle_loop.winner == self.battle_loop.heroes:
             recruit_enemy = random.choices([True, False], k=1, weights=[1.0, 0.0])[0]
             if recruit_enemy:
+                original_enemy.kill()
                 original_enemy.recruit(player, original_enemy.name, original_enemy.level)
 
             original_enemy.respawn_time = pygame.time.get_ticks() + 600000
@@ -354,11 +357,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             # reset mana
             participant.mana = 0
 
+        for item_name in original_enemy.item_drop:
+            item = Item(self, item_name, 1, (0,0))
+            player.inventory.add(item)
 
-
-
-
-
+            ItemMessage(item, len(list(self.item_messages)), self.item_messages)
 
         self.battle_loop = None
         self.battle_participants = None
