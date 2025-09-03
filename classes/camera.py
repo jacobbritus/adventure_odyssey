@@ -318,6 +318,13 @@ class YSortCameraGroup(pygame.sprite.Group):
             enemy.kill()
 
         if self.battle_loop.winner == self.battle_loop.heroes:
+            for item_name in original_enemy.item_drop:
+                item = Item(self, item_name, 1, (0, 0))
+                player.inventory.add(item)
+
+                ItemMessage(item, len(list(self.item_messages)), self.item_messages)
+
+
             recruit_enemy = random.choices([True, False], k=1, weights=[1.0, 0.0])[0]
             if recruit_enemy:
                 original_enemy.kill()
@@ -357,11 +364,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             # reset mana
             participant.mana = 0
 
-        for item_name in original_enemy.item_drop:
-            item = Item(self, item_name, 1, (0,0))
-            player.inventory.add(item)
 
-            ItemMessage(item, len(list(self.item_messages)), self.item_messages)
 
         self.battle_loop = None
         self.battle_participants = None

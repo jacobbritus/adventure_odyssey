@@ -56,14 +56,13 @@
         "untitled.tmx": {
             "expandedObjectLayers": [
                 2,
-                3,
-                4
+                3
             ],
-            "scale": 1.6225,
-            "selectedLayer": 3,
+            "scale": 1.44,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1280.1232665639445,
-                "y": 956.2403697996917
+                "x": 1336.8055555555554,
+                "y": 635.7638888888889
             }
         }
     },
