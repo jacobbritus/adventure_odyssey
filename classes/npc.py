@@ -2,7 +2,7 @@ import random
 
 import pygame.mixer
 
-from archive.corruption_test import apply_dark_purple_tint
+from other.apply_corruption import apply_corruption
 from classes.UI import StatusBar
 from classes.entity import Entity
 from classes.inventory import Inventory
@@ -269,7 +269,7 @@ class CombatNPC(NPC):
             new_sprite_dict[key] = {
                 "sprites": {
                     action: [
-                        apply_dark_purple_tint(image.copy())  # copy surface first
+                        apply_corruption(image.copy())  # copy surface first
                         for image in images
                     ]
                     for action, images in data["sprites"].items()

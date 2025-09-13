@@ -3,9 +3,7 @@ import random
 
 import pygame.mixer
 
-from archive.corruption_test import apply_dark_purple_tint
 from classes.inventory import Item
-from classes.pointer import Pointer
 from classes.states import AnimationState
 from classes.spells import ProjectileSpell, StationarySpell
 from other.play_sound import play_sound
