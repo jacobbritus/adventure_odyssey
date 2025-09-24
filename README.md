@@ -43,7 +43,7 @@ It is still a **work in progress**, but already includes several core systems.
 1. Clone the repository:  
  ```bash
  git clone https://github.com/jacobbritus/adventure_odyssey.git
- cd yourrepo
+ cd adventure_odyssey/
  ```
 2. Install dependencies:
   ```bash
